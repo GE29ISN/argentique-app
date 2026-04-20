@@ -25,24 +25,29 @@
 
         /* Écran de login */
         #auth-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bleu-marine); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; color: white; }
-        .login-box { background: white; padding: 30px; border-radius: 8px; color: #333; width: 300px; display: flex; flex-direction: column; gap: 10px; }
+        .login-box { background: white; padding: 30px; border-radius: 8px; color: #333; width: 300px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-box input { padding: 10px; border: 1px solid var(--gris-bordure); border-radius: 4px; }
+        .login-box button { background: var(--bleu-marine); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
         nav { background-color: var(--bleu-marine); padding: 15px 20px; display: flex; gap: 15px; position: sticky; top: 0; z-index: 1000; align-items: center; }
         nav button { background: none; border: 2px solid var(--blanc); color: var(--blanc); font-size: 15px; cursor: pointer; padding: 6px 12px; border-radius: 4px; }
         nav button.actif { background: var(--blanc); color: var(--bleu-marine); font-weight: bold; }
-        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; color: white; font-size: 12px; }
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 15px; color: white; font-size: 13px; }
 
-        .container { max-width: 1300px; margin: 20px auto; background: var(--blanc); padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; margin: 20px auto; background: var(--blanc); padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: var(--bleu-marine); margin-top: 0; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--gris-bordure); }
         
-        .notes-area { width: 100%; height: 100px; padding: 10px; border: 1px solid var(--gris-bordure); border-radius: 6px; font-family: inherit; margin-bottom: 20px; resize: vertical; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--gris-bordure); }
+        .form-grid div { display: flex; flex-direction: column; gap: 5px; }
+        .form-grid input { padding: 8px; border: 1px solid var(--gris-bordure); border-radius: 4px; }
+        
+        .notes-area { width: 100%; height: 80px; padding: 10px; border: 1px solid var(--gris-bordure); border-radius: 6px; font-family: inherit; margin-bottom: 20px; box-sizing: border-box; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--gris-bordure); font-size: 13px; }
-        th { background-color: #f1f1f1; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--gris-bordure); font-size: 14px; }
+        th { background-color: #f1f1f1; color: var(--bleu-marine); }
         
-        .loading-spinner { display: none; margin-left: 10px; }
+        .btn-action { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: none; background: #007bff; color: white; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
@@ -57,7 +62,7 @@
         <label>Mot de passe</label>
         <input type="password" id="login-pass" placeholder="******">
         <button onclick="handleLogin()" id="btn-login">Se connecter</button>
-        <p id="login-error" style="color:red; font-size:12px; display:none;"></p>
+        <p id="login-error" style="color:red; font-size:12px; display:none; margin:0;"></p>
     </div>
 </div>
 
@@ -65,10 +70,9 @@
     <button id="nav-dossiers" class="actif" onclick="showTab('dossiers')">📁 Dossiers</button>
     <button id="nav-stock" onclick="showTab('stock')">📦 Stock & Tarifs</button>
     <button id="nav-clients" onclick="showTab('clients')">👥 Clients</button>
-    <button id="nav-dispo" onclick="showTab('dispo')">📅 Disponibilités</button>
     <div class="nav-right">
         <span id="user-display"></span>
-        <button onclick="handleLogout()" style="border-color: #ff4d4d; color: #ff4d4d;">Déconnexion</button>
+        <button onclick="handleLogout()" style="border-color: #ff4d4d; color: #ff4d4d; background: none;">Déconnexion</button>
     </div>
 </nav>
 
@@ -76,19 +80,19 @@
     <!-- ONGLET DOSSIERS -->
     <div id="tab-dossiers" class="container">
         <div id="view-list-dossiers">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom:20px;">
                 <h1>📁 Liste des Dossiers</h1>
-                <button onclick="createDossier()">+ Nouveau Dossier</button>
+                <button class="btn-action" onclick="createDossier()">+ Nouveau Dossier</button>
             </div>
             <table>
-                <thead><tr><th>Début</th><th>Projet</th><th>Client</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Nom du Projet</th><th>Client</th><th>Coeff</th><th>Actions</th></tr></thead>
                 <tbody id="table-dossiers-body"></tbody>
             </table>
         </div>
 
         <div id="view-detail-dossier" style="display:none;">
-            <button class="btn-mini" onclick="showTab('dossiers')">⬅ Retour</button>
-            <div style="display:flex; gap:10px; margin:15px 0;">
+            <button onclick="showTab('dossiers')" style="margin-bottom:15px;">⬅ Retour à la liste</button>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
                 <button onclick="genPDF('prep')">📋 Bon de Prépa</button>
                 <button onclick="genPDF('devis')">📄 Devis</button>
                 <button onclick="genPDF('facture')">💰 Facture</button>
@@ -103,33 +107,32 @@
 
             <label>Notes / Infos Libres (apparaissent sur les documents)</label>
             <textarea id="det-notes" class="notes-area" placeholder="Ex: Livraison porte A, code 1234..." onchange="syncDossier()"></textarea>
-
-            <h3>📦 Matériel</h3>
-            <div id="dossier-items-container"></div>
-            <button onclick="addItemToDossier()">+ Ajouter Matériel</button>
         </div>
     </div>
 
-    <!-- AUTRES ONGLETS (Simplifiés pour l'exemple, à compléter avec ton code précédent) -->
-    <div id="tab-stock" class="container" style="display:none;"><h1>📦 Stock</h1><div id="stock-list"></div></div>
-    <div id="tab-clients" class="container" style="display:none;"><h1>👥 Clients</h1></div>
-    <div id="tab-dispo" class="container" style="display:none;"><h1>📅 Dispo</h1></div>
+    <!-- ONGLET STOCK -->
+    <div id="tab-stock" class="container" style="display:none;">
+        <h1>📦 Gestion du Stock</h1>
+        <p>Fonctionnalité en cours de liaison...</p>
+    </div>
+
+    <!-- ONGLET CLIENTS -->
+    <div id="tab-clients" class="container" style="display:none;">
+        <h1>👥 Base Clients</h1>
+        <p>Fonctionnalité en cours de liaison...</p>
+    </div>
 </div>
 
 <script>
-
-
     // --- CONFIGURATION SUPABASE ---
-const SB_URL = "https://mtryplxbgytozvruahwf.supabase.co"; // J'ai retiré le /rest/v1/ à la fin
-const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10cnlwbHhiZ3l0b3p2cnVhaHdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDYwNjgsImV4cCI6MjA5MjI4MjA2OH0.08U3PnkeMn_kfiPNCv0RR0Qwvt9UBVZF4ecYasOc-2E"; // Attention, lis le point n°2 ci-dessous
+    const SB_URL = "https://mtryplxbgytozvruahwf.supabase.co";
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10cnlwbHhiZ3l0b3p2cnVhaHdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDYwNjgsImV4cCI6MjA5MjI4MjA2OH0.08U3PnkeMn_kfiPNCv0RR0Qwvt9UBVZF4ecYasOc-2E";
 
-// Initialisation correcte du client
-const client = supabase.createClient(SB_URL, SB_KEY);
-
+    // Initialisation
+    const client = supabase.createClient(SB_URL, SB_KEY);
 
     let currentUser = null;
     let localDossiers = [];
-    let localStock = [];
     let activeDossierId = null;
 
     // --- AUTHENTIFICATION ---
@@ -137,14 +140,19 @@ const client = supabase.createClient(SB_URL, SB_KEY);
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
         const btn = document.getElementById('btn-login');
+        const err = document.getElementById('login-error');
+
+        err.style.display = 'none';
         btn.disabled = true;
+        btn.innerText = "Connexion...";
 
         const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
 
         if (error) {
-            document.getElementById('login-error').innerText = error.message;
-            document.getElementById('login-error').style.display = 'block';
+            err.innerText = "Erreur : " + error.message;
+            err.style.display = 'block';
             btn.disabled = false;
+            btn.innerText = "Se connecter";
         } else {
             currentUser = data.user;
             initApp();
@@ -156,7 +164,7 @@ const client = supabase.createClient(SB_URL, SB_KEY);
         location.reload();
     }
 
-    // --- INITIALISATION ---
+    // --- INITIALISATION APRES CONNEXION ---
     async function initApp() {
         document.getElementById('auth-overlay').style.display = 'none';
         document.getElementById('main-nav').style.display = 'flex';
@@ -168,24 +176,28 @@ const client = supabase.createClient(SB_URL, SB_KEY);
     }
 
     async function loadData() {
-        // Charger les dossiers depuis Supabase
-        const { data: dossiers } = await client.from('dossiers').select('*');
-        localDossiers = dossiers || [];
-        
-        const { data: stock } = await client.from('stock').select('*');
-        localStock = stock || [];
-
+        const { data: dossiers, error } = await client.from('dossiers').select('*');
+        if (error) {
+            console.error("Erreur chargement dossiers:", error);
+            localDossiers = [];
+        } else {
+            localDossiers = dossiers || [];
+        }
         renderDossierList();
     }
 
     // --- NAVIGATION ---
     function showTab(t) {
-        ['dossiers', 'stock', 'clients', 'dispo'].forEach(id => {
-            document.getElementById('tab-'+id).style.display = 'none';
-            document.getElementById('nav-'+id).classList.remove('actif');
+        ['dossiers', 'stock', 'clients'].forEach(id => {
+            const el = document.getElementById('tab-'+id);
+            const nav = document.getElementById('nav-'+id);
+            if(el) el.style.display = 'none';
+            if(nav) nav.classList.remove('actif');
         });
+        
         document.getElementById('tab-'+t).style.display = 'block';
         document.getElementById('nav-'+t).classList.add('actif');
+
         if(t === 'dossiers') {
             document.getElementById('view-detail-dossier').style.display = 'none';
             document.getElementById('view-list-dossiers').style.display = 'block';
@@ -195,22 +207,30 @@ const client = supabase.createClient(SB_URL, SB_KEY);
     // --- GESTION DOSSIERS ---
     function renderDossierList() {
         const body = document.getElementById('table-dossiers-body');
+        if (localDossiers.length === 0) {
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucun dossier trouvé.</td></tr>';
+            return;
+        }
         body.innerHTML = localDossiers.map(d => `
             <tr>
-                <td>-</td>
                 <td><b>${d.nom}</b></td>
                 <td>${d.cli || '-'}</td>
-                <td><button onclick="openDossier(${d.id})">Ouvrir</button></td>
+                <td>${d.coeff || 1}</td>
+                <td><button class="btn-action" onclick="openDossier(${d.id})">Ouvrir</button></td>
             </tr>
         `).join('');
     }
 
     async function createDossier() {
-        const n = prompt("Nom du projet ?");
+        const n = prompt("Nom du nouveau projet ?");
         if(!n) return;
-        const newD = { nom: n, coeff: 1, cats: [], user_id: currentUser.id };
+        
+        const newD = { nom: n, coeff: 1, user_id: currentUser.id };
         const { data, error } = await client.from('dossiers').insert([newD]).select();
-        if(!error) {
+        
+        if(error) {
+            alert("Erreur lors de la création : " + error.message);
+        } else {
             localDossiers.push(data[0]);
             openDossier(data[0].id);
         }
@@ -219,6 +239,8 @@ const client = supabase.createClient(SB_URL, SB_KEY);
     function openDossier(id) {
         activeDossierId = id;
         const d = localDossiers.find(x => x.id === id);
+        if(!d) return;
+
         document.getElementById('view-list-dossiers').style.display = 'none';
         document.getElementById('view-detail-dossier').style.display = 'block';
         
@@ -226,52 +248,49 @@ const client = supabase.createClient(SB_URL, SB_KEY);
         document.getElementById('det-cli').value = d.cli || '';
         document.getElementById('det-coeff').value = d.coeff || 1;
         document.getElementById('det-notes').value = d.notes || '';
-        // ... chargement des catégories et items ...
     }
 
     async function syncDossier() {
         const d = localDossiers.find(x => x.id === activeDossierId);
-        d.nom = document.getElementById('det-nom').value;
-        d.cli = document.getElementById('det-cli').value;
-        d.coeff = parseFloat(document.getElementById('det-coeff').value);
-        d.notes = document.getElementById('det-notes').value;
+        if(!d) return;
 
-        // Sauvegarde immédiate dans Supabase
-        await client.from('dossiers').update({ 
-            nom: d.nom, 
-            cli: d.cli, 
-            coeff: d.coeff, 
-            notes: d.notes 
-        }).eq('id', activeDossierId);
+        const updatedData = {
+            nom: document.getElementById('det-nom').value,
+            cli: document.getElementById('det-cli').value,
+            coeff: parseFloat(document.getElementById('det-coeff').value) || 1,
+            notes: document.getElementById('det-notes').value
+        };
+
+        const { error } = await client.from('dossiers').update(updatedData).eq('id', activeDossierId);
+        if(error) console.error("Erreur de synchro:", error);
+        
+        // Mise à jour locale
+        Object.assign(d, updatedData);
     }
 
-    // --- GÉNÉRATION PDF ADAPTATIVE ---
-    async function genPDF(type) {
+    // --- GÉNÉRATION PDF ---
+    function genPDF(type) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         const d = localDossiers.find(x => x.id === activeDossierId);
         
-        // On récupère les infos de l'utilisateur connecté pour le devis
-        // Dans une vraie table 'profiles', on aurait son tel et son nom complet
-        const senderMail = currentUser.email; 
-
-        doc.setFillColor(10, 35, 66); doc.rect(0, 0, 210, 40, 'F');
-        doc.setTextColor(255, 255, 255); doc.setFontSize(18);
-        doc.text("L'Argentique Events", 15, 20);
+        doc.setFillColor(10, 35, 66); 
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.text("L'Argentique Events", 15, 25);
         
-        doc.setTextColor(0,0,0); doc.setFontSize(10);
-        doc.text(`Document généré par : ${senderMail}`, 15, 50);
-        doc.text(`Projet : ${d.nom}`, 15, 60);
+        doc.setTextColor(0,0,0);
+        doc.setFontSize(12);
+        doc.text(`DOCUMENT : ${type.toUpperCase()}`, 15, 55);
+        doc.text(`Projet : ${d.nom}`, 15, 65);
+        doc.text(`Client : ${d.cli || 'Non renseigné'}`, 15, 75);
 
-        // Affichage des NOTES si remplies
         if(d.notes) {
-            doc.setFont(undefined, 'italic');
-            doc.text("Notes : " + d.notes, 15, 70, { maxWidth: 180 });
-            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+            doc.text("Notes : " + d.notes, 15, 90, { maxWidth: 180 });
         }
 
-        // ... Reste de la logique de tableau ...
-        
         doc.save(`${type.toUpperCase()}_${d.nom}.pdf`);
     }
 
