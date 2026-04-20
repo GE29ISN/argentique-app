@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>L'Argentique Events - Pro</title>
+    <title>L'Argentique Events - Cloud Pro</title>
+    <!-- Bibliothèques PDF & Supabase -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,13 +23,16 @@
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--gris-fond); padding: 0; margin: 0; color: #333; }
 
+        /* Écran de login Cloud */
+        #auth-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bleu-marine); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; color: white; }
+        .login-box { background: white; padding: 30px; border-radius: 8px; color: #333; width: 300px; display: flex; flex-direction: column; gap: 10px; }
+
         nav { background-color: var(--bleu-marine); padding: 15px 20px; display: flex; gap: 15px; position: sticky; top: 0; z-index: 1000; align-items: center; }
         nav button { background: none; border: 2px solid var(--blanc); color: var(--blanc); font-size: 15px; cursor: pointer; padding: 6px 12px; border-radius: 4px; }
         nav button.actif { background: var(--blanc); color: var(--bleu-marine); font-weight: bold; }
         .nav-right { margin-left: auto; }
 
         .container { max-width: 1300px; margin: 20px auto; background: var(--blanc); padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-
         h1, h2, h3 { color: var(--bleu-marine); margin-top: 0; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--gris-bordure); }
 
@@ -37,12 +41,10 @@
 
         input, select, textarea { padding: 8px; border: 1px solid var(--gris-bordure); border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px; font-family: inherit; }
         label { font-size: 12px; font-weight: bold; color: var(--bleu-marine-clair); display: block; margin-bottom: 3px; }
-
         button { padding: 10px 15px; background: var(--bleu-marine); color: var(--blanc); border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { opacity: 0.9; }
         .btn-delete { background: var(--rouge-alerte); }
         .btn-edit { background: var(--jaune-edit); color: #000; }
-        .btn-custom { background: #6c757d; font-size: 11px; }
         .btn-mini { padding: 4px 8px; font-size: 11px; }
         .btn-pdf { background: #555; }
 
@@ -56,112 +58,124 @@
         .item-custom { color: #d63384; }
 
         .recap-final { background: var(--bleu-marine); color: white; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: right; }
-
         #admin-login { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(10,35,66,0.95); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:2000; color:white; }
-        
-        .badge-link { 
-            background: #ffffff; color: var(--bleu-marine); padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; 
-            border: 1px solid var(--bleu-marine); margin-right: 5px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: bold;
-        }
-
         .logo-preview { max-height: 80px; display: block; margin-top: 10px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
 
+<!-- Login Cloud -->
+<div id="auth-overlay">
+    <h2>L'Argentique Events Cloud</h2>
+    <div class="login-box">
+        <input type="email" id="auth-email" placeholder="Email">
+        <input type="password" id="auth-password" placeholder="Mot de passe">
+        <button onclick="handleLogin()">Se connecter</button>
+        <p id="auth-error" style="color:red; font-size:12px; display:none;"></p>
+    </div>
+</div>
+
 <datalist id="dl-stock"></datalist>
 <datalist id="dl-clients"></datalist>
 
-<nav>
+<nav id="main-nav" style="display:none;">
     <button id="nav-dossiers" class="actif" onclick="showTab('dossiers')">📁 Dossiers</button>
     <button id="nav-stock" onclick="showTab('stock')">📦 Stock & Tarifs</button>
     <button id="nav-clients" onclick="showTab('clients')">👥 Clients</button>
     <button id="nav-dispo" onclick="showTab('dispo')">📅 Disponibilités</button>
     <div class="nav-right">
         <button id="nav-admin" style="border-color: var(--jaune-edit); color: var(--jaune-edit);" onclick="checkAdmin()">⚙️ Admin</button>
+        <button onclick="handleLogout()" style="font-size:10px; border:none; background:none;">Déconnexion</button>
     </div>
 </nav>
 
-<div id="admin-login">
-    <h2>Accès Administration</h2>
-    <input type="password" id="admin-pass" style="width:250px; text-align:center; margin-bottom: 10px;" placeholder="Mot de passe">
-    <div>
-        <button onclick="verifyAdmin()">Connexion</button>
-        <button class="btn-delete" onclick="closeAdmin()">Annuler</button>
-    </div>
-</div>
-
-<div id="tab-admin" class="container" style="display:none;">
-    <h1>⚙️ Paramètres de l'Association</h1>
-    <div class="form-grid">
-        <div style="grid-column: span 2;"><label>Nom de l'Asso / Structure</label><input type="text" id="adm-nom"></div>
-        <div style="grid-column: span 2;"><label>Adresse</label><input type="text" id="adm-adr"></div>
-        <div><label>Email</label><input type="text" id="adm-mail"></div>
-        <div><label>Téléphone</label><input type="text" id="adm-tel"></div>
-        <div><label>SIRET</label><input type="text" id="adm-siret"></div>
-        <div><label>Code APE</label><input type="text" id="adm-ape"></div>
-        <div><label>TVA Intracom.</label><input type="text" id="adm-tva"></div>
-        <div style="grid-column: span 2;">
-            <label>Logo de l'entreprise (Import PC)</label>
-            <input type="file" id="adm-logo-file" accept="image/*" onchange="handleLogoUpload(this)">
-            <img id="logo-preview" class="logo-preview" src="">
-        </div>
-    </div>
-    <h3>🏦 Coordonnées Bancaires (RIB)</h3>
-    <div class="form-grid">
-        <div style="grid-column: span 2;"><label>Banque</label><input type="text" id="adm-banque"></div>
-        <div><label>IBAN</label><input type="text" id="adm-iban"></div>
-        <div><label>BIC/SWIFT</label><input type="text" id="adm-bic"></div>
-    </div>
-    <button onclick="saveAdminSettings()" style="background:var(--vert-ok); width: 100%;">Enregistrer les paramètres</button>
-</div>
-
+<!-- STOCK -->
 <div id="tab-stock" class="container" style="display:none;">
-    <h1>📦 Gestion Stock</h1>
+    <h1>📦 Gestion du Stock</h1>
     <div class="form-grid">
         <div><label>Référence</label><input type="text" id="s-ref"></div>
-        <div><label>Nom</label><input type="text" id="s-nom"></div>
+        <div><label>Désignation</label><input type="text" id="s-nom"></div>
         <div><label>Quantité</label><input type="number" id="s-qte"></div>
-        <div><label>Prix Achat (€)</label><input type="number" step="0.01" id="s-pachat"></div>
-        <div><label>Prix Loc/J (€)</label><input type="number" step="0.01" id="s-ploc"></div>
+        <div><label>Prix Achat HT</label><input type="number" step="0.01" id="s-pachat"></div>
+        <div><label>Prix Loc/Jour HT</label><input type="number" step="0.01" id="s-ploc"></div>
     </div>
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button id="btn-save-stock" onclick="saveStock()">Enregistrer Article</button>
-        <button class="btn-delete" style="display:none;" id="btn-cancel-stock" onclick="cancelStock()">Annuler</button>
+    <div style="display:flex; gap:10px;">
+        <button onclick="saveStock()">Enregistrer l'article</button>
+        <button class="btn-delete" onclick="cancelStock()">Annuler</button>
     </div>
-    <input type="text" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" id="search-stock" placeholder="🔍 Rechercher un article..." onkeyup="renderStock()">
+    <hr style="margin:20px 0;">
+    <input type="text" id="search-stock" placeholder="🔍 Rechercher dans le stock..." onkeyup="renderStock()">
     <table>
-        <thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Achat</th><th>Loc/J</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Réf</th><th>Désignation</th><th>Qte</th><th>Achat</th><th>Loc</th><th>Actions</th></tr></thead>
         <tbody id="table-stock-body"></tbody>
     </table>
 </div>
 
+<!-- CLIENTS -->
 <div id="tab-clients" class="container" style="display:none;">
-    <h1>👥 Clients</h1>
+    <h1>👥 Gestion des Clients</h1>
     <div class="form-grid">
-        <div><label>Entreprise</label><input type="text" id="c-ent"></div>
-        <div><label>Contact</label><input type="text" id="c-nom"></div>
-        <div><label>Tel</label><input type="text" id="c-tel"></div>
-        <div><label>Email</label><input type="text" id="c-email"></div>
+        <div><label>Entreprise / Nom</label><input type="text" id="c-ent"></div>
+        <div><label>Contact (Nom)</label><input type="text" id="c-nom"></div>
+        <div><label>Email</label><input type="text" id="c-mail"></div>
+        <div><label>Téléphone</label><input type="text" id="c-tel"></div>
+        <div><label>Adresse</label><input type="text" id="c-adr"></div>
     </div>
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button id="btn-save-client" onclick="saveClient()">Enregistrer Client</button>
-        <button class="btn-delete" style="display:none;" id="btn-cancel-client" onclick="cancelClient()">Annuler</button>
+    <div style="display:flex; gap:10px;">
+        <button onclick="saveClient()">Enregistrer le client</button>
+        <button class="btn-delete" onclick="cancelClient()">Annuler</button>
     </div>
-    <input type="text" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" id="search-clients" placeholder="🔍 Rechercher un client..." onkeyup="renderClients()">
+    <hr style="margin:20px 0;">
     <table>
-        <thead><tr><th>Structure</th><th>Contact</th><th>Tel</th><th>Email</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Client</th><th>Contact</th><th>Email</th><th>Actions</th></tr></thead>
         <tbody id="table-clients-body"></tbody>
     </table>
 </div>
 
-<div id="tab-dossiers" class="container">
+<!-- ADMIN -->
+<div id="admin-login">
+    <div style="background:white; padding:30px; border-radius:8px; color:#333; text-align:center;">
+        <h3>Accès Admin</h3>
+        <input type="password" id="admin-pass" placeholder="Mot de passe">
+        <div style="margin-top:15px; display:flex; gap:10px;">
+            <button onclick="verifyAdmin()">Entrer</button>
+            <button class="btn-delete" onclick="closeAdmin()">Fermer</button>
+        </div>
+    </div>
+</div>
+
+<div id="tab-admin" class="container" style="display:none;">
+    <h1>⚙️ Paramètres de l'entreprise</h1>
+    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+        <div>
+            <label>Logo de l'entreprise</label>
+            <input type="file" accept="image/*" onchange="handleLogoUpload(this)">
+            <img id="logo-preview" class="logo-preview" src="" alt="Aperçu Logo">
+        </div>
+        <div>
+            <label>Nom de l'Asso / Entreprise</label><input type="text" id="adm-nom">
+            <label>Adresse complète</label><textarea id="adm-adr" rows="2"></textarea>
+        </div>
+        <div><label>Téléphone</label><input type="text" id="adm-tel"></div>
+        <div><label>Email</label><input type="text" id="adm-mail"></div>
+        <div><label>SIRET</label><input type="text" id="adm-siret"></div>
+        <div><label>Code APE</label><input type="text" id="adm-ape"></div>
+        <div><label>N° TVA</label><input type="text" id="adm-tva"></div>
+        <div><label>Banque</label><input type="text" id="adm-banque"></div>
+        <div><label>IBAN</label><input type="text" id="adm-iban"></div>
+        <div><label>BIC</label><input type="text" id="adm-bic"></div>
+    </div>
+    <button onclick="saveAdminSettings()" style="background:var(--vert-ok); width: 100%;">Enregistrer les paramètres</button>
+</div>
+
+<!-- DOSSIERS -->
+<div id="tab-dossiers" class="container" style="display:none;">
     <div id="view-list-dossiers">
         <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
             <h1>📁 Liste des Dossiers</h1>
             <button onclick="createDossier()">+ Nouveau Dossier</button>
         </div>
-        <input type="text" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" id="search-dossiers" placeholder="🔍 Rechercher un projet..." onkeyup="renderDossierList()">
+        <input type="text" id="search-dossiers" placeholder="🔍 Rechercher un projet..." onkeyup="renderDossierList()">
         <table>
             <thead><tr><th>Début</th><th>Projet</th><th>Client</th><th>Actions</th></tr></thead>
             <tbody id="table-dossiers-body"></tbody>
@@ -177,7 +191,6 @@
         </div>
         
         <h1 id="det-titre" style="margin-top:15px;">Détails Dossier</h1>
-
         <div class="form-grid">
             <div><label>Nom Projet</label><input type="text" id="det-nom" onchange="syncDossier()"></div>
             <div><label>Client</label><input type="text" id="det-cli" list="dl-clients" onchange="syncDossier()"></div>
@@ -188,36 +201,35 @@
         <h3>📅 Dates Détaillées</h3>
         <div class="dates-container">
             <div class="dates-label">DÉBUT</div>
-            <div><label>Immobilisation</label><input type="date" id="d-immo-d" onchange="syncDossier()"></div>
+            <div><label>Immo</label><input type="date" id="d-immo-d" onchange="syncDossier()"></div>
             <div><label>Livraison</label><input type="date" id="d-livr-d" onchange="syncDossier()"></div>
             <div><label>Montage</label><input type="date" id="d-mont-d" onchange="syncDossier()"></div>
             <div><label>Show</label><input type="date" id="d-show-d" onchange="syncDossier()"></div>
             <div><label>Démontage</label><input type="date" id="d-demo-d" onchange="syncDossier()"></div>
-            <div><label>Récupération</label><input type="date" id="d-recu-d" onchange="syncDossier()"></div>
-
+            <div><label>Récup</label><input type="date" id="d-recu-d" onchange="syncDossier()"></div>
+        </div>
+        <div class="dates-container" style="background: #fff5f5;">
             <div class="dates-label">FIN</div>
-            <div><input type="date" id="d-immo-f" onchange="syncDossier()"></div>
-            <div><input type="date" id="d-livr-f" onchange="syncDossier()"></div>
-            <div><input type="date" id="d-mont-f" onchange="syncDossier()"></div>
-            <div><input type="date" id="d-show-f" onchange="syncDossier()"></div>
-            <div><input type="date" id="d-demo-f" onchange="syncDossier()"></div>
-            <div><input type="date" id="d-recu-f" onchange="syncDossier()"></div>
+            <div><label>Immo</label><input type="date" id="d-immo-f" onchange="syncDossier()"></div>
+            <div><label>Fin Livr.</label><input type="date" id="d-livr-f" onchange="syncDossier()"></div>
+            <div><label>Fin Mont.</label><input type="date" id="d-mont-f" onchange="syncDossier()"></div>
+            <div><label>Fin Show</label><input type="date" id="d-show-f" onchange="syncDossier()"></div>
+            <div><label>Fin Démo.</label><input type="date" id="d-demo-f" onchange="syncDossier()"></div>
+            <div><label>Fin Récup.</label><input type="date" id="d-recu-f" onchange="syncDossier()"></div>
         </div>
 
-        <div style="margin-bottom: 20px;">
-            <label>📝 Notes / Informations complémentaires (apparaîtront sur les PDF)</label>
-            <textarea id="det-notes" rows="4" placeholder="Ex: Lieu de prestation, consignes particulières, accès..." onchange="syncDossier()"></textarea>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3>📦 Liste du matériel & Prestations</h3>
-            <button class="btn-mini" onclick="addCat()">+ Ajouter Catégorie</button>
-        </div>
         <div id="dossier-cats-container"></div>
+        <button onclick="addCat()">+ Ajouter une catégorie</button>
+
         <div class="recap-final" id="dossier-recap"></div>
+        <div style="margin-top:20px;">
+            <label>Notes internes / Observations sur le devis</label>
+            <textarea id="det-notes" rows="4" onchange="syncDossier()"></textarea>
+        </div>
     </div>
 </div>
 
+<!-- DISPO -->
 <div id="tab-dispo" class="container" style="display:none;">
     <h1>📅 Disponibilités</h1>
     <div class="form-grid">
@@ -230,45 +242,64 @@
 </div>
 
 <script>
-    // Configuration Supabase
+    // CONFIGURATION SUPABASE
     const SB_URL = "https://mtryplxbgytozvruahwf.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10cnlwbHhiZ3l0b3p2cnVhaHdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDYwNjgsImV4cCI6MjA5MjI4MjA2OH0.08U3PnkeMn_kfiPNCv0RR0Qwvt9UBVZF4ecYasOc-2E";
-    const supabaseClient = window.supabase.createClient(SB_URL, SB_KEY);
+    const client = supabase.createClient(SB_URL, SB_KEY);
 
     const PASS_ADMIN = "1234 ARGENTIQUE";
-    
-    // Variables globales avec des valeurs par défaut
     let stock = [];
     let clients = [];
     let dossiers = [];
-    let settings = { id: 1, nom: "L'Argentique Events", logoB64: "" };
+    let settings = { nom: "L'Argentique Events", logoB64: "" };
     
     let activeDossierId = null;
     let editStockRef = null;
     let editClientId = null;
+    let currentUser = null;
 
-    // --- INITIALISATION SUPABASE ---
-    async function initApp() {
-        try {
-            const [resStock, resClients, resDossiers, resSettings] = await Promise.all([
-                supabaseClient.from('stock').select('*'),
-                supabaseClient.from('clients').select('*'),
-                supabaseClient.from('dossiers').select('*'),
-                supabaseClient.from('settings').select('*').eq('id', 1).single()
-            ]);
-            
-            if (resStock.data) stock = resStock.data;
-            if (resClients.data) clients = resClients.data;
-            if (resDossiers.data) dossiers = resDossiers.data;
-            if (resSettings.data) settings = resSettings.data;
-        } catch (error) {
-            console.error("Erreur lors de l'initialisation depuis Supabase:", error);
+    // --- AUTHENTIFICATION ---
+    async function handleLogin() {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        
+        if (error) {
+            document.getElementById('auth-error').innerText = "Erreur : " + error.message;
+            document.getElementById('auth-error').style.display = 'block';
+        } else {
+            currentUser = data.user;
+            initApp();
         }
-        updateDatalists();
-        showTab('dossiers');
     }
 
-    // --- NAV ---
+    function handleLogout() {
+        client.auth.signOut();
+        location.reload();
+    }
+
+    async function initApp() {
+        document.getElementById('auth-overlay').style.display = 'none';
+        document.getElementById('main-nav').style.display = 'flex';
+        
+        // Charger les données depuis Supabase
+        const pStock = client.from('stock').select('*');
+        const pClients = client.from('clients').select('*');
+        const pDossiers = client.from('dossiers').select('*');
+        const pSettings = client.from('settings').select('*').single();
+
+        const [rS, rC, rD, rSt] = await Promise.all([pStock, pClients, pDossiers, pSettings]);
+        
+        stock = rS.data || [];
+        clients = rC.data || [];
+        dossiers = rD.data || [];
+        if (rSt.data) settings = rSt.data;
+
+        showTab('dossiers');
+        updateDatalists();
+    }
+
+    // --- NAVIGATION ---
     function showTab(t) {
         ['stock', 'clients', 'dossiers', 'dispo', 'admin'].forEach(id => {
             if(document.getElementById('tab-'+id)) document.getElementById('tab-'+id).style.display = 'none';
@@ -276,7 +307,13 @@
         });
         document.getElementById('tab-'+t).style.display = 'block';
         if(document.getElementById('nav-'+t)) document.getElementById('nav-'+t).classList.add('actif');
-        if(t === 'dossiers') { document.getElementById('view-detail-dossier').style.display = 'none'; document.getElementById('view-list-dossiers').style.display = 'block'; renderDossierList(); }
+        if(t === 'dossiers') { 
+            document.getElementById('view-detail-dossier').style.display = 'none'; 
+            document.getElementById('view-list-dossiers').style.display = 'block'; 
+            renderDossierList(); 
+        }
+        if(t === 'stock') renderStock();
+        if(t === 'clients') renderClients();
         if(t === 'admin') loadAdminFields();
         updateDatalists();
     }
@@ -285,7 +322,7 @@
     function checkAdmin() { document.getElementById('admin-login').style.display = 'flex'; }
     function closeAdmin() { document.getElementById('admin-login').style.display = 'none'; }
     function verifyAdmin() { if(document.getElementById('admin-pass').value === PASS_ADMIN) { closeAdmin(); showTab('admin'); } else alert("Accès refusé"); }
-
+    
     function handleLogoUpload(input) {
         if (input.files && input.files[0]) {
             let reader = new FileReader();
@@ -308,12 +345,11 @@
         ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => {
             settings[k] = document.getElementById('adm-'+k).value;
         });
-        settings.id = 1; // Assurer un ID pour la base
-        await supabaseClient.from('settings').upsert(settings);
-        alert("Paramètres enregistrés !");
+        await client.from('settings').upsert({id: 1, ...settings});
+        alert("Paramètres enregistrés dans le Cloud !");
     }
 
-    // --- STOCK & CLIENTS ---
+    // --- STOCK ---
     async function saveStock() {
         let r = document.getElementById('s-ref').value.toUpperCase();
         let n = document.getElementById('s-nom').value;
@@ -321,63 +357,79 @@
         let pa = parseFloat(document.getElementById('s-pachat').value) || 0;
         let pl = parseFloat(document.getElementById('s-ploc').value) || 0;
         if(!r || !n) return;
-        
-        let newItem = {ref:r, nom:n, qte:q, pachat:pa, ploc:pl};
 
-        if(editStockRef) { 
-            let i = stock.findIndex(x => x.ref === editStockRef); 
-            if(editStockRef !== r) {
-                await supabaseClient.from('stock').delete().eq('ref', editStockRef); // Effacer l'ancienne ref si modifiée
-            }
-            stock[i] = newItem; 
-        } 
-        else { stock.push(newItem); }
+        const newArt = {ref:r, nom:n, qte:q, pachat:pa, ploc:pl};
+        await client.from('stock').upsert(newArt);
         
-        cancelStock(); 
-        renderStock();
-        await supabaseClient.from('stock').upsert(newItem);
+        // Update local
+        let i = stock.findIndex(x => x.ref === r);
+        if(i > -1) stock[i] = newArt; else stock.push(newArt);
+        
+        cancelStock(); renderStock(); updateDatalists();
     }
+
     function renderStock() {
         let sVal = document.getElementById('search-stock').value.toLowerCase();
         document.getElementById('table-stock-body').innerHTML = stock.filter(s => s.nom.toLowerCase().includes(sVal) || s.ref.toLowerCase().includes(sVal)).map(s => `<tr>
             <td>${s.ref}</td><td>${s.nom}</td><td>${s.qte}</td><td>${s.pachat}€</td><td>${s.ploc}€</td>
             <td><button class="btn-mini btn-edit" onclick="editStock('${s.ref}')">Edit</button> <button class="btn-mini btn-delete" onclick="deleteStock('${s.ref}')">X</button></td></tr>`).join('');
     }
-    function editStock(r) { let s = stock.find(x => x.ref === r); editStockRef = r; document.getElementById('s-ref').value = s.ref; document.getElementById('s-nom').value = s.nom; document.getElementById('s-qte').value = s.qte; document.getElementById('s-pachat').value = s.pachat; document.getElementById('s-ploc').value = s.ploc; document.getElementById('btn-save-stock').innerText = "Mettre à jour"; document.getElementById('btn-cancel-stock').style.display = "inline-block"; }
-    
-    async function deleteStock(r) { 
-        if(confirm("Supprimer l'article ?")) { 
-            stock = stock.filter(x => x.ref !== r); 
-            renderStock(); 
-            await supabaseClient.from('stock').delete().eq('ref', r);
-        } 
-    }
-    function cancelStock() { editStockRef = null; ['s-ref','s-nom','s-qte','s-pachat','s-ploc'].forEach(id => document.getElementById(id).value = ''); document.getElementById('btn-save-stock').innerText = "Enregistrer Article"; document.getElementById('btn-cancel-stock').style.display = "none"; }
 
-    async function saveClient() {
-        let c = { id: editClientId || Date.now(), ent: document.getElementById('c-ent').value, nom: document.getElementById('c-nom').value, tel: document.getElementById('c-tel').value, email: document.getElementById('c-email').value };
-        if(editClientId) { let i = clients.findIndex(x => x.id === editClientId); clients[i] = c; } else clients.push(c);
-        
-        cancelClient(); 
-        renderClients();
-        await supabaseClient.from('clients').upsert(c);
+    function editStock(r) { 
+        let s = stock.find(x => x.ref === r); editStockRef = r; 
+        document.getElementById('s-ref').value = s.ref; document.getElementById('s-nom').value = s.nom;
+        document.getElementById('s-qte').value = s.qte; document.getElementById('s-pachat').value = s.pachat;
+        document.getElementById('s-ploc').value = s.ploc;
     }
+
+    async function deleteStock(r) { 
+        if(confirm("Supprimer ?")) {
+            await client.from('stock').delete().eq('ref', r);
+            stock = stock.filter(x => x.ref !== r); renderStock(); 
+        }
+    }
+
+    function cancelStock() { editStockRef = null; document.querySelectorAll('#tab-stock input').forEach(i => i.value=''); }
+
+    // --- CLIENTS ---
+    async function saveClient() {
+        let ent = document.getElementById('c-ent').value;
+        let nom = document.getElementById('c-nom').value;
+        let mail = document.getElementById('c-mail').value;
+        let tel = document.getElementById('c-tel').value;
+        let adr = document.getElementById('c-adr').value;
+        if(!ent) return;
+
+        const newCli = { id: editClientId || Date.now(), ent, nom, email:mail, tel, adr };
+        await client.from('clients').upsert(newCli);
+        
+        let i = clients.findIndex(x => x.id === newCli.id);
+        if(i > -1) clients[i] = newCli; else clients.push(newCli);
+        
+        cancelClient(); renderClients(); updateDatalists();
+    }
+
     function renderClients() {
-        let sVal = document.getElementById('search-clients').value.toLowerCase();
-        document.getElementById('table-clients-body').innerHTML = clients.filter(c => c.ent.toLowerCase().includes(sVal) || c.nom.toLowerCase().includes(sVal)).map(c => `<tr>
-            <td>${c.ent}</td><td>${c.nom}</td><td>${c.tel}</td><td>${c.email}</td>
+        document.getElementById('table-clients-body').innerHTML = clients.map(c => `<tr>
+            <td><b>${c.ent}</b></td><td>${c.nom}</td><td>${c.email}</td>
             <td><button class="btn-mini btn-edit" onclick="editClient(${c.id})">Edit</button> <button class="btn-mini btn-delete" onclick="deleteClient(${c.id})">X</button></td></tr>`).join('');
     }
-    function editClient(id) { let c = clients.find(x => x.id === id); editClientId = id; document.getElementById('c-ent').value = c.ent; document.getElementById('c-nom').value = c.nom; document.getElementById('c-tel').value = c.tel; document.getElementById('c-email').value = c.email; document.getElementById('btn-save-client').innerText = "Mettre à jour"; document.getElementById('btn-cancel-client').style.display = "inline-block"; }
-    
-    async function deleteClient(id) { 
-        if(confirm("Supprimer ce client ?")) { 
-            clients = clients.filter(c => c.id !== id); 
-            renderClients(); 
-            await supabaseClient.from('clients').delete().eq('id', id);
-        } 
+
+    function editClient(id) {
+        let c = clients.find(x => x.id === id); editClientId = id;
+        document.getElementById('c-ent').value = c.ent; document.getElementById('c-nom').value = c.nom;
+        document.getElementById('c-mail').value = c.email; document.getElementById('c-tel').value = c.tel;
+        document.getElementById('c-adr').value = c.adr;
     }
-    function cancelClient() { editClientId = null; ['c-ent','c-nom','c-tel','c-email'].forEach(id => document.getElementById(id).value = ''); document.getElementById('btn-save-client').innerText = "Enregistrer Client"; document.getElementById('btn-cancel-client').style.display = "none"; }
+
+    async function deleteClient(id) { 
+        if(confirm("Supprimer ?")) {
+            await client.from('clients').delete().eq('id', id);
+            clients = clients.filter(x => x.id !== id); renderClients(); 
+        }
+    }
+
+    function cancelClient() { editClientId = null; document.querySelectorAll('#tab-clients input').forEach(i => i.value=''); }
 
     // --- DOSSIERS ---
     function renderDossierList() {
@@ -386,37 +438,53 @@
         document.getElementById('table-dossiers-body').innerHTML = sorted.map(d => `<tr><td>${d.immoD || '-'}</td><td><b>${d.nom}</b></td><td>${d.cli || '-'}</td>
             <td><button class="btn-mini" onclick="openDossier(${d.id})">Ouvrir</button> <button class="btn-mini btn-delete" onclick="deleteDossier(${d.id})">X</button></td></tr>`).join('');
     }
+
     async function createDossier() {
         let n = prompt("Nom du projet ?"); if(!n) return;
         let d = { id: Date.now(), nom: n, coeff: 1, remiseG: 0, notes: "", cats: [{id: Date.now()+1, nom: "Matériel", items: [], remise: 0}] };
-        dossiers.push(d); 
-        openDossier(d.id);
-        await supabaseClient.from('dossiers').insert(d);
+        await client.from('dossiers').insert(d);
+        dossiers.push(d); renderDossierList(); openDossier(d.id);
     }
+
+    async function deleteDossier(id) {
+        if(confirm("Supprimer ce dossier ?")) {
+            await client.from('dossiers').delete().eq('id', id);
+            dossiers = dossiers.filter(x => x.id !== id); renderDossierList();
+        }
+    }
+
     function openDossier(id) {
         activeDossierId = id; let d = dossiers.find(x => x.id === id);
-        document.getElementById('view-list-dossiers').style.display = 'none'; document.getElementById('view-detail-dossier').style.display = 'block';
+        document.getElementById('view-list-dossiers').style.display = 'none'; 
+        document.getElementById('view-detail-dossier').style.display = 'block';
         document.getElementById('det-nom').value = d.nom; 
         document.getElementById('det-cli').value = d.cli || ''; 
         document.getElementById('det-coeff').value = d.coeff || 1; 
         document.getElementById('det-rem-g').value = d.remiseG || 0;
         document.getElementById('det-notes').value = d.notes || "";
-        ['immo','livr','mont','show','demo','recu'].forEach(k => { document.getElementById(`d-${k}-d`).value = d[`${k}D`] || ''; document.getElementById(`d-${k}-f`).value = d[`${k}F`] || ''; });
+        ['immo','livr','mont','show','demo','recu'].forEach(k => { 
+            document.getElementById(`d-${k}-d`).value = d[`${k}D`] || ''; 
+            document.getElementById(`d-${k}-f`).value = d[`${k}F`] || ''; 
+        });
         renderCats();
     }
-    function syncDossier() {
+
+    async function syncDossier() {
         let d = dossiers.find(x => x.id === activeDossierId);
         d.nom = document.getElementById('det-nom').value; 
         d.cli = document.getElementById('det-cli').value; 
         d.coeff = parseFloat(document.getElementById('det-coeff').value) || 1; 
         d.remiseG = parseFloat(document.getElementById('det-rem-g').value) || 0;
         d.notes = document.getElementById('det-notes').value;
-        ['immo','livr','mont','show','demo','recu'].forEach(k => { d[`${k}D`] = document.getElementById(`d-${k}-d`).value; d[`${k}F`] = document.getElementById(`d-${k}-f`).value; });
+        ['immo','livr','mont','show','demo','recu'].forEach(k => { 
+            d[`${k}D`] = document.getElementById(`d-${k}-d`).value; 
+            d[`${k}F`] = document.getElementById(`d-${k}-f`).value; 
+        });
+        await client.from('dossiers').upsert(d);
         renderCats();
-        supabaseClient.from('dossiers').upsert(d); // Envoi non-bloquant
     }
-    function navToDossier(id) { showTab('dossiers'); openDossier(id); }
 
+    // --- LOGIQUE MATERIEL (CATS & ITEMS) ---
     function renderCats() {
         let d = dossiers.find(x => x.id === activeDossierId);
         let cont = document.getElementById('dossier-cats-container'); cont.innerHTML = ""; let totalBrut = 0;
@@ -430,17 +498,52 @@
                 return `<tr><td>${it.isCustom ? 'MANU' : it.ref}</td><td><span class="${it.isCustom ? 'item-clickable item-custom' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'label')` : ''}">${nom}</span></td><td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td><td><span class="${it.isCustom ? 'item-clickable' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'pUnit')` : ''}">${pUnit}€</span></td><td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td><td style="font-weight:bold;">${ligneNet.toFixed(2)}€</td><td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td></tr>`;
             }).join('');
             let catFinal = catNet * (1 - cat.remise/100); totalBrut += catFinal;
-            let div = document.createElement('div'); div.className = 'categorie-bloc';
-            div.innerHTML = `<div class="categorie-header"><b onclick="renameCat(${cat.id})" style="cursor:pointer;">${cat.nom}</b><div>Remise: <input type="number" style="width:50px" value="${cat.remise}" onchange="updateCatRem(${cat.id},this.value)">%</div><button class="btn-mini btn-delete" onclick="removeCat(${cat.id})">Suppr</button></div>
-                <div style="padding:10px; background:#f8f9fa; display:flex; gap:10px;"><input type="text" id="add-ref-${cat.id}" list="dl-stock" placeholder="Réf Stock" style="width:150px;"><input type="number" id="add-qte-${cat.id}" placeholder="Qté" style="width:70px;"><button class="btn-mini" onclick="addItem(${cat.id})">Ajouter</button><button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})">+ Ligne Manuelle</button></div>
-                <table><thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Unit/J</th><th>Rem.</th><th>Total</th><th></th></tr></thead><tbody>${itemsHtml}</tbody></table>
-                <div style="text-align:right; padding:10px; font-weight:bold; background:#eee;">Sous-total : ${catFinal.toFixed(2)}€</div>`;
+            let div = document.createElement('div'); div.className = "categorie-bloc";
+            div.innerHTML = `<div class="categorie-header"><input type="text" value="${cat.nom}" onchange="renameCat(${cat.id}, this.value)" style="width:200px; font-weight:bold;"><div>Remise cat. : <input type="number" value="${cat.remise}" onchange="remiseCat(${cat.id}, this.value)" style="width:50px;">% <button class="btn-mini btn-delete" onclick="removeCat(${cat.id})">Suppr. Catégorie</button></div></div>
+                <table><thead><tr><th>Réf</th><th>Désignation</th><th>Qte</th><th>P.U.</th><th>Rem.</th><th>Sous-Total</th><th></th></tr></thead><tbody>${itemsHtml}</tbody></table>
+                <div style="padding:10px; background:#f8f9fa; display:flex; gap:10px;">
+                    <input type="text" id="add-ref-${cat.id}" placeholder="Réf Stock" style="width:120px;" list="dl-stock">
+                    <input type="number" id="add-qte-${cat.id}" value="1" style="width:60px;">
+                    <button class="btn-mini" onclick="addItem(${cat.id})">+ Ajouter</button>
+                    <button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})">+ Manuel</button>
+                    <div style="margin-left:auto; font-weight:bold;">Total Catégorie : ${catFinal.toFixed(2)}€</div>
+                </div>`;
             cont.appendChild(div);
         });
         let final = totalBrut * (1 - d.remiseG/100);
         document.getElementById('dossier-recap').innerHTML = `<div>Total Brut : ${totalBrut.toFixed(2)}€</div><div style="font-size:1.5em; font-weight:bold;">NET À PAYER : ${final.toFixed(2)}€</div>`;
     }
 
+    // Fonctions de modification Dossier (identiques à avant, mais avec syncDossier)
+    function addCat() { dossiers.find(x => x.id === activeDossierId).cats.push({id: Date.now(), nom: "Nouvelle catégorie", items: [], remise: 0}); syncDossier(); }
+    function removeCat(id) { if(confirm("Supprimer cette catégorie ?")) { let d = dossiers.find(x => x.id === activeDossierId); d.cats = d.cats.filter(c => c.id !== id); syncDossier(); } }
+    function renameCat(id, val) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === id).nom = val; syncDossier(); }
+    function remiseCat(id, val) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === id).remise = parseFloat(val) || 0; syncDossier(); }
+    
+    function addItem(catId) { 
+        let r = document.getElementById('add-ref-'+catId).value.toUpperCase(); let q = parseInt(document.getElementById('add-qte-'+catId).value) || 1;
+        if(!stock.find(s => s.ref === r)) return;
+        if(!checkAvailability(r, q, activeDossierId, null, catId)) { if(!confirm("ALERTE STOCK : Manque sur cette période. Ajouter ?")) return; }
+        dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:q, remise:0, isCustom:false}); syncDossier(); 
+    }
+    function addCustomItem(catId) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({ref:'MANU', label:'Prestation', qte:1, pUnit:0, remise:0, isCustom:true}); syncDossier(); }
+    function removeItem(catId, idx) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.splice(idx, 1); syncDossier(); }
+    function editItem(catId, idx, field) {
+        let it = dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items[idx];
+        let val = prompt("Nouvelle valeur ?", field==='label' ? it.label : (field==='qte' ? it.qte : (field==='pUnit' ? it.pUnit : it.remise)));
+        if(val !== null) {
+            if(field === 'qte') {
+                let nQ = parseInt(val) || 0;
+                if(!it.isCustom && !checkAvailability(it.ref, nQ, activeDossierId, idx, catId)) { if(!confirm("ALERTE STOCK. Continuer ?")) return; }
+                it.qte = nQ;
+            } else if(field === 'pUnit') it.pUnit = parseFloat(val) || 0;
+            else if(field === 'remise') it.remise = parseFloat(val) || 0;
+            else if(field === 'label') it.label = val;
+            syncDossier();
+        }
+    }
+
+    // --- DISPONIBILITES ---
     function checkAvailability(ref, addedQty, dossierId, isModIdx = null, catId = null) {
         let d = dossiers.find(x => x.id === dossierId); if(!d.immoD || !d.immoF) return true; 
         let s = stock.find(x => x.ref === ref);
@@ -451,7 +554,10 @@
             dossiers.forEach(dos => {
                 if(iso >= dos.immoD && iso <= dos.immoF) {
                     dos.cats.forEach(c => c.items.forEach((it, idx) => {
-                        if(it.ref === ref && !it.isCustom) { if(dos.id === dossierId && c.id === catId && idx === isModIdx) return; booked += it.qte; }
+                        if(it.ref === ref && !it.isCustom) { 
+                            if(dos.id === dossierId && c.id === catId && idx === isModIdx) return; 
+                            booked += it.qte; 
+                        }
                     }));
                 }
             });
@@ -459,52 +565,27 @@
         }
         return true;
     }
-    function addItem(catId) { 
-        let r = document.getElementById('add-ref-'+catId).value.toUpperCase(); let q = parseInt(document.getElementById('add-qte-'+catId).value) || 1;
-        if(!stock.find(s => s.ref === r)) return;
-        if(!checkAvailability(r, q, activeDossierId)) { if(!confirm("ALERTE STOCK : Manque sur cette période. Ajouter ?")) return; }
-        dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:q, remise:0, isCustom:false}); syncDossier(); 
-    }
-    function addCustomItem(catId) {
-        let label = prompt("Nom de l'article / prestation ?"); if(!label) return;
-        let pUnit = parseFloat(prompt("Prix unitaire / Jour ?", "0")) || 0;
-        dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({label:label, pUnit:pUnit, qte:1, remise:0, isCustom:true}); syncDossier();
-    }
-    function editItem(catId, idx, key) { 
-        let it = dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items[idx];
-        let v = prompt("Nouvelle valeur :", it[key]); if(v === null) return;
-        if(key === 'qte' && !it.isCustom && !checkAvailability(it.ref, parseFloat(v), activeDossierId, idx, catId)) { if(!confirm("ALERTE STOCK : Manque sur cette période. Valider ?")) return; }
-        it[key] = (key === 'label') ? v : parseFloat(v) || 0; syncDossier(); 
-    }
-    function updateCatRem(catId, v) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).remise = parseFloat(v) || 0; syncDossier(); }
-    function addCat() { let n = prompt("Nom catégorie :"); if(n) dossiers.find(x => x.id === activeDossierId).cats.push({id:Date.now(), nom:n, items:[], remise:0}); syncDossier(); }
-    function renameCat(id) { let c = dossiers.find(x => x.id === activeDossierId).cats.find(x => x.id === id); let n = prompt("Nom :", c.nom); if(n) { c.nom = n; syncDossier(); } }
-    function removeCat(id) { if(confirm("Supprimer cette catégorie ?")) { let d = dossiers.find(x => x.id === activeDossierId); d.cats = d.cats.filter(c => c.id !== id); syncDossier(); } }
-    function removeItem(catId, idx) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.splice(idx, 1); syncDossier(); }
-    async function deleteDossier(id) { 
-        if(confirm("Supprimer ce dossier ?")) { 
-            dossiers = dossiers.filter(d => d.id !== id); 
-            renderDossierList(); 
-            await supabaseClient.from('dossiers').delete().eq('id', id);
-        } 
-    }
 
-    // --- DISPO ---
     function checkDispo() {
-        let ref = document.getElementById('dispo-ref').value.toUpperCase(); let dStr = document.getElementById('dispo-d').value; let fStr = document.getElementById('dispo-f').value;
-        if(!ref || !dStr || !fStr) return;
-        let s = stock.find(x => x.ref === ref); if(!s) return alert("Article inexistant");
-        let cur = new Date(dStr); let end = new Date(fStr); let h = `<h3>${s.nom} (Total: ${s.qte})</h3>`;
+        let ref = document.getElementById('dispo-ref').value.toUpperCase();
+        let d1 = document.getElementById('dispo-d').value;
+        let d2 = document.getElementById('dispo-f').value;
+        let s = stock.find(x => x.ref === ref);
+        if(!s || !d1 || !d2) return;
+        let h = `<h3>Disponibilités pour ${s.nom} (Total: ${s.qte})</h3>`;
+        let cur = new Date(d1); let end = new Date(d2);
         while(cur <= end) {
-            let iso = cur.toISOString().split('T')[0]; let qPrise = 0; let bads = [];
-            dossiers.forEach(d => {
-                if(d.immoD && d.immoF && iso >= d.immoD && iso <= d.immoF) {
-                    let qd = 0; d.cats.forEach(c => c.items.forEach(it => { if(!it.isCustom && it.ref === ref) qd += it.qte; }));
-                    if(qd > 0) { qPrise += qd; bads.push(`<span class="badge-link" onclick="navToDossier(${d.id})">📁 ${d.nom} (-${qd})</span>`); }
+            let iso = cur.toISOString().split('T')[0];
+            let used = 0; let details = [];
+            dossiers.forEach(dos => {
+                if(iso >= dos.immoD && iso <= dos.immoF) {
+                    dos.cats.forEach(c => c.items.forEach(it => {
+                        if(it.ref === ref && !it.isCustom) { used += it.qte; details.push(`${it.qte} (${dos.nom})`); }
+                    }));
                 }
             });
-            let reste = s.qte - qPrise; let color = reste < 0 ? '#f8d7da' : (reste === 0 ? '#fff3cd' : '#d4edda');
-            h += `<div style="background:${color}; padding:10px; border:1px solid #ccc; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; border-radius:6px;"><b>${iso}</b> <div style="flex:1;">${bads.join('') || '<i>Libre</i>'}</div> <b>Reste : ${reste}</b></div>`;
+            let reste = s.qte - used;
+            h += `<div style="padding:5px; border-bottom:1px solid #ddd; color:${reste < 0 ? 'red':'black'}">${iso} : Reservé ${used} (${details.join(', ') || 'aucun'}) - <b>Reste : ${reste}</b></div>`;
             cur.setDate(cur.getDate()+1);
         }
         document.getElementById('dispo-result').innerHTML = h;
@@ -517,79 +598,61 @@
         let d = dossiers.find(x => x.id === activeDossierId);
         let client = clients.find(c => c.ent === d.cli || c.nom === d.cli) || { nom: d.cli, email: "" };
 
-        // En-tête bleu marine
         doc.setFillColor(10, 35, 66); doc.rect(0, 0, 210, 40, 'F');
-        if(settings.logoB64) {
-            try { doc.addImage(settings.logoB64, 'PNG', 10, 5, 30, 30); } catch(e){}
-        }
+        if(settings.logoB64) { try { doc.addImage(settings.logoB64, 'PNG', 10, 5, 30, 30); } catch(e){} }
         doc.setTextColor(255, 255, 255); doc.setFontSize(18);
         doc.text(settings.nom || "L'Argentique Events", 45, 20);
         let labelDoc = type === 'prep' ? 'BON DE PRÉPARATION' : (type === 'devis' ? 'DEVIS' : 'FACTURE');
         doc.setFontSize(10); doc.text(labelDoc, 195, 20, { align: 'right' });
 
-        // Coordonnées
         doc.setTextColor(0, 0, 0); doc.setFontSize(9);
         doc.text(`Émetteur :\n${settings.nom}\n${settings.adr || ''}\n${settings.mail || ''}\n${settings.tel || ''}`, 15, 48);
         doc.text(`Destinataire :\n${client.ent || client.nom || d.cli}\n${client.email || ''}\n${client.tel || ''}`, 130, 48);
 
-        // Dates détaillées
         let currentY = 75;
         doc.setFont(undefined, 'bold'); doc.text(`PROJET : ${d.nom}`, 15, currentY); doc.setFont(undefined, 'normal');
         let datesText = [];
         if(d.livrD) datesText.push(`Livraison : ${d.livrD}`);
-        if(d.montD) datesText.push(`Montage : ${d.montD}`);
         if(d.showD) datesText.push(`SHOW : ${d.showD}`);
         if(d.demoD) datesText.push(`Démontage : ${d.demoD}`);
-        if(d.recuD) datesText.push(`Récupération : ${d.recuD}`);
-        
-        doc.setFontSize(8);
-        let dateLine = datesText.join(' | ');
-        doc.text(dateLine, 15, currentY + 5);
+        doc.setFontSize(8); doc.text(datesText.join(' | '), 15, currentY + 5);
         currentY += 12;
 
-        // ZONE TEXTE LIBRE (NOTES)
-        if(d.notes && d.notes.trim() !== "") {
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'italic');
+        if(d.notes) {
+            doc.setFontSize(9); doc.setFont(undefined, 'italic');
             let splitNotes = doc.splitTextToSize(d.notes, 180);
             doc.text(splitNotes, 15, currentY);
             currentY += (splitNotes.length * 5) + 5;
             doc.setFont(undefined, 'normal');
         }
 
-        // Tableau Matériel
-        let body = []; let totalBrut = 0;
+        let tableRows = []; let totalBrut = 0;
         d.cats.forEach(cat => {
-            body.push([{ content: cat.nom + (cat.remise > 0 ? ` (Remise cat: ${cat.remise}%)` : ""), colSpan: (type === 'prep' ? 3 : 6), styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } }]);
-            let catTotal = 0;
+            tableRows.push([{ content: cat.nom, colSpan: (type==='prep'?2:5), styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } }]);
+            let catNet = 0;
             cat.items.forEach(it => {
-                let name = it.isCustom ? it.label : (stock.find(s => s.ref === it.ref)?.nom || '???');
-                let pu = it.isCustom ? it.pUnit : (stock.find(s => s.ref === it.ref)?.ploc || 0);
-                let lineNet = (it.qte * pu * d.coeff) * (1 - it.remise/100);
-                catTotal += lineNet;
-                if(type === 'prep') body.push([it.ref || 'MANU', name, it.qte]);
-                else body.push([name, it.qte, pu.toFixed(2)+'€', d.coeff, it.remise > 0 ? it.remise+'%' : '-', lineNet.toFixed(2)+'€']);
+                let nom, pUnit;
+                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
+                else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
+                let ligneNet = (it.qte * pUnit * d.coeff) * (1 - it.remise/100);
+                catNet += ligneNet;
+                if(type === 'prep') tableRows.push([it.qte, nom]);
+                else tableRows.push([nom, it.qte, pUnit.toFixed(2)+'€', it.remise+'%', ligneNet.toFixed(2)+'€']);
             });
-            totalBrut += catTotal * (1 - cat.remise/100);
+            let catFinal = catNet * (1 - cat.remise/100); totalBrut += catFinal;
         });
 
         doc.autoTable({
             startY: currentY,
-            head: type === 'prep' ? [['Réf', 'Désignation', 'Quantité']] : [['Désignation', 'Qté', 'PU Loc/J', 'Coeff', 'Rem.', 'Total NET']],
-            body: body,
-            headStyles: { fillColor: [10, 35, 66] }, theme: 'grid'
+            head: type==='prep' ? [['Qte', 'Désignation']] : [['Désignation', 'Qte', 'P.U. HT', 'Rem.', 'Total HT']],
+            body: tableRows,
+            theme: 'striped', headStyles: { fillColor: [10, 35, 66] }
         });
 
-        // Totaux et Mentions
         let finalY = doc.lastAutoTable.finalY + 10;
         if(type !== 'prep') {
             doc.setFontSize(12); doc.setFont(undefined, 'bold');
             let finalTotal = totalBrut * (1 - d.remiseG/100);
-            if(d.remiseG > 0) {
-                doc.text(`Total avant remise : ${totalBrut.toFixed(2)} €`, 195, finalY, { align: 'right' });
-                doc.text(`REMISE GLOBALE (${d.remiseG}%)`, 195, finalY + 7, { align: 'right' });
-                finalY += 14;
-            }
             doc.text(`TOTAL NET À PAYER : ${finalTotal.toFixed(2)} €`, 195, finalY, { align: 'right' });
             doc.setFontSize(8); doc.setFont(undefined, 'normal');
             doc.text("TVA non applicable, art. 293 B du CGI.", 15, finalY + 10);
@@ -605,8 +668,14 @@
         document.getElementById('dl-clients').innerHTML = clients.map(c => `<option value="${c.ent || c.nom}">${c.ent || c.nom}</option>`).join('');
     }
 
-    // Lancement de l'application
-    initApp();
+    // Vérifier session au chargement
+    client.auth.getSession().then(({ data }) => {
+        if (data.session) {
+            currentUser = data.session.user;
+            initApp();
+        }
+    });
+
 </script>
 </body>
 </html>
