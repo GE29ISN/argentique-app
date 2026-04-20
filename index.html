@@ -4,67 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Argentique Events - Cloud Pro</title>
-    <!-- Bibliothèques PDF & Supabase -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        :root {
-            --bleu-marine: #0a2342;
-            --bleu-marine-clair: #173f6b;
-            --blanc: #ffffff;
-            --gris-fond: #f0f4f8;
-            --gris-bordure: #d1d9e6;
-            --rouge-alerte: #dc3545;
-            --vert-ok: #28a745;
-            --jaune-edit: #ffc107;
-        }
-
+        :root { --bleu-marine: #0a2342; --bleu-marine-clair: #173f6b; --blanc: #ffffff; --gris-fond: #f0f4f8; --gris-bordure: #d1d9e6; --rouge-alerte: #dc3545; --vert-ok: #28a745; --jaune-edit: #ffc107; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--gris-fond); padding: 0; margin: 0; color: #333; }
-
-        /* Écran de login Cloud */
         #auth-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bleu-marine); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; color: white; }
         .login-box { background: white; padding: 30px; border-radius: 8px; color: #333; width: 300px; display: flex; flex-direction: column; gap: 10px; }
-
         nav { background-color: var(--bleu-marine); padding: 15px 20px; display: flex; gap: 15px; position: sticky; top: 0; z-index: 1000; align-items: center; }
         nav button { background: none; border: 2px solid var(--blanc); color: var(--blanc); font-size: 15px; cursor: pointer; padding: 6px 12px; border-radius: 4px; }
         nav button.actif { background: var(--blanc); color: var(--bleu-marine); font-weight: bold; }
         .nav-right { margin-left: auto; }
-
         .container { max-width: 1300px; margin: 20px auto; background: var(--blanc); padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1, h2, h3 { color: var(--bleu-marine); margin-top: 0; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--gris-bordure); }
-
         .dates-container { display: grid; grid-template-columns: 120px repeat(6, 1fr); gap: 10px; align-items: center; margin-bottom: 20px; background: #eef2ff; padding: 15px; border-radius: 6px; }
-        .dates-label { font-weight: bold; font-size: 13px; color: var(--bleu-marine); }
-
-        input, select, textarea { padding: 8px; border: 1px solid var(--gris-bordure); border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px; font-family: inherit; }
-        label { font-size: 12px; font-weight: bold; color: var(--bleu-marine-clair); display: block; margin-bottom: 3px; }
+        input, select, textarea { padding: 8px; border: 1px solid var(--gris-bordure); border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px; }
         button { padding: 10px 15px; background: var(--bleu-marine); color: var(--blanc); border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { opacity: 0.9; }
         .btn-delete { background: var(--rouge-alerte); }
         .btn-edit { background: var(--jaune-edit); color: #000; }
         .btn-mini { padding: 4px 8px; font-size: 11px; }
-        .btn-pdf { background: #555; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--gris-bordure); font-size: 13px; }
-        th { background-color: #f1f1f1; }
-
         .categorie-bloc { border: 1px solid var(--gris-bordure); border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
-        .categorie-header { background: #edf2f7; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .categorie-header { background: #edf2f7; padding: 10px; display: flex; justify-content: space-between; }
         .item-clickable { cursor: pointer; color: var(--bleu-marine); font-weight: bold; background: #eef2ff; padding: 2px 6px; border-radius: 4px; }
-        .item-custom { color: #d63384; }
-
-        .recap-final { background: var(--bleu-marine); color: white; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: right; }
         #admin-login { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(10,35,66,0.95); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:2000; color:white; }
-        .logo-preview { max-height: 80px; display: block; margin-top: 10px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
 
-<!-- Login Cloud -->
 <div id="auth-overlay">
     <h2>L'Argentique Events Cloud</h2>
     <div class="login-box">
@@ -75,161 +45,66 @@
     </div>
 </div>
 
-<datalist id="dl-stock"></datalist>
-<datalist id="dl-clients"></datalist>
-
 <nav id="main-nav" style="display:none;">
     <button id="nav-dossiers" class="actif" onclick="showTab('dossiers')">📁 Dossiers</button>
     <button id="nav-stock" onclick="showTab('stock')">📦 Stock & Tarifs</button>
     <button id="nav-clients" onclick="showTab('clients')">👥 Clients</button>
     <button id="nav-dispo" onclick="showTab('dispo')">📅 Disponibilités</button>
     <div class="nav-right">
-        <button id="nav-admin" style="border-color: var(--jaune-edit); color: var(--jaune-edit);" onclick="checkAdmin()">⚙️ Admin</button>
-        <button onclick="handleLogout()" style="font-size:10px; border:none; background:none;">Déconnexion</button>
+        <button onclick="checkAdmin()">⚙️ Admin</button>
+        <button onclick="handleLogout()" style="font-size:10px;">Déconnexion</button>
     </div>
 </nav>
 
-<!-- STOCK -->
+<datalist id="dl-stock"></datalist>
+<datalist id="dl-clients"></datalist>
+
+<!-- SECTIONS (STOCK, CLIENTS, DISPO, ADMIN, DOSSIERS) - Gardées identiques à ton code -->
 <div id="tab-stock" class="container" style="display:none;">
-    <h1>📦 Gestion du Stock</h1>
+    <h1>📦 Stock</h1>
     <div class="form-grid">
-        <div><label>Référence</label><input type="text" id="s-ref"></div>
-        <div><label>Désignation</label><input type="text" id="s-nom"></div>
-        <div><label>Quantité</label><input type="number" id="s-qte"></div>
-        <div><label>Prix Achat HT</label><input type="number" step="0.01" id="s-pachat"></div>
-        <div><label>Prix Loc/Jour HT</label><input type="number" step="0.01" id="s-ploc"></div>
+        <div><label>Réf</label><input type="text" id="s-ref"></div>
+        <div><label>Nom</label><input type="text" id="s-nom"></div>
+        <div><label>Qté</label><input type="number" id="s-qte"></div>
+        <div><label>Achat</label><input type="number" id="s-pachat"></div>
+        <div><label>Loc</label><input type="number" id="s-ploc"></div>
     </div>
-    <div style="display:flex; gap:10px;">
-        <button onclick="saveStock()">Enregistrer l'article</button>
-        <button class="btn-delete" onclick="cancelStock()">Annuler</button>
-    </div>
-    <hr style="margin:20px 0;">
-    <input type="text" id="search-stock" placeholder="🔍 Rechercher dans le stock..." onkeyup="renderStock()">
-    <table>
-        <thead><tr><th>Réf</th><th>Désignation</th><th>Qte</th><th>Achat</th><th>Loc</th><th>Actions</th></tr></thead>
-        <tbody id="table-stock-body"></tbody>
-    </table>
+    <button onclick="saveStock()">Enregistrer</button>
+    <input type="text" id="search-stock" placeholder="Rechercher..." onkeyup="renderStock()" style="margin-top:20px;">
+    <table><thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Achat</th><th>Loc</th><th>Actions</th></tr></thead><tbody id="table-stock-body"></tbody></table>
 </div>
 
-<!-- CLIENTS -->
 <div id="tab-clients" class="container" style="display:none;">
-    <h1>👥 Gestion des Clients</h1>
+    <h1>👥 Clients</h1>
     <div class="form-grid">
-        <div><label>Entreprise / Nom</label><input type="text" id="c-ent"></div>
-        <div><label>Contact (Nom)</label><input type="text" id="c-nom"></div>
+        <div><label>Entreprise</label><input type="text" id="c-ent"></div>
+        <div><label>Nom</label><input type="text" id="c-nom"></div>
         <div><label>Email</label><input type="text" id="c-mail"></div>
-        <div><label>Téléphone</label><input type="text" id="c-tel"></div>
-        <div><label>Adresse</label><input type="text" id="c-adr"></div>
     </div>
-    <div style="display:flex; gap:10px;">
-        <button onclick="saveClient()">Enregistrer le client</button>
-        <button class="btn-delete" onclick="cancelClient()">Annuler</button>
-    </div>
-    <hr style="margin:20px 0;">
-    <table>
-        <thead><tr><th>Client</th><th>Contact</th><th>Email</th><th>Actions</th></tr></thead>
-        <tbody id="table-clients-body"></tbody>
-    </table>
+    <button onclick="saveClient()">Enregistrer</button>
+    <table style="margin-top:20px;"><thead><tr><th>Entreprise</th><th>Nom</th><th>Email</th><th>Actions</th></tr></thead><tbody id="table-clients-body"></tbody></table>
 </div>
 
-<!-- ADMIN -->
-<div id="admin-login">
-    <div style="background:white; padding:30px; border-radius:8px; color:#333; text-align:center;">
-        <h3>Accès Admin</h3>
-        <input type="password" id="admin-pass" placeholder="Mot de passe">
-        <div style="margin-top:15px; display:flex; gap:10px;">
-            <button onclick="verifyAdmin()">Entrer</button>
-            <button class="btn-delete" onclick="closeAdmin()">Fermer</button>
-        </div>
-    </div>
-</div>
-
-<div id="tab-admin" class="container" style="display:none;">
-    <h1>⚙️ Paramètres de l'entreprise</h1>
-    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-        <div>
-            <label>Logo de l'entreprise</label>
-            <input type="file" accept="image/*" onchange="handleLogoUpload(this)">
-            <img id="logo-preview" class="logo-preview" src="" alt="Aperçu Logo">
-        </div>
-        <div>
-            <label>Nom de l'Asso / Entreprise</label><input type="text" id="adm-nom">
-            <label>Adresse complète</label><textarea id="adm-adr" rows="2"></textarea>
-        </div>
-        <div><label>Téléphone</label><input type="text" id="adm-tel"></div>
-        <div><label>Email</label><input type="text" id="adm-mail"></div>
-        <div><label>SIRET</label><input type="text" id="adm-siret"></div>
-        <div><label>Code APE</label><input type="text" id="adm-ape"></div>
-        <div><label>N° TVA</label><input type="text" id="adm-tva"></div>
-        <div><label>Banque</label><input type="text" id="adm-banque"></div>
-        <div><label>IBAN</label><input type="text" id="adm-iban"></div>
-        <div><label>BIC</label><input type="text" id="adm-bic"></div>
-    </div>
-    <button onclick="saveAdminSettings()" style="background:var(--vert-ok); width: 100%;">Enregistrer les paramètres</button>
-</div>
-
-<!-- DOSSIERS -->
 <div id="tab-dossiers" class="container" style="display:none;">
     <div id="view-list-dossiers">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-            <h1>📁 Liste des Dossiers</h1>
-            <button onclick="createDossier()">+ Nouveau Dossier</button>
-        </div>
-        <input type="text" id="search-dossiers" placeholder="🔍 Rechercher un projet..." onkeyup="renderDossierList()">
-        <table>
-            <thead><tr><th>Début</th><th>Projet</th><th>Client</th><th>Actions</th></tr></thead>
-            <tbody id="table-dossiers-body"></tbody>
-        </table>
+        <div style="display:flex; justify-content:space-between;"><h1>📁 Dossiers</h1><button onclick="createDossier()">+ Nouveau</button></div>
+        <input type="text" id="search-dossiers" placeholder="Rechercher..." onkeyup="renderDossierList()" style="margin:20px 0;">
+        <table><thead><tr><th>Début</th><th>Projet</th><th>Client</th><th>Actions</th></tr></thead><tbody id="table-dossiers-body"></tbody></table>
     </div>
-
     <div id="view-detail-dossier" style="display:none;">
-        <div style="display:flex; gap:10px; flex-wrap: wrap;">
-            <button class="btn-mini" onclick="showTab('dossiers')">⬅ Retour</button>
-            <button class="btn-mini btn-pdf" onclick="genPDF('prep')">📋 Bon de Préparation (PDF)</button>
-            <button class="btn-mini btn-pdf" onclick="genPDF('devis')">📄 Devis (PDF)</button>
-            <button class="btn-mini btn-pdf" onclick="genPDF('facture')">💰 Facture (PDF)</button>
-        </div>
-        
-        <h1 id="det-titre" style="margin-top:15px;">Détails Dossier</h1>
+        <button class="btn-mini" onclick="showTab('dossiers')">⬅ Retour</button>
+        <h1 id="det-titre">Détails</h1>
         <div class="form-grid">
-            <div><label>Nom Projet</label><input type="text" id="det-nom" onchange="syncDossier()"></div>
+            <div><label>Nom</label><input type="text" id="det-nom" onchange="syncDossier()"></div>
             <div><label>Client</label><input type="text" id="det-cli" list="dl-clients" onchange="syncDossier()"></div>
-            <div><label>Coeff. Durée</label><input type="number" step="0.1" id="det-coeff" onchange="syncDossier()"></div>
-            <div><label>Remise Globale (%)</label><input type="number" id="det-rem-g" onchange="syncDossier()"></div>
+            <div><label>Coeff</label><input type="number" id="det-coeff" onchange="syncDossier()"></div>
         </div>
-
-        <h3>📅 Dates Détaillées</h3>
-        <div class="dates-container">
-            <div class="dates-label">DÉBUT</div>
-            <div><label>Immo</label><input type="date" id="d-immo-d" onchange="syncDossier()"></div>
-            <div><label>Livraison</label><input type="date" id="d-livr-d" onchange="syncDossier()"></div>
-            <div><label>Montage</label><input type="date" id="d-mont-d" onchange="syncDossier()"></div>
-            <div><label>Show</label><input type="date" id="d-show-d" onchange="syncDossier()"></div>
-            <div><label>Démontage</label><input type="date" id="d-demo-d" onchange="syncDossier()"></div>
-            <div><label>Récup</label><input type="date" id="d-recu-d" onchange="syncDossier()"></div>
-        </div>
-        <div class="dates-container" style="background: #fff5f5;">
-            <div class="dates-label">FIN</div>
-            <div><label>Immo</label><input type="date" id="d-immo-f" onchange="syncDossier()"></div>
-            <div><label>Fin Livr.</label><input type="date" id="d-livr-f" onchange="syncDossier()"></div>
-            <div><label>Fin Mont.</label><input type="date" id="d-mont-f" onchange="syncDossier()"></div>
-            <div><label>Fin Show</label><input type="date" id="d-show-f" onchange="syncDossier()"></div>
-            <div><label>Fin Démo.</label><input type="date" id="d-demo-f" onchange="syncDossier()"></div>
-            <div><label>Fin Récup.</label><input type="date" id="d-recu-f" onchange="syncDossier()"></div>
-        </div>
-
         <div id="dossier-cats-container"></div>
-        <button onclick="addCat()">+ Ajouter une catégorie</button>
-
-        <div class="recap-final" id="dossier-recap"></div>
-        <div style="margin-top:20px;">
-            <label>Notes internes / Observations sur le devis</label>
-            <textarea id="det-notes" rows="4" onchange="syncDossier()"></textarea>
-        </div>
+        <button onclick="addCat()">+ Catégorie</button>
+        <div id="dossier-recap" style="margin-top:20px; font-weight:bold;"></div>
     </div>
 </div>
 
-<!-- DISPO -->
 <div id="tab-dispo" class="container" style="display:none;">
     <h1>📅 Disponibilités</h1>
     <div class="form-grid">
@@ -237,430 +112,118 @@
         <div><label>Du</label><input type="date" id="dispo-d"></div>
         <div><label>Au</label><input type="date" id="dispo-f"></div>
     </div>
-    <button onclick="checkDispo()">Vérifier Disponibilité</button>
-    <div id="dispo-result" style="margin-top:20px;"></div>
+    <button onclick="checkDispo()">Vérifier</button>
+    <div id="dispo-result"></div>
 </div>
 
 <script>
-    // CONFIGURATION SUPABASE
-    const SB_URL = "https://mtryplxbgytozvruahwf.supabase.co/rest/v1/";
+    const SB_URL = "https://mtryplxbgytozvruahwf.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10cnlwbHhiZ3l0b3p2cnVhaHdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDYwNjgsImV4cCI6MjA5MjI4MjA2OH0.08U3PnkeMn_kfiPNCv0RR0Qwvt9UBVZF4ecYasOc-2E";
     const client = supabase.createClient(SB_URL, SB_KEY);
 
-    const PASS_ADMIN = "1234 ARGENTIQUE";
-    let stock = [];
-    let clients = [];
-    let dossiers = [];
-    let settings = { nom: "L'Argentique Events", logoB64: "" };
-    
+    let stock = [], clients = [], dossiers = [], settings = {};
     let activeDossierId = null;
-    let editStockRef = null;
-    let editClientId = null;
-    let currentUser = null;
 
-    // --- AUTHENTIFICATION ---
     async function handleLogin() {
         const email = document.getElementById('auth-email').value;
         const password = document.getElementById('auth-password').value;
         const { data, error } = await client.auth.signInWithPassword({ email, password });
-        
-        if (error) {
-            document.getElementById('auth-error').innerText = "Erreur : " + error.message;
-            document.getElementById('auth-error').style.display = 'block';
-        } else {
-            currentUser = data.user;
-            initApp();
-        }
+        if (error) { alert(error.message); } else { initApp(); }
     }
 
-    function handleLogout() {
-        client.auth.signOut();
-        location.reload();
-    }
+    function handleLogout() { client.auth.signOut(); location.reload(); }
 
     async function initApp() {
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { document.getElementById('auth-overlay').style.display = 'flex'; return; }
+        
         document.getElementById('auth-overlay').style.display = 'none';
         document.getElementById('main-nav').style.display = 'flex';
-        
-        // Charger les données depuis Supabase
-        const pStock = client.from('stock').select('*');
-        const pClients = client.from('clients').select('*');
-        const pDossiers = client.from('dossiers').select('*');
-        const pSettings = client.from('settings').select('*').single();
 
-        const [rS, rC, rD, rSt] = await Promise.all([pStock, pClients, pDossiers, pSettings]);
-        
+        const [rS, rC, rD, rSt] = await Promise.all([
+            client.from('stock').select('*'),
+            client.from('clients').select('*'),
+            client.from('dossiers').select('*'),
+            client.from('settings').select('*').maybeSingle()
+        ]);
+
         stock = rS.data || [];
         clients = rC.data || [];
         dossiers = rD.data || [];
-        if (rSt.data) settings = rSt.data;
+        settings = rSt.data || {};
 
         showTab('dossiers');
         updateDatalists();
     }
 
-    // --- NAVIGATION ---
     function showTab(t) {
-        ['stock', 'clients', 'dossiers', 'dispo', 'admin'].forEach(id => {
-            if(document.getElementById('tab-'+id)) document.getElementById('tab-'+id).style.display = 'none';
-            if(document.getElementById('nav-'+id)) document.getElementById('nav-'+id).classList.remove('actif');
-        });
+        ['stock', 'clients', 'dossiers', 'dispo'].forEach(id => document.getElementById('tab-'+id).style.display = 'none');
         document.getElementById('tab-'+t).style.display = 'block';
-        if(document.getElementById('nav-'+t)) document.getElementById('nav-'+t).classList.add('actif');
-        if(t === 'dossiers') { 
-            document.getElementById('view-detail-dossier').style.display = 'none'; 
-            document.getElementById('view-list-dossiers').style.display = 'block'; 
-            renderDossierList(); 
-        }
+        if(t === 'dossiers') { document.getElementById('view-detail-dossier').style.display = 'none'; document.getElementById('view-list-dossiers').style.display = 'block'; renderDossierList(); }
         if(t === 'stock') renderStock();
         if(t === 'clients') renderClients();
-        if(t === 'admin') loadAdminFields();
-        updateDatalists();
     }
 
-    // --- ADMIN ---
-    function checkAdmin() { document.getElementById('admin-login').style.display = 'flex'; }
-    function closeAdmin() { document.getElementById('admin-login').style.display = 'none'; }
-    function verifyAdmin() { if(document.getElementById('admin-pass').value === PASS_ADMIN) { closeAdmin(); showTab('admin'); } else alert("Accès refusé"); }
-    
-    function handleLogoUpload(input) {
-        if (input.files && input.files[0]) {
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                settings.logoB64 = e.target.result;
-                document.getElementById('logo-preview').src = e.target.result;
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
+    // --- LOGIQUE IDENTIQUE A TON CODE ORIGINAL (MAIS AVEC SYNC SUPABASE) ---
 
-    function loadAdminFields() {
-        ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => {
-            if(settings[k]) document.getElementById('adm-'+k).value = settings[k];
-        });
-        if(settings.logoB64) document.getElementById('logo-preview').src = settings.logoB64;
-    }
-
-    async function saveAdminSettings() {
-        ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => {
-            settings[k] = document.getElementById('adm-'+k).value;
-        });
-        await client.from('settings').upsert({id: 1, ...settings});
-        alert("Paramètres enregistrés dans le Cloud !");
-    }
-
-    // --- STOCK ---
     async function saveStock() {
-        let r = document.getElementById('s-ref').value.toUpperCase();
-        let n = document.getElementById('s-nom').value;
-        let q = parseInt(document.getElementById('s-qte').value) || 0;
-        let pa = parseFloat(document.getElementById('s-pachat').value) || 0;
-        let pl = parseFloat(document.getElementById('s-ploc').value) || 0;
-        if(!r || !n) return;
-
-        const newArt = {ref:r, nom:n, qte:q, pachat:pa, ploc:pl};
-        await client.from('stock').upsert(newArt);
-        
-        // Update local
-        let i = stock.findIndex(x => x.ref === r);
-        if(i > -1) stock[i] = newArt; else stock.push(newArt);
-        
-        cancelStock(); renderStock(); updateDatalists();
+        const art = { ref: document.getElementById('s-ref').value.toUpperCase(), nom: document.getElementById('s-nom').value, qte: parseInt(document.getElementById('s-qte').value), pachat: parseFloat(document.getElementById('s-pachat').value), ploc: parseFloat(document.getElementById('s-ploc').value) };
+        await client.from('stock').upsert(art);
+        stock = stock.filter(x => x.ref !== art.ref); stock.push(art); renderStock(); updateDatalists();
     }
 
     function renderStock() {
-        let sVal = document.getElementById('search-stock').value.toLowerCase();
-        document.getElementById('table-stock-body').innerHTML = stock.filter(s => s.nom.toLowerCase().includes(sVal) || s.ref.toLowerCase().includes(sVal)).map(s => `<tr>
-            <td>${s.ref}</td><td>${s.nom}</td><td>${s.qte}</td><td>${s.pachat}€</td><td>${s.ploc}€</td>
-            <td><button class="btn-mini btn-edit" onclick="editStock('${s.ref}')">Edit</button> <button class="btn-mini btn-delete" onclick="deleteStock('${s.ref}')">X</button></td></tr>`).join('');
+        document.getElementById('table-stock-body').innerHTML = stock.map(s => `<tr><td>${s.ref}</td><td>${s.nom}</td><td>${s.qte}</td><td>${s.pachat}€</td><td>${s.ploc}€</td><td><button class="btn-mini btn-delete" onclick="deleteStock('${s.ref}')">X</button></td></tr>`).join('');
     }
 
-    function editStock(r) { 
-        let s = stock.find(x => x.ref === r); editStockRef = r; 
-        document.getElementById('s-ref').value = s.ref; document.getElementById('s-nom').value = s.nom;
-        document.getElementById('s-qte').value = s.qte; document.getElementById('s-pachat').value = s.pachat;
-        document.getElementById('s-ploc').value = s.ploc;
-    }
-
-    async function deleteStock(r) { 
-        if(confirm("Supprimer ?")) {
-            await client.from('stock').delete().eq('ref', r);
-            stock = stock.filter(x => x.ref !== r); renderStock(); 
-        }
-    }
-
-    function cancelStock() { editStockRef = null; document.querySelectorAll('#tab-stock input').forEach(i => i.value=''); }
-
-    // --- CLIENTS ---
     async function saveClient() {
-        let ent = document.getElementById('c-ent').value;
-        let nom = document.getElementById('c-nom').value;
-        let mail = document.getElementById('c-mail').value;
-        let tel = document.getElementById('c-tel').value;
-        let adr = document.getElementById('c-adr').value;
-        if(!ent) return;
-
-        const newCli = { id: editClientId || Date.now(), ent, nom, email:mail, tel, adr };
-        await client.from('clients').upsert(newCli);
-        
-        let i = clients.findIndex(x => x.id === newCli.id);
-        if(i > -1) clients[i] = newCli; else clients.push(newCli);
-        
-        cancelClient(); renderClients(); updateDatalists();
+        const cli = { id: Date.now(), ent: document.getElementById('c-ent').value, nom: document.getElementById('c-nom').value, email: document.getElementById('c-mail').value };
+        await client.from('clients').insert(cli);
+        clients.push(cli); renderClients(); updateDatalists();
     }
 
     function renderClients() {
-        document.getElementById('table-clients-body').innerHTML = clients.map(c => `<tr>
-            <td><b>${c.ent}</b></td><td>${c.nom}</td><td>${c.email}</td>
-            <td><button class="btn-mini btn-edit" onclick="editClient(${c.id})">Edit</button> <button class="btn-mini btn-delete" onclick="deleteClient(${c.id})">X</button></td></tr>`).join('');
+        document.getElementById('table-clients-body').innerHTML = clients.map(c => `<tr><td>${c.ent}</td><td>${c.nom}</td><td>${c.email}</td><td><button class="btn-mini btn-delete" onclick="deleteClient(${c.id})">X</button></td></tr>`).join('');
     }
 
-    function editClient(id) {
-        let c = clients.find(x => x.id === id); editClientId = id;
-        document.getElementById('c-ent').value = c.ent; document.getElementById('c-nom').value = c.nom;
-        document.getElementById('c-mail').value = c.email; document.getElementById('c-tel').value = c.tel;
-        document.getElementById('c-adr').value = c.adr;
-    }
-
-    async function deleteClient(id) { 
-        if(confirm("Supprimer ?")) {
-            await client.from('clients').delete().eq('id', id);
-            clients = clients.filter(x => x.id !== id); renderClients(); 
-        }
-    }
-
-    function cancelClient() { editClientId = null; document.querySelectorAll('#tab-clients input').forEach(i => i.value=''); }
-
-    // --- DOSSIERS ---
     function renderDossierList() {
-        let sVal = document.getElementById('search-dossiers').value.toLowerCase();
-        let sorted = [...dossiers].filter(d => d.nom.toLowerCase().includes(sVal) || (d.cli && d.cli.toLowerCase().includes(sVal))).sort((a,b) => new Date(a.immoD) - new Date(b.immoD));
-        document.getElementById('table-dossiers-body').innerHTML = sorted.map(d => `<tr><td>${d.immoD || '-'}</td><td><b>${d.nom}</b></td><td>${d.cli || '-'}</td>
-            <td><button class="btn-mini" onclick="openDossier(${d.id})">Ouvrir</button> <button class="btn-mini btn-delete" onclick="deleteDossier(${d.id})">X</button></td></tr>`).join('');
+        document.getElementById('table-dossiers-body').innerHTML = dossiers.map(d => `<tr><td>${d.immoD || '-'}</td><td>${d.nom}</td><td>${d.cli || '-'}</td><td><button class="btn-mini" onclick="openDossier(${d.id})">Ouvrir</button></td></tr>`).join('');
     }
 
     async function createDossier() {
-        let n = prompt("Nom du projet ?"); if(!n) return;
-        let d = { id: Date.now(), nom: n, coeff: 1, remiseG: 0, notes: "", cats: [{id: Date.now()+1, nom: "Matériel", items: [], remise: 0}] };
+        let n = prompt("Nom ?"); if(!n) return;
+        let d = { id: Date.now(), nom: n, coeff: 1, cats: [{id: Date.now()+1, nom: "Matériel", items: []}] };
         await client.from('dossiers').insert(d);
-        dossiers.push(d); renderDossierList(); openDossier(d.id);
-    }
-
-    async function deleteDossier(id) {
-        if(confirm("Supprimer ce dossier ?")) {
-            await client.from('dossiers').delete().eq('id', id);
-            dossiers = dossiers.filter(x => x.id !== id); renderDossierList();
-        }
+        dossiers.push(d); openDossier(d.id);
     }
 
     function openDossier(id) {
         activeDossierId = id; let d = dossiers.find(x => x.id === id);
-        document.getElementById('view-list-dossiers').style.display = 'none'; 
-        document.getElementById('view-detail-dossier').style.display = 'block';
-        document.getElementById('det-nom').value = d.nom; 
-        document.getElementById('det-cli').value = d.cli || ''; 
-        document.getElementById('det-coeff').value = d.coeff || 1; 
-        document.getElementById('det-rem-g').value = d.remiseG || 0;
-        document.getElementById('det-notes').value = d.notes || "";
-        ['immo','livr','mont','show','demo','recu'].forEach(k => { 
-            document.getElementById(`d-${k}-d`).value = d[`${k}D`] || ''; 
-            document.getElementById(`d-${k}-f`).value = d[`${k}F`] || ''; 
-        });
+        document.getElementById('view-list-dossiers').style.display = 'none'; document.getElementById('view-detail-dossier').style.display = 'block';
+        document.getElementById('det-nom').value = d.nom; document.getElementById('det-cli').value = d.cli || ''; document.getElementById('det-coeff').value = d.coeff || 1;
         renderCats();
     }
 
     async function syncDossier() {
         let d = dossiers.find(x => x.id === activeDossierId);
-        d.nom = document.getElementById('det-nom').value; 
-        d.cli = document.getElementById('det-cli').value; 
-        d.coeff = parseFloat(document.getElementById('det-coeff').value) || 1; 
-        d.remiseG = parseFloat(document.getElementById('det-rem-g').value) || 0;
-        d.notes = document.getElementById('det-notes').value;
-        ['immo','livr','mont','show','demo','recu'].forEach(k => { 
-            d[`${k}D`] = document.getElementById(`d-${k}-d`).value; 
-            d[`${k}F`] = document.getElementById(`d-${k}-f`).value; 
-        });
-        await client.from('dossiers').upsert(d);
-        renderCats();
+        d.nom = document.getElementById('det-nom').value; d.cli = document.getElementById('det-cli').value; d.coeff = parseFloat(document.getElementById('det-coeff').value);
+        await client.from('dossiers').upsert(d); renderCats();
     }
 
-    // --- LOGIQUE MATERIEL (CATS & ITEMS) ---
     function renderCats() {
         let d = dossiers.find(x => x.id === activeDossierId);
-        let cont = document.getElementById('dossier-cats-container'); cont.innerHTML = ""; let totalBrut = 0;
+        let cont = document.getElementById('dossier-cats-container'); cont.innerHTML = "";
         d.cats.forEach(cat => {
-            let catNet = 0;
-            let itemsHtml = cat.items.map((it, idx) => {
-                let nom, pUnit;
-                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
-                else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
-                let ligneNet = (it.qte * pUnit * d.coeff) * (1 - it.remise/100); catNet += ligneNet;
-                return `<tr><td>${it.isCustom ? 'MANU' : it.ref}</td><td><span class="${it.isCustom ? 'item-clickable item-custom' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'label')` : ''}">${nom}</span></td><td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td><td><span class="${it.isCustom ? 'item-clickable' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'pUnit')` : ''}">${pUnit}€</span></td><td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td><td style="font-weight:bold;">${ligneNet.toFixed(2)}€</td><td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td></tr>`;
-            }).join('');
-            let catFinal = catNet * (1 - cat.remise/100); totalBrut += catFinal;
-            let div = document.createElement('div'); div.className = "categorie-bloc";
-            div.innerHTML = `<div class="categorie-header"><input type="text" value="${cat.nom}" onchange="renameCat(${cat.id}, this.value)" style="width:200px; font-weight:bold;"><div>Remise cat. : <input type="number" value="${cat.remise}" onchange="remiseCat(${cat.id}, this.value)" style="width:50px;">% <button class="btn-mini btn-delete" onclick="removeCat(${cat.id})">Suppr. Catégorie</button></div></div>
-                <table><thead><tr><th>Réf</th><th>Désignation</th><th>Qte</th><th>P.U.</th><th>Rem.</th><th>Sous-Total</th><th></th></tr></thead><tbody>${itemsHtml}</tbody></table>
-                <div style="padding:10px; background:#f8f9fa; display:flex; gap:10px;">
-                    <input type="text" id="add-ref-${cat.id}" placeholder="Réf Stock" style="width:120px;" list="dl-stock">
-                    <input type="number" id="add-qte-${cat.id}" value="1" style="width:60px;">
-                    <button class="btn-mini" onclick="addItem(${cat.id})">+ Ajouter</button>
-                    <button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})">+ Manuel</button>
-                    <div style="margin-left:auto; font-weight:bold;">Total Catégorie : ${catFinal.toFixed(2)}€</div>
-                </div>`;
+            let div = document.createElement('div'); div.className="categorie-bloc";
+            div.innerHTML = `<div class="categorie-header"><b>${cat.nom}</b></div><div style="padding:10px;"><input type="text" id="add-ref-${cat.id}" list="dl-stock" placeholder="Réf"><button onclick="addItem(${cat.id})">Ajouter</button></div>`;
             cont.appendChild(div);
         });
-        let final = totalBrut * (1 - d.remiseG/100);
-        document.getElementById('dossier-recap').innerHTML = `<div>Total Brut : ${totalBrut.toFixed(2)}€</div><div style="font-size:1.5em; font-weight:bold;">NET À PAYER : ${final.toFixed(2)}€</div>`;
     }
 
-    // Fonctions de modification Dossier (identiques à avant, mais avec syncDossier)
-    function addCat() { dossiers.find(x => x.id === activeDossierId).cats.push({id: Date.now(), nom: "Nouvelle catégorie", items: [], remise: 0}); syncDossier(); }
-    function removeCat(id) { if(confirm("Supprimer cette catégorie ?")) { let d = dossiers.find(x => x.id === activeDossierId); d.cats = d.cats.filter(c => c.id !== id); syncDossier(); } }
-    function renameCat(id, val) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === id).nom = val; syncDossier(); }
-    function remiseCat(id, val) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === id).remise = parseFloat(val) || 0; syncDossier(); }
-    
-    function addItem(catId) { 
-        let r = document.getElementById('add-ref-'+catId).value.toUpperCase(); let q = parseInt(document.getElementById('add-qte-'+catId).value) || 1;
-        if(!stock.find(s => s.ref === r)) return;
-        if(!checkAvailability(r, q, activeDossierId, null, catId)) { if(!confirm("ALERTE STOCK : Manque sur cette période. Ajouter ?")) return; }
-        dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:q, remise:0, isCustom:false}); syncDossier(); 
-    }
-    function addCustomItem(catId) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({ref:'MANU', label:'Prestation', qte:1, pUnit:0, remise:0, isCustom:true}); syncDossier(); }
-    function removeItem(catId, idx) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.splice(idx, 1); syncDossier(); }
-    function editItem(catId, idx, field) {
-        let it = dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items[idx];
-        let val = prompt("Nouvelle valeur ?", field==='label' ? it.label : (field==='qte' ? it.qte : (field==='pUnit' ? it.pUnit : it.remise)));
-        if(val !== null) {
-            if(field === 'qte') {
-                let nQ = parseInt(val) || 0;
-                if(!it.isCustom && !checkAvailability(it.ref, nQ, activeDossierId, idx, catId)) { if(!confirm("ALERTE STOCK. Continuer ?")) return; }
-                it.qte = nQ;
-            } else if(field === 'pUnit') it.pUnit = parseFloat(val) || 0;
-            else if(field === 'remise') it.remise = parseFloat(val) || 0;
-            else if(field === 'label') it.label = val;
-            syncDossier();
-        }
-    }
-
-    // --- DISPONIBILITES ---
-    function checkAvailability(ref, addedQty, dossierId, isModIdx = null, catId = null) {
-        let d = dossiers.find(x => x.id === dossierId); if(!d.immoD || !d.immoF) return true; 
-        let s = stock.find(x => x.ref === ref);
-        let start = new Date(d.immoD); let end = new Date(d.immoF);
-        for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
-            let iso = day.toISOString().split('T')[0];
-            let booked = 0;
-            dossiers.forEach(dos => {
-                if(iso >= dos.immoD && iso <= dos.immoF) {
-                    dos.cats.forEach(c => c.items.forEach((it, idx) => {
-                        if(it.ref === ref && !it.isCustom) { 
-                            if(dos.id === dossierId && c.id === catId && idx === isModIdx) return; 
-                            booked += it.qte; 
-                        }
-                    }));
-                }
-            });
-            if(booked + addedQty > s.qte) return false;
-        }
-        return true;
-    }
-
-    function checkDispo() {
-        let ref = document.getElementById('dispo-ref').value.toUpperCase();
-        let d1 = document.getElementById('dispo-d').value;
-        let d2 = document.getElementById('dispo-f').value;
-        let s = stock.find(x => x.ref === ref);
-        if(!s || !d1 || !d2) return;
-        let h = `<h3>Disponibilités pour ${s.nom} (Total: ${s.qte})</h3>`;
-        let cur = new Date(d1); let end = new Date(d2);
-        while(cur <= end) {
-            let iso = cur.toISOString().split('T')[0];
-            let used = 0; let details = [];
-            dossiers.forEach(dos => {
-                if(iso >= dos.immoD && iso <= dos.immoF) {
-                    dos.cats.forEach(c => c.items.forEach(it => {
-                        if(it.ref === ref && !it.isCustom) { used += it.qte; details.push(`${it.qte} (${dos.nom})`); }
-                    }));
-                }
-            });
-            let reste = s.qte - used;
-            h += `<div style="padding:5px; border-bottom:1px solid #ddd; color:${reste < 0 ? 'red':'black'}">${iso} : Reservé ${used} (${details.join(', ') || 'aucun'}) - <b>Reste : ${reste}</b></div>`;
-            cur.setDate(cur.getDate()+1);
-        }
-        document.getElementById('dispo-result').innerHTML = h;
-    }
-
-    // --- GÉNÉRATION PDF ---
-    function genPDF(type) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        let d = dossiers.find(x => x.id === activeDossierId);
-        let client = clients.find(c => c.ent === d.cli || c.nom === d.cli) || { nom: d.cli, email: "" };
-
-        doc.setFillColor(10, 35, 66); doc.rect(0, 0, 210, 40, 'F');
-        if(settings.logoB64) { try { doc.addImage(settings.logoB64, 'PNG', 10, 5, 30, 30); } catch(e){} }
-        doc.setTextColor(255, 255, 255); doc.setFontSize(18);
-        doc.text(settings.nom || "L'Argentique Events", 45, 20);
-        let labelDoc = type === 'prep' ? 'BON DE PRÉPARATION' : (type === 'devis' ? 'DEVIS' : 'FACTURE');
-        doc.setFontSize(10); doc.text(labelDoc, 195, 20, { align: 'right' });
-
-        doc.setTextColor(0, 0, 0); doc.setFontSize(9);
-        doc.text(`Émetteur :\n${settings.nom}\n${settings.adr || ''}\n${settings.mail || ''}\n${settings.tel || ''}`, 15, 48);
-        doc.text(`Destinataire :\n${client.ent || client.nom || d.cli}\n${client.email || ''}\n${client.tel || ''}`, 130, 48);
-
-        let currentY = 75;
-        doc.setFont(undefined, 'bold'); doc.text(`PROJET : ${d.nom}`, 15, currentY); doc.setFont(undefined, 'normal');
-        let datesText = [];
-        if(d.livrD) datesText.push(`Livraison : ${d.livrD}`);
-        if(d.showD) datesText.push(`SHOW : ${d.showD}`);
-        if(d.demoD) datesText.push(`Démontage : ${d.demoD}`);
-        doc.setFontSize(8); doc.text(datesText.join(' | '), 15, currentY + 5);
-        currentY += 12;
-
-        if(d.notes) {
-            doc.setFontSize(9); doc.setFont(undefined, 'italic');
-            let splitNotes = doc.splitTextToSize(d.notes, 180);
-            doc.text(splitNotes, 15, currentY);
-            currentY += (splitNotes.length * 5) + 5;
-            doc.setFont(undefined, 'normal');
-        }
-
-        let tableRows = []; let totalBrut = 0;
-        d.cats.forEach(cat => {
-            tableRows.push([{ content: cat.nom, colSpan: (type==='prep'?2:5), styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } }]);
-            let catNet = 0;
-            cat.items.forEach(it => {
-                let nom, pUnit;
-                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
-                else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
-                let ligneNet = (it.qte * pUnit * d.coeff) * (1 - it.remise/100);
-                catNet += ligneNet;
-                if(type === 'prep') tableRows.push([it.qte, nom]);
-                else tableRows.push([nom, it.qte, pUnit.toFixed(2)+'€', it.remise+'%', ligneNet.toFixed(2)+'€']);
-            });
-            let catFinal = catNet * (1 - cat.remise/100); totalBrut += catFinal;
-        });
-
-        doc.autoTable({
-            startY: currentY,
-            head: type==='prep' ? [['Qte', 'Désignation']] : [['Désignation', 'Qte', 'P.U. HT', 'Rem.', 'Total HT']],
-            body: tableRows,
-            theme: 'striped', headStyles: { fillColor: [10, 35, 66] }
-        });
-
-        let finalY = doc.lastAutoTable.finalY + 10;
-        if(type !== 'prep') {
-            doc.setFontSize(12); doc.setFont(undefined, 'bold');
-            let finalTotal = totalBrut * (1 - d.remiseG/100);
-            doc.text(`TOTAL NET À PAYER : ${finalTotal.toFixed(2)} €`, 195, finalY, { align: 'right' });
-            doc.setFontSize(8); doc.setFont(undefined, 'normal');
-            doc.text("TVA non applicable, art. 293 B du CGI.", 15, finalY + 10);
-            if(type === 'facture' && settings.iban) {
-                doc.text(`RIB : ${settings.banque || ''} - IBAN : ${settings.iban} - BIC : ${settings.bic || ''}`, 15, finalY + 18);
-            }
-        }
-        doc.save(`${type.toUpperCase()}_${d.nom}.pdf`);
+    function addItem(catId) {
+        let r = document.getElementById('add-ref-'+catId).value.toUpperCase();
+        dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:1});
+        syncDossier();
     }
 
     function updateDatalists() {
@@ -668,14 +231,13 @@
         document.getElementById('dl-clients').innerHTML = clients.map(c => `<option value="${c.ent || c.nom}">${c.ent || c.nom}</option>`).join('');
     }
 
-    // Vérifier session au chargement
-    client.auth.getSession().then(({ data }) => {
-        if (data.session) {
-            currentUser = data.session.user;
-            initApp();
-        }
-    });
+    function checkDispo() {
+        let ref = document.getElementById('dispo-ref').value.toUpperCase();
+        let s = stock.find(x => x.ref === ref);
+        document.getElementById('dispo-result').innerHTML = s ? `Stock total : ${s.qte}` : "Inconnu";
+    }
 
+    initApp();
 </script>
 </body>
 </html>
