@@ -117,11 +117,15 @@
 </div>
 
 <script>
+
+
     // --- CONFIGURATION SUPABASE ---
-    const SB_URL = "https://mtryplxbgytozvruahwf.supabase.co/rest/v1/";
-    const SB_KEY = "sb_publishable_yF9r0iCTS7BHaMuyUCVO7A_X9feHVs1";
-    const supabase =导入 { createClient } = supabase;
-    const client = supabase.createClient(SB_URL, SB_KEY);
+const SB_URL = "https://mtryplxbgytozvruahwf.supabase.co"; // J'ai retiré le /rest/v1/ à la fin
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10cnlwbHhiZ3l0b3p2cnVhaHdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDYwNjgsImV4cCI6MjA5MjI4MjA2OH0.08U3PnkeMn_kfiPNCv0RR0Qwvt9UBVZF4ecYasOc-2E"; // Attention, lis le point n°2 ci-dessous
+
+// Initialisation correcte du client
+const client = supabase.createClient(SB_URL, SB_KEY);
+
 
     let currentUser = null;
     let localDossiers = [];
