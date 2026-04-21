@@ -34,7 +34,7 @@
 
         .dates-container { display: grid; grid-template-columns: 120px repeat(6, 1fr); gap: 10px; align-items: center; margin-bottom: 20px; background: #eef2ff; padding: 15px; border-radius: 6px; }
         .dates-label { font-weight: bold; font-size: 13px; color: var(--bleu-marine); }
-
+        
         input, select, textarea { padding: 8px; border: 1px solid var(--gris-bordure); border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px; font-family: inherit; }
         label { font-size: 12px; font-weight: bold; color: var(--bleu-marine-clair); display: block; margin-bottom: 3px; }
         
@@ -49,7 +49,7 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--gris-bordure); font-size: 13px; }
         th { background-color: #f1f1f1; }
-
+        
         .categorie-bloc { border: 2px solid var(--bleu-marine); border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
         .categorie-header { background: var(--bleu-marine); color: white; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
         .item-clickable { cursor: pointer; color: var(--bleu-marine); font-weight: bold; background: #eef2ff; padding: 2px 6px; border-radius: 4px; }
@@ -67,102 +67,111 @@
         }
 
         .logo-preview { max-height: 80px; display: block; margin-top: 10px; border: 1px solid #ccc; }
-        #loader-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.9); display:flex; justify-content:center; align-items:center; z-index:9999; flex-direction:column; color: var(--bleu-marine); font-weight:bold; font-size:18px; }
+        
+        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.9); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999; color:var(--bleu-marine); font-size: 20px; font-weight:bold; }
     </style>
 </head>
 <body>
 
-<!-- Écran de chargement Supabase -->
-<div id="loader-overlay">
-    <div>Chargement des données depuis la base...</div>
-</div>
+<div id="loading-overlay">Chargement des données depuis Supabase...</div>
 
 <datalist id="dl-stock"></datalist>
 <datalist id="dl-clients"></datalist>
 
 <nav>
-    <button id="nav-dossiers" class="actif" onclick="showTab('dossiers')">📁 Dossiers</button>
+    <button id="nav-dossiers" onclick="showTab('dossiers')">📁 Dossiers</button>
     <button id="nav-stock" onclick="showTab('stock')">📦 Stock & Tarifs</button>
     <button id="nav-clients" onclick="showTab('clients')">👥 Clients</button>
     <button id="nav-dispo" onclick="showTab('dispo')">📅 Disponibilités</button>
     <div class="nav-right">
-        <button id="nav-admin" style="border-color: var(--jaune-edit); color: var(--jaune-edit);" onclick="checkAdmin()">⚙️ Admin</button>
+        <button id="nav-admin" onclick="showAdminLogin()" style="border-color:var(--jaune-edit); color:var(--jaune-edit);">⚙️ Admin</button>
     </div>
 </nav>
 
-<!-- LOGIN -->
+<!-- ADMIN LOGIN -->
 <div id="admin-login">
     <h2>Accès Administration</h2>
-    <input type="password" id="admin-pass" style="width:250px; text-align:center; margin-bottom: 10px;" placeholder="Mot de passe">
+    <input type="password" id="admin-pwd" placeholder="Mot de passe" style="width:200px; margin-bottom:10px; text-align:center;">
     <div>
-        <button onclick="loginAdmin()">Connexion</button>
-        <button class="btn-delete" onclick="closeAdmin()">Annuler</button>
+        <button onclick="checkAdmin()">Valider</button>
+        <button class="btn-delete" onclick="document.getElementById('admin-login').style.display='none'">Annuler</button>
     </div>
 </div>
 
-<!-- ADMIN -->
+<!-- TAB ADMIN -->
 <div id="tab-admin" class="container" style="display:none;">
-    <h1>⚙️ Administration & Paramètres</h1>
-    <div class="form-grid">
-        <div><label>Nom de l'entreprise</label><input type="text" id="adm-nom"></div>
-        <div><label>Adresse</label><input type="text" id="adm-adr"></div>
+    <h1>⚙️ Paramètres Société</h1>
+    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+        <div>
+            <label>Logo de l'entreprise</label>
+            <input type="file" accept="image/*" onchange="handleLogoUpload(this)">
+            <img id="logo-preview" class="logo-preview" src="">
+        </div>
+        <div>
+            <label>Nom Commercial</label><input type="text" id="adm-nom">
+            <label>Adresse complète</label><textarea id="adm-adr" rows="2"></textarea>
+        </div>
         <div><label>Téléphone</label><input type="text" id="adm-tel"></div>
-        <div><label>Email</label><input type="email" id="adm-mail"></div>
+        <div><label>Email</label><input type="text" id="adm-mail"></div>
         <div><label>SIRET</label><input type="text" id="adm-siret"></div>
-        <div><label>Code APE</label><input type="text" id="adm-ape"></div>
-        <div><label>TVA Intracom.</label><input type="text" id="adm-tva"></div>
-        <div><label>Nom de la Banque</label><input type="text" id="adm-banque"></div>
+        <div><label>APE</label><input type="text" id="adm-ape"></div>
+        <div><label>N° TVA Intra</label><input type="text" id="adm-tva"></div>
+        <div><label>Banque</label><input type="text" id="adm-banque"></div>
         <div><label>IBAN</label><input type="text" id="adm-iban"></div>
         <div><label>BIC</label><input type="text" id="adm-bic"></div>
     </div>
-    <div>
-        <label>Logo (PNG/JPG max 1Mo)</label>
-        <input type="file" id="adm-logo-file" accept="image/png, image/jpeg" onchange="handleLogoUpload(this)">
-        <img id="logo-preview" class="logo-preview">
-    </div>
-    <br>
     <button onclick="saveAdminSettings()" style="background:var(--vert-ok); width: 100%;">Enregistrer les paramètres</button>
-</div>
-
-<!-- CLIENTS -->
-<div id="tab-clients" class="container" style="display:none;">
-    <h1>👥 Gestion Clients</h1>
-    <div class="form-grid">
-        <div><label>Entreprise</label><input type="text" id="c-ent"></div>
-        <div><label>Contact (Nom)</label><input type="text" id="c-nom"></div>
-        <div><label>Téléphone</label><input type="text" id="c-tel"></div>
-        <div><label>Email</label><input type="email" id="c-email"></div>
-    </div>
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button id="btn-save-client" onclick="saveClient()">Enregistrer Client</button>
-        <button class="btn-delete" style="display:none;" id="btn-cancel-client" onclick="cancelClient()">Annuler</button>
-    </div>
-    <input type="text" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" id="search-clients" placeholder="🔍 Rechercher un client..." onkeyup="renderClients()">
-    <table>
-        <thead><tr><th>Entreprise</th><th>Nom</th><th>Téléphone</th><th>Email</th><th>Actions</th></tr></thead>
-        <tbody id="table-clients-body"></tbody>
-    </table>
 </div>
 
 <!-- STOCK -->
 <div id="tab-stock" class="container" style="display:none;">
-    <h1>📦 Gestion Stock</h1>
+    <h1>📦 Gestion du Stock & Tarifs</h1>
     <div class="form-grid">
-        <div><label>Référence</label><input type="text" id="s-ref"></div>
-        <div><label>Nom</label><input type="text" id="s-nom"></div>
-        <div><label>Quantité</label><input type="number" id="s-qte"></div>
-        <div><label>Prix Achat (€)</label><input type="number" step="0.01" id="s-pachat"></div>
-        <div><label>Prix Loc/J (€)</label><input type="number" step="0.01" id="s-ploc"></div>
+        <div><label>Référence</label><input type="text" id="s-ref" placeholder="Ex: LUM-01"></div>
+        <div><label>Désignation</label><input type="text" id="s-nom" placeholder="Nom du matériel"></div>
+        <div><label>Quantité totale</label><input type="number" id="s-qte" min="0"></div>
+        <div><label>Prix Achat (€)</label><input type="number" id="s-pachat" step="0.01"></div>
+        <div><label>Prix Loc/Jour (€)</label><input type="number" id="s-ploc" step="0.01"></div>
     </div>
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button id="btn-save-stock" onclick="saveStock()">Enregistrer Article</button>
-        <button class="btn-delete" style="display:none;" id="btn-cancel-stock" onclick="cancelStock()">Annuler</button>
-    </div>
-    <input type="text" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" id="search-stock" placeholder="🔍 Rechercher un article..." onkeyup="renderStock()">
+    <button id="btn-save-stock" onclick="saveStock()">Ajouter / Modifier Matériel</button>
+    <button id="btn-cancel-stock" onclick="cancelStock()" style="display:none; background:#6c757d;">Annuler</button>
+
+    <input type="text" style="margin-top: 20px; padding:10px; width:100%; box-sizing:border-box;" id="search-stock" placeholder="🔍 Rechercher dans le stock..." onkeyup="renderStock()">
     <table>
-        <thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Achat</th><th>Loc/J</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Réf</th><th>Désignation</th><th>Qté</th><th>P.Achat</th><th>P.Loc/J</th><th>Actions</th></tr></thead>
         <tbody id="table-stock-body"></tbody>
     </table>
+</div>
+
+<!-- CLIENTS -->
+<div id="tab-clients" class="container" style="display:none;">
+    <h1>👥 Base Clients</h1>
+    <div class="form-grid">
+        <div><label>Entreprise</label><input type="text" id="c-ent"></div>
+        <div><label>Nom Contact</label><input type="text" id="c-nom"></div>
+        <div><label>Téléphone</label><input type="text" id="c-tel"></div>
+        <div><label>Email</label><input type="text" id="c-email"></div>
+    </div>
+    <button id="btn-save-client" onclick="saveClient()">Enregistrer Client</button>
+    <button id="btn-cancel-client" onclick="cancelClient()" style="display:none; background:#6c757d;">Annuler</button>
+
+    <input type="text" style="margin-top: 20px; padding:10px; width:100%; box-sizing:border-box;" id="search-clients" placeholder="🔍 Rechercher un client..." onkeyup="renderClients()">
+    <table>
+        <thead><tr><th>Entreprise</th><th>Contact</th><th>Téléphone</th><th>Email</th><th>Actions</th></tr></thead>
+        <tbody id="table-clients-body"></tbody>
+    </table>
+</div>
+
+<!-- DISPO -->
+<div id="tab-dispo" class="container" style="display:none;">
+    <h1>📅 Vérifier Disponibilité Matériel</h1>
+    <div class="form-grid">
+        <div><label>Article (Réf)</label><input type="text" id="dispo-ref" list="dl-stock"></div>
+        <div><label>Du</label><input type="date" id="dispo-d"></div>
+        <div><label>Au</label><input type="date" id="dispo-f"></div>
+    </div>
+    <button onclick="checkDispo()">Vérifier</button>
+    <div id="dispo-result" style="margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; border:1px solid var(--gris-bordure);"></div>
 </div>
 
 <!-- DOSSIERS -->
@@ -188,19 +197,21 @@
                 <button class="btn-pdf" onclick="genPDF('facture')">💰 Facture</button>
             </div>
         </div>
-        <div class="form-grid">
-            <div><label>Nom Projet</label><input type="text" id="det-nom" onchange="syncDossier()"></div>
+
+        <div class="form-grid" style="grid-template-columns: 2fr 2fr 1.5fr 1fr 1fr;">
+            <div><label>Nom Projet</label><input type="text" id="det-nom" oninput="syncDossier()"></div>
             <div><label>Client</label><input type="text" id="det-cli" list="dl-clients" onchange="syncDossier()"></div>
             <div>
                 <label>Type de prestation</label>
                 <select id="det-type-presta" onchange="syncDossier()">
+                    <option value="Prestation de service">Prestation de service</option>
+                    <option value="Location de matériel">Location de matériel</option>
                     <option value="Location comptoir">Location comptoir</option>
-                    <option value="Location avec livraison">Location avec livraison</option>
-                    <option value="Prestation complète">Prestation complète</option>
+                    <option value="Vente">Vente</option>
                 </select>
             </div>
-            <div><label>Coeff. Durée Global</label><input type="number" step="0.1" id="det-coeff" onchange="syncDossier()"></div>
-            <div><label>Remise Globale (%)</label><input type="number" id="det-rem-g" onchange="syncDossier()"></div>
+            <div><label>Coeff. Durée Global</label><input type="number" id="det-coeff" step="0.1" value="1" oninput="syncDossier()"></div>
+            <div><label>Remise Globale (%)</label><input type="number" id="det-rem-g" value="0" oninput="syncDossier()"></div>
         </div>
 
         <h3>📅 Dates Détaillées</h3>
@@ -221,46 +232,36 @@
             <div><input type="date" id="d-recu-f" onchange="syncDossier()"></div>
         </div>
 
-        <div style="margin-bottom: 20px;">
+        <div>
             <label>📝 Notes / Informations complémentaires (apparaîtront sur les PDF)</label>
-            <textarea id="det-notes" rows="4" placeholder="Ex: Lieu de prestation, consignes particulières, accès..." onchange="syncDossier()"></textarea>
+            <textarea id="det-notes" rows="3" oninput="syncDossier()" placeholder="Ex: Lieu de prestation, consignes particulières, accès..."></textarea>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:30px;">
             <h3>📦 Liste du matériel & Prestations</h3>
-            <button class="btn-mini" onclick="addCat()">+ Ajouter Catégorie</button>
+            <button onclick="addCat()">+ Ajouter Catégorie</button>
         </div>
-        <div id="dossier-cats-container"></div>
+
+        <div id="dossier-cats"></div>
+
         <div class="recap-final" id="dossier-recap"></div>
     </div>
 </div>
 
-<!-- DISPO -->
-<div id="tab-dispo" class="container" style="display:none;">
-    <h1>📅 Disponibilités</h1>
-    <div class="form-grid">
-        <div><label>Matériel</label><input type="text" id="dispo-ref" list="dl-stock"></div>
-        <div><label>Du</label><input type="date" id="dispo-d"></div>
-        <div><label>Au</label><input type="date" id="dispo-f"></div>
-    </div>
-    <button onclick="checkDispo()">Vérifier Disponibilité</button>
-    <div id="dispo-result" style="margin-top:20px;"></div>
-</div>
-
 <script>
-    // Configuration Supabase
-    const SUPABASE_URL = "https://mtryplxbgytozvruahwf.supabase.co/rest/v1";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10cnlwbHhiZ3l0b3p2cnVhaHdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDYwNjgsImV4cCI6MjA5MjI4MjA2OH0.08U3PnkeMn_kfiPNCv0RR0Qwvt9UBVZF4ecYasOc-2E";
-    const FETCH_HEADERS = {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-    };
-
     const PASS_ADMIN = "1234 ARGENTIQUE";
     
-    // Variables de données
+    // CONFIGURATION SUPABASE
+    const SUPABASE_URL = "https://mtryplxbgytozvruahwf.supabase.co/rest/v1";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10cnlwbHhiZ3l0b3p2cnVhaHdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDYwNjgsImV4cCI6MjA5MjI4MjA2OH0.08U3PnkeMn_kfiPNCv0RR0Qwvt9UBVZF4ecYasOc-2E";
+    
+    const FETCH_HEADERS = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+    };
+
     let stock = [];
     let clients = [];
     let dossiers = [];
@@ -269,57 +270,34 @@
     let activeDossierId = null;
     let editStockRef = null;
     let editClientId = null;
-    let draggedItemInfo = null; 
 
-    // --- INITIALISATION (FETCH SUPABASE) ---
-    async function fetchSupabaseData(table) {
+    // --- INITIALISATION SUPABASE ---
+    async function loadFromSupabase(table) {
         try {
-            const res = await fetch(`${SUPABASE_URL}/${table}`, { headers: FETCH_HEADERS });
-            if (!res.ok) throw new Error(`Erreur lors du chargement de la table ${table}`);
-            return await res.json();
-        } catch (error) {
-            console.error(error);
-            return [];
+            const res = await fetch(`${SUPABASE_URL}/${table}?select=data&id=eq.1`, { headers: FETCH_HEADERS });
+            if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
+            const json = await res.json();
+            return (json.length > 0 && json[0].data) ? json[0].data : null;
+        } catch (e) {
+            console.error(`Erreur de chargement depuis Supabase (${table}):`, e);
+            return null;
         }
     }
 
-    async function initApp() {
-        document.getElementById('loader-overlay').style.display = 'flex';
-        
-        const rawStock = await fetchSupabaseData('stock');
-        stock = rawStock.length ? rawStock[0].data || [] : [];
-        
-        const rawClients = await fetchSupabaseData('clients');
-        clients = rawClients.length ? rawClients[0].data || [] : [];
-        
-        const rawDossiers = await fetchSupabaseData('dossiers');
-        dossiers = rawDossiers.length ? rawDossiers[0].data || [] : [];
-        
-        const rawSettings = await fetchSupabaseData('settings');
-        if (rawSettings.length && rawSettings[0].data) {
-            settings = rawSettings[0].data;
-        }
-
-        document.getElementById('loader-overlay').style.display = 'none';
-        
-        updateDatalists();
-        showTab('dossiers');
-    }
-
-    // --- FONCTIONS DE SAUVEGARDE SUPABASE ---
     async function saveToSupabase(table, dataPayload) {
         try {
-            // Dans ce scénario de base, on fait un upsert du tableau entier dans une seule ligne 
-            // pour reproduire le comportement simpliste du localStorage tout en utilisant l'API.
-            // On s'assure que la table a une structure pour accepter un payload global (ex: id=1, data=jsonb)
             const payload = { id: 1, data: dataPayload };
+            
+            // On essaie d'abord de mettre à jour la ligne existante (PATCH)
             const res = await fetch(`${SUPABASE_URL}/${table}?id=eq.1`, {
-                method: 'PUT', // Ou POST avec on_conflict si configuré
+                method: 'PATCH',
                 headers: FETCH_HEADERS,
                 body: JSON.stringify(payload)
             });
-            if(!res.ok) {
-                // Si l'enregistrement avec id=1 n'existe pas, on fait un POST
+            
+            // Si la ligne n'existe pas encore (ex: tableau vide, 0 ligne affectée), on la crée (POST)
+            const responseData = await res.json();
+            if(!res.ok || (Array.isArray(responseData) && responseData.length === 0)) {
                 await fetch(`${SUPABASE_URL}/${table}`, {
                     method: 'POST',
                     headers: FETCH_HEADERS,
@@ -327,8 +305,64 @@
                 });
             }
         } catch (e) {
-            console.error("Erreur de sauvegarde vers Supabase:", e);
+            console.error(`Erreur de sauvegarde vers Supabase (${table}):`, e);
         }
+    }
+
+    async function initApp() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+        
+        const [dbStock, dbClients, dbDossiers, dbSettings] = await Promise.all([
+            loadFromSupabase('stock'),
+            loadFromSupabase('clients'),
+            loadFromSupabase('dossiers'),
+            loadFromSupabase('settings')
+        ]);
+
+        if(dbStock) stock = dbStock;
+        if(dbClients) clients = dbClients;
+        if(dbDossiers) dossiers = dbDossiers;
+        if(dbSettings) settings = dbSettings;
+
+        document.getElementById('loading-overlay').style.display = 'none';
+        
+        updateDatalists();
+        showTab('dossiers');
+    }
+
+    function showTab(tab) {
+        ['dossiers','stock','clients','dispo','admin'].forEach(t => document.getElementById('tab-'+t).style.display = 'none');
+        ['dossiers','stock','clients','dispo','admin'].forEach(t => document.getElementById('nav-'+t).classList.remove('actif'));
+        document.getElementById('tab-'+tab).style.display = 'block';
+        document.getElementById('nav-'+tab).classList.add('actif');
+        if(tab === 'stock') renderStock();
+        if(tab === 'clients') renderClients();
+        if(tab === 'dossiers') renderDossierList();
+        if(tab === 'admin') loadAdminFields();
+        updateDatalists();
+    }
+
+    // --- ADMIN ---
+    function showAdminLogin() { document.getElementById('admin-login').style.display = 'flex'; document.getElementById('admin-pwd').value = ''; }
+    function checkAdmin() { if(document.getElementById('admin-pwd').value === PASS_ADMIN) { document.getElementById('admin-login').style.display = 'none'; showTab('admin'); } else alert("Mot de passe incorrect"); }
+    
+    function handleLogoUpload(input) {
+        if(input.files && input.files[0]) {
+            let reader = new FileReader();
+            reader.onload = function(e) { settings.logoB64 = e.target.result; document.getElementById('logo-preview').src = settings.logoB64; };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function loadAdminFields() {
+        ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => document.getElementById('adm-'+k).value = settings[k] || '');
+        document.getElementById('logo-preview').src = settings.logoB64 || '';
+    }
+
+    async function saveAdminSettings() {
+        ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => settings[k] = document.getElementById('adm-'+k).value);
+        await saveToSupabase('settings', settings);
+        alert("Paramètres enregistrés !");
     }
 
     function formatDateFr(isoDate) {
@@ -338,141 +372,138 @@
         return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
-    function formatDateFR(dateStr) {
-        if (!dateStr) return '';
-        let parts = dateStr.split('-');
-        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        return dateStr;
-    }
-
-    function showTab(t) {
-        ['stock', 'clients', 'dossiers', 'dispo', 'admin'].forEach(id => {
-            if(document.getElementById('tab-'+id)) document.getElementById('tab-'+id).style.display = 'none';
-            if(document.getElementById('nav-'+id)) document.getElementById('nav-'+id).classList.remove('actif');
-        });
-        document.getElementById('tab-'+t).style.display = 'block';
-        if(document.getElementById('nav-'+t)) document.getElementById('nav-'+t).classList.add('actif');
-        
-        if(t === 'dossiers') { 
-            document.getElementById('view-detail-dossier').style.display = 'none'; 
-            document.getElementById('view-list-dossiers').style.display = 'block'; 
-            renderDossierList(); 
-        }
-        if(t === 'stock') renderStock();
-        if(t === 'clients') renderClients();
-        if(t === 'admin') loadAdminFields();
-        updateDatalists();
-    }
-
-    // --- ADMIN ---
-    function checkAdmin() { document.getElementById('admin-login').style.display = 'flex'; }
-    function closeAdmin() { document.getElementById('admin-login').style.display = 'none'; }
-    function loginAdmin() { 
-        if(document.getElementById('admin-pass').value === PASS_ADMIN) { 
-            closeAdmin(); showTab('admin'); 
-        } else {
-            alert("Accès refusé"); 
-        }
-    }
-
-    function handleLogoUpload(input) {
-        if (input.files && input.files[0]) {
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                settings.logoB64 = e.target.result;
-                document.getElementById('logo-preview').src = e.target.result;
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function loadAdminFields() {
-        ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => {
-            if(settings[k]) document.getElementById('adm-'+k).value = settings[k];
-        });
-        if(settings.logoB64) document.getElementById('logo-preview').src = settings.logoB64;
-    }
-
-    async function saveAdminSettings() {
-        ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => {
-            settings[k] = document.getElementById('adm-'+k).value;
-        });
-        await saveToSupabase('settings', settings);
-        alert("Paramètres enregistrés !");
-    }
-
     // --- STOCK ---
     async function saveStock() {
-        let r = document.getElementById('s-ref').value; if(!r) return;
-        let s = { ref:r, nom:document.getElementById('s-nom').value, qte:parseFloat(document.getElementById('s-qte').value)||0, pachat:parseFloat(document.getElementById('s-pachat').value)||0, ploc:parseFloat(document.getElementById('s-ploc').value)||0 };
-        if(editStockRef) { let i = stock.findIndex(x => x.ref === editStockRef); stock[i] = s; } else stock.push(s);
+        let s = { ref: document.getElementById('s-ref').value.toUpperCase(), nom: document.getElementById('s-nom').value, qte: parseInt(document.getElementById('s-qte').value) || 0, pachat: parseFloat(document.getElementById('s-pachat').value) || 0, ploc: parseFloat(document.getElementById('s-ploc').value) || 0 };
+        if(!s.ref) return;
+        let idx = stock.findIndex(x => x.ref === s.ref);
+        if(idx > -1 && editStockRef === null) { alert("Référence déjà existante"); return; }
+        if(editStockRef !== null) { stock[stock.findIndex(x => x.ref === editStockRef)] = s; } else stock.push(s);
+        
         await saveToSupabase('stock', stock);
-        cancelStock(); renderStock();
+        cancelStock(); 
+        renderStock();
     }
+
     function renderStock() {
         let sVal = document.getElementById('search-stock').value.toLowerCase();
         document.getElementById('table-stock-body').innerHTML = stock.filter(s => s.ref.toLowerCase().includes(sVal) || s.nom.toLowerCase().includes(sVal)).map(s => `<tr>
-            <td><b>${s.ref}</b></td><td>${s.nom}</td><td>${s.qte}</td><td>${s.pachat}€</td><td>${s.ploc}€</td>
+            <td>${s.ref}</td><td>${s.nom}</td><td>${s.qte}</td><td>${s.pachat}€</td><td>${s.ploc}€</td>
             <td><button class="btn-mini btn-edit" onclick="editStock('${s.ref}')">Edit</button> <button class="btn-mini btn-delete" onclick="deleteStock('${s.ref}')">X</button></td></tr>`).join('');
     }
-    function editStock(ref) { let s = stock.find(x => x.ref === ref); editStockRef = ref; document.getElementById('s-ref').value = s.ref; document.getElementById('s-nom').value = s.nom; document.getElementById('s-qte').value = s.qte; document.getElementById('s-pachat').value = s.pachat; document.getElementById('s-ploc').value = s.ploc; document.getElementById('btn-save-stock').innerText = "Mettre à jour"; document.getElementById('btn-cancel-stock').style.display = "inline-block"; }
-    function cancelStock() { editStockRef = null; ['s-ref','s-nom','s-qte','s-pachat','s-ploc'].forEach(id => document.getElementById(id).value = ''); document.getElementById('btn-save-stock').innerText = "Enregistrer Article"; document.getElementById('btn-cancel-stock').style.display = "none"; }
-    async function deleteStock(ref) { if(confirm("Supprimer ?")) { stock = stock.filter(x => x.ref !== ref); await saveToSupabase('stock', stock); renderStock(); } }
+
+    function editStock(ref) { 
+        let s = stock.find(x => x.ref === ref); 
+        editStockRef = ref; 
+        document.getElementById('s-ref').value = s.ref; 
+        document.getElementById('s-nom').value = s.nom; 
+        document.getElementById('s-qte').value = s.qte; 
+        document.getElementById('s-pachat').value = s.pachat; 
+        document.getElementById('s-ploc').value = s.ploc; 
+        document.getElementById('btn-save-stock').innerText = "Mettre à jour"; 
+        document.getElementById('btn-cancel-stock').style.display = "inline-block"; 
+    }
+
+    function cancelStock() { 
+        editStockRef = null; 
+        ['s-ref','s-nom','s-qte','s-pachat','s-ploc'].forEach(id => document.getElementById(id).value = ''); 
+        document.getElementById('btn-save-stock').innerText = "Ajouter / Modifier Matériel"; 
+        document.getElementById('btn-cancel-stock').style.display = "none"; 
+    }
+
+    async function deleteStock(ref) { 
+        if(confirm("Supprimer ?")) { 
+            stock = stock.filter(x => x.ref !== ref); 
+            await saveToSupabase('stock', stock); 
+            renderStock(); 
+        } 
+    }
 
     // --- CLIENTS ---
     async function saveClient() {
         let c = { id: editClientId || Date.now(), ent: document.getElementById('c-ent').value, nom: document.getElementById('c-nom').value, tel: document.getElementById('c-tel').value, email: document.getElementById('c-email').value };
-        if(editClientId) { let i = clients.findIndex(x => x.id === editClientId); clients[i] = c; } else clients.push(c);
-        await saveToSupabase('clients', clients); 
-        cancelClient(); renderClients();
+        if(!c.ent && !c.nom) return;
+        if(editClientId !== null) { clients[clients.findIndex(x => x.id === editClientId)] = c; } else clients.push(c);
+        
+        await saveToSupabase('clients', clients);
+        cancelClient(); 
+        renderClients();
     }
+
     function renderClients() {
         let sVal = document.getElementById('search-clients').value.toLowerCase();
-        document.getElementById('table-clients-body').innerHTML = clients.filter(c => c.ent.toLowerCase().includes(sVal) || c.nom.toLowerCase().includes(sVal)).map(c => `<tr>
+        document.getElementById('table-clients-body').innerHTML = clients.filter(c => (c.ent||'').toLowerCase().includes(sVal) || (c.nom||'').toLowerCase().includes(sVal)).map(c => `<tr>
             <td>${c.ent}</td><td>${c.nom}</td><td>${c.tel}</td><td>${c.email}</td>
             <td><button class="btn-mini btn-edit" onclick="editClient(${c.id})">Edit</button> <button class="btn-mini btn-delete" onclick="deleteClient(${c.id})">X</button></td></tr>`).join('');
     }
-    function editClient(id) { let c = clients.find(x => x.id === id); editClientId = id; document.getElementById('c-ent').value = c.ent; document.getElementById('c-nom').value = c.nom; document.getElementById('c-tel').value = c.tel; document.getElementById('c-email').value = c.email; document.getElementById('btn-save-client').innerText = "Mettre à jour"; document.getElementById('btn-cancel-client').style.display = "inline-block"; }
-    async function deleteClient(id) { if(confirm("Supprimer ce client ?")) { clients = clients.filter(c => c.id !== id); await saveToSupabase('clients', clients); renderClients(); } }
-    function cancelClient() { editClientId = null; ['c-ent','c-nom','c-tel','c-email'].forEach(id => document.getElementById(id).value = ''); document.getElementById('btn-save-client').innerText = "Enregistrer Client"; document.getElementById('btn-cancel-client').style.display = "none"; }
+
+    function editClient(id) { 
+        let c = clients.find(x => x.id === id); 
+        editClientId = id; 
+        document.getElementById('c-ent').value = c.ent; 
+        document.getElementById('c-nom').value = c.nom; 
+        document.getElementById('c-tel').value = c.tel; 
+        document.getElementById('c-email').value = c.email; 
+        document.getElementById('btn-save-client').innerText = "Mettre à jour"; 
+        document.getElementById('btn-cancel-client').style.display = "inline-block"; 
+    }
+
+    function cancelClient() { 
+        editClientId = null; 
+        ['c-ent','c-nom','c-tel','c-email'].forEach(id => document.getElementById(id).value = ''); 
+        document.getElementById('btn-save-client').innerText = "Enregistrer Client"; 
+        document.getElementById('btn-cancel-client').style.display = "none"; 
+    }
+
+    async function deleteClient(id) { 
+        if(confirm("Supprimer ?")) { 
+            clients = clients.filter(x => x.id !== id); 
+            await saveToSupabase('clients', clients); 
+            renderClients(); 
+        } 
+    }
 
     // --- DOSSIERS ---
+    async function createDossier() {
+        let d = { id: Date.now(), nom: "Nouveau Projet", cli: "", typePresta: "Prestation de service", notes: "", coeff: 1, remiseG: 0, cats: [], immoD:'', livrD:'', montD:'', showD:'', demoD:'', recuD:'', immoF:'', livrF:'', montF:'', showF:'', demoF:'', recuF:'' };
+        dossiers.push(d);
+        await saveToSupabase('dossiers', dossiers);
+        openDossier(d.id);
+    }
+
     function renderDossierList() {
         let sVal = document.getElementById('search-dossiers').value.toLowerCase();
-        let sorted = [...dossiers].filter(d => d.nom.toLowerCase().includes(sVal) || (d.cli && d.cli.toLowerCase().includes(sVal))).sort((a,b) => new Date(a.immoD) - new Date(b.immoD));
-        document.getElementById('table-dossiers-body').innerHTML = sorted.map(d => `<tr><td>${formatDateFR(d.immoD) || '-'}</td><td><b>${d.nom}</b></td><td>${d.cli || '-'}</td>
-            <td><button class="btn-mini" onclick="openDossier(${d.id})">Ouvrir</button> <button class="btn-mini btn-delete" onclick="deleteDossier(${d.id})">X</button></td></tr>`).join('');
+        document.getElementById('table-dossiers-body').innerHTML = dossiers.filter(d => d.nom.toLowerCase().includes(sVal) || d.cli.toLowerCase().includes(sVal)).map(d => `<tr>
+            <td>${formatDateFr(d.immoD)}</td><td><b>${d.nom}</b></td><td>${d.cli}</td>
+            <td><button class="btn-mini" onclick="openDossier(${d.id})">Ouvrir</button> <button class="btn-mini btn-delete" onclick="deleteDossier(${d.id})">Suppr.</button></td></tr>`).join('');
     }
-    async function createDossier() {
-        let n = prompt("Nom du projet ?"); if(!n) return;
-        let d = { id: Date.now(), nom: n, typePresta: "Location comptoir", coeff: 1, remiseG: 0, notes: "", cats: [{id: Date.now()+1, nom: "Matériel", items: [], remise: 0}] };
-        dossiers.push(d); await saveToSupabase('dossiers', dossiers); openDossier(d.id);
+
+    async function deleteDossier(id) { 
+        if(confirm("Supprimer ce dossier ?")) { 
+            dossiers = dossiers.filter(x => x.id !== id); 
+            await saveToSupabase('dossiers', dossiers); 
+            renderDossierList(); 
+        } 
     }
-    async function deleteDossier(id) {
-        if(confirm("Supprimer le dossier ?")) {
-            dossiers = dossiers.filter(d => d.id !== id);
-            await saveToSupabase('dossiers', dossiers);
-            renderDossierList();
-        }
-    }
+
     function openDossier(id) {
-        activeDossierId = id; let d = dossiers.find(x => x.id === id);
-        document.getElementById('view-list-dossiers').style.display = 'none'; 
+        activeDossierId = id;
+        document.getElementById('view-list-dossiers').style.display = 'none';
         document.getElementById('view-detail-dossier').style.display = 'block';
-        document.getElementById('det-nom').value = d.nom; 
-        document.getElementById('det-cli').value = d.cli || ''; 
-        document.getElementById('det-coeff').value = d.coeff || 1; 
+        let d = dossiers.find(x => x.id === id);
+        document.getElementById('det-nom').value = d.nom;
+        document.getElementById('det-cli').value = d.cli;
+        document.getElementById('det-coeff').value = d.coeff || 1;
         document.getElementById('det-rem-g').value = d.remiseG || 0;
         document.getElementById('det-notes').value = d.notes || "";
-        let typeSelect = document.getElementById('det-type-presta');
-        if(typeSelect) typeSelect.value = d.typePresta || "Location comptoir";
-
+        document.getElementById('det-type-presta').value = d.typePresta || "Prestation de service";
         ['immoD','livrD','montD','showD','demoD','recuD','immoF','livrF','montF','showF','demoF','recuF'].forEach(k => {
             let key = k.endsWith('D') ? k.replace('D','-d') : k.replace('F','-f');
-            if(document.getElementById('d-'+key)) document.getElementById('d-'+key).value = d[k] || '';
+            document.getElementById('d-'+key).value = d[k] || '';
         });
         renderCats();
     }
+
     function closeDossier() {
         activeDossierId = null;
         document.getElementById('view-detail-dossier').style.display = 'none';
@@ -494,7 +525,7 @@
             d[k] = document.getElementById('d-'+key).value;
         });
 
-        // Calcul coeff automatique silencieux
+        // Calcul coeff automatique sans popup (silencieux)
         if(d.showD && d.showF) {
             let start = new Date(d.showD);
             let end = new Date(d.showF);
@@ -505,86 +536,122 @@
                 document.getElementById('det-coeff').value = autoCoeff;
             }
         }
+        
         await saveToSupabase('dossiers', dossiers);
         renderCats();
     }
 
-    // --- RENDER CATÉGORIES & ITEMS ---
+    async function addCat() {
+        let nom = prompt("Nom de la catégorie (ex: Son, Lumière...) :");
+        if(!nom) return;
+        dossiers.find(x => x.id === activeDossierId).cats.push({ id: Date.now(), nom: nom, remise: 0, items: [] });
+        await syncDossier();
+    }
+
+    async function renameCat(id) {
+        let cat = dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === id);
+        let n = prompt("Nouveau nom :", cat.nom);
+        if(n) { cat.nom = n; await syncDossier(); }
+    }
+
+    async function remCatRemise(id) {
+        let cat = dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === id);
+        let r = prompt("Remise (%) sur cette catégorie :", cat.remise);
+        if(r !== null) { cat.remise = parseFloat(r) || 0; await syncDossier(); }
+    }
+
+    async function deleteCat(id) {
+        if(!confirm("Supprimer cette catégorie et son contenu ?")) return;
+        let d = dossiers.find(x => x.id === activeDossierId);
+        d.cats = d.cats.filter(c => c.id !== id);
+        await syncDossier();
+    }
+
     function renderCats() {
         let d = dossiers.find(x => x.id === activeDossierId);
-        let cont = document.getElementById('dossier-cats-container'); cont.innerHTML = '';
+        let cont = document.getElementById('dossier-cats');
+        cont.innerHTML = '';
         let totalBrut = 0;
+        
         d.cats.forEach(cat => {
-            let itemsHtml = ''; let catNet = 0;
+            let div = document.createElement('div'); div.className = 'categorie-bloc';
+            div.ondragover = allowDrop; div.ondrop = (ev) => drop(ev, cat.id);
+            
+            let html = `<div class="categorie-header">
+                <div><span style="font-size:1.2em; font-weight:bold; cursor:pointer;" onclick="renameCat(${cat.id})">${cat.nom}</span> <span style="font-size:0.9em; margin-left:15px; cursor:pointer;" onclick="remCatRemise(${cat.id})">Remise: <span style="background:white; color:black; padding:2px 8px; border-radius:4px;">${cat.remise}</span> %</span></div>
+                <button class="btn-mini btn-delete" onclick="deleteCat(${cat.id})">Suppr</button>
+            </div>
+            <div style="padding:10px; background:#f9f9f9; display:flex; gap:10px; align-items:center;">
+                <input type="text" id="add-ref-${cat.id}" list="dl-stock" placeholder="Réf Stock" style="width:150px;">
+                <input type="number" id="add-qte-${cat.id}" value="1" min="1" style="width:70px;" placeholder="Qté">
+                <button onclick="addItem(${cat.id})">Ajouter</button>
+                <button class="btn-custom" onclick="addCustomItem(${cat.id})">+ Ligne Manuelle</button>
+            </div>`;
+
+            let itemsHtml = '';
+            let catTotal = 0;
             cat.items.forEach((it, idx) => {
-                let s = stock.find(x => x.ref === it.ref);
-                let label = it.isCustom ? it.label : (s ? s.nom : '<span style="color:red">Supprimé</span>');
-                let pUnit = it.isCustom ? it.pUnit : (s ? s.ploc : 0);
+                let name = it.isCustom ? it.label : (stock.find(s => s.ref === it.ref)?.nom || 'Inconnu');
+                let pu = it.isCustom ? it.pUnit : (stock.find(s => s.ref === it.ref)?.ploc || 0);
                 let coeffLigne = it.coeff !== undefined ? it.coeff : d.coeff;
-                let tot = (it.qte * pUnit * coeffLigne) * (1 - it.remise/100);
-                catNet += tot;
+                let tot = (it.qte * pu * coeffLigne) * (1 - it.remise/100);
+                catTotal += tot;
                 
-                itemsHtml += `<tr class="draggable-row" draggable="true" ondragstart="dragStart(event, ${cat.id}, ${idx})">
-                    <td>${it.isCustom ? '<span class="item-custom">MANU</span>' : it.ref}</td>
-                    <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'label')">${label}</span></td>
+                itemsHtml += `<tr class="draggable-row" draggable="true" ondragstart="drag(event, ${cat.id}, ${idx})">
+                    <td>${it.isCustom ? '-' : it.ref}</td>
+                    <td><span class="${it.isCustom?'item-custom':'item-clickable'}" onclick="editItem(${cat.id},${idx},'label')">${name}</span></td>
                     <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td>
-                    <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'pUnit')">${pUnit}</span>€</td>
-                    <td><input type="number" step="0.1" style="width:60px;" value="${coeffLigne}" onchange="updateItemCoeff(${cat.id}, ${idx}, this.value)"></td>
+                    <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'pUnit')">${pu.toFixed(2)}€</span></td>
+                    <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'coeff')" title="Coeff ligne">${coeffLigne}</span></td>
                     <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td>
-                    <td><b>${tot.toFixed(2)}€</b></td>
-                    <td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td>
+                    <td style="font-weight:bold;">${tot.toFixed(2)}€</td>
+                    <td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id}, ${idx})">X</button></td>
                 </tr>`;
             });
-            let catFinal = catNet * (1 - cat.remise/100); totalBrut += catFinal;
-            let div = document.createElement('div'); div.className = 'categorie-bloc';
-            div.innerHTML = `<div class="categorie-header"><b onclick="renameCat(${cat.id})" style="cursor:pointer;">${cat.nom}</b><div>Remise: <input type="number" style="width:50px" value="${cat.remise}" onchange="updateCatRem(${cat.id},this.value)">%</div><button class="btn-mini btn-delete" onclick="removeCat(${cat.id})">Suppr</button></div>
-                <div style="padding:10px; background:#f8f9fa; display:flex; gap:10px;"><input type="text" id="add-ref-${cat.id}" list="dl-stock" placeholder="Réf Stock" style="width:150px;"><input type="number" id="add-qte-${cat.id}" placeholder="Qté" style="width:70px;"><button class="btn-mini" onclick="addItem(${cat.id})">Ajouter</button><button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})">+ Ligne Manuelle</button></div>
-                <table><thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Unit/J</th><th>Coeff</th><th>Rem.</th><th>Total</th><th></th></tr></thead><tbody ondragover="allowDrop(event)" ondrop="drop(event, ${cat.id})" ondragenter="this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')">${itemsHtml}</tbody></table>
+
+            let catFinal = catTotal * (1 - cat.remise/100);
+            totalBrut += catFinal;
+
+            html += `<table><thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Unit/J</th><th>Coeff</th><th>Rem.</th><th>Total</th><th></th></tr></thead><tbody>${itemsHtml}</tbody></table>
                 <div style="text-align:right; padding:10px; font-weight:bold; background:#eee;">Sous-total : ${catFinal.toFixed(2)}€</div>`;
+            div.innerHTML = html;
             cont.appendChild(div);
         });
+        
         let final = totalBrut * (1 - d.remiseG/100);
         document.getElementById('dossier-recap').innerHTML = `<div>Total Brut : ${totalBrut.toFixed(2)}€</div><div style="font-size:1.5em; font-weight:bold;">NET À PAYER : ${final.toFixed(2)}€</div>`;
     }
 
-    async function addItem(catId) { 
-        let r = document.getElementById('add-ref-'+catId).value; let q = parseFloat(document.getElementById('add-qte-'+catId).value) || 1; 
-        if(!r || !stock.find(s => s.ref === r)) return alert("Référence invalide");
-        if(!checkAvailability(r, q, activeDossierId, null, catId)) { if(!confirm("ALERTE STOCK ! L'article manque sur cette période. Ajouter quand même ?")) return; }
-        dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:q, remise:0, isCustom:false}); 
+    // Drag and Drop implementation
+    function drag(ev, catId, idx) { ev.dataTransfer.setData("catId", catId); ev.dataTransfer.setData("idx", idx); }
+    function allowDrop(ev) { ev.preventDefault(); }
+    async function drop(ev, toCatId) {
+        ev.preventDefault();
+        let fromCatId = parseInt(ev.dataTransfer.getData("catId"));
+        let idx = parseInt(ev.dataTransfer.getData("idx"));
+        if(fromCatId === toCatId) return;
+        let d = dossiers.find(x => x.id === activeDossierId);
+        let fromCat = d.cats.find(c => c.id === fromCatId);
+        let toCat = d.cats.find(c => c.id === toCatId);
+        let item = fromCat.items.splice(idx, 1)[0];
+        toCat.items.push(item);
+        await syncDossier();
+    }
+
+    async function addItem(catId) {
+        let r = document.getElementById('add-ref-'+catId).value.toUpperCase();
+        let q = parseInt(document.getElementById('add-qte-'+catId).value) || 1;
+        if(!r) return;
+        if(!checkAvailability(r, q, activeDossierId)) { if(!confirm("ALERTE STOCK : Quantité insuffisante sur cette période. Ajouter quand même ?")) return; }
+        dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:q, remise:0, coeff: undefined, isCustom:false}); 
         await syncDossier(); 
     }
+
     async function addCustomItem(catId) {
         let label = prompt("Nom de l'article / prestation ?"); if(!label) return;
         let pUnit = parseFloat(prompt("Prix unitaire / Jour ?", "0")) || 0;
-        dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({label:label, pUnit:pUnit, qte:1, remise:0, isCustom:true}); 
+        dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.push({label:label, pUnit:pUnit, qte:1, remise:0, coeff: undefined, isCustom:true}); 
         await syncDossier();
-    }
-
-    async function updateItemCoeff(catId, idx, value) {
-        let it = dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items[idx];
-        it.coeff = parseFloat(value) || 1;
-        await syncDossier();
-    }
-
-    // Drag and Drop
-    function dragStart(ev, catId, idx) { draggedItemInfo = { catId, idx }; }
-    function allowDrop(ev) { ev.preventDefault(); }
-    async function drop(ev, targetCatId) {
-        ev.preventDefault();
-        ev.currentTarget.classList.remove('drag-over');
-        if (!draggedItemInfo) return;
-        
-        let d = dossiers.find(x => x.id === activeDossierId);
-        let sCat = d.cats.find(c => c.id === draggedItemInfo.catId);
-        let tCat = d.cats.find(c => c.id === targetCatId);
-        
-        if (sCat && tCat && sCat.id !== tCat.id) {
-            let item = sCat.items.splice(draggedItemInfo.idx, 1)[0];
-            tCat.items.push(item);
-            await syncDossier();
-        }
-        draggedItemInfo = null;
     }
 
     async function editItem(catId, idx, key) { 
@@ -594,11 +661,11 @@
         it[key] = (key === 'label') ? v : parseFloat(v) || 0; 
         await syncDossier(); 
     }
-    async function removeItem(catId, idx) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.splice(idx,1); await syncDossier(); }
-    async function updateCatRem(catId, v) { dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).remise = parseFloat(v) || 0; await syncDossier(); }
-    async function addCat() { let n = prompt("Nom catégorie :"); if(n) dossiers.find(x => x.id === activeDossierId).cats.push({id:Date.now(), nom:n, items:[], remise:0}); await syncDossier(); }
-    async function renameCat(id) { let c = dossiers.find(x => x.id === activeDossierId).cats.find(x => x.id === id); let n = prompt("Nom :", c.nom); if(n) { c.nom = n; await syncDossier(); } }
-    async function removeCat(id) { if(confirm("Supprimer cette catégorie et son contenu ?")) { let d = dossiers.find(x => x.id === activeDossierId); d.cats = d.cats.filter(c => c.id !== id); await syncDossier(); } }
+
+    async function removeItem(catId, idx) { 
+        dossiers.find(x => x.id === activeDossierId).cats.find(c => c.id === catId).items.splice(idx, 1);
+        await syncDossier();
+    }
 
     function checkAvailability(ref, qteReclamee, currentDossierId, skipIdx=null, skipCatId=null) {
         let st = stock.find(s => s.ref === ref); if(!st) return true;
@@ -620,28 +687,26 @@
         return (st.qte - occ) >= qteReclamee;
     }
 
+    // --- DISPO ---
     function checkDispo() {
-        let ref = document.getElementById('dispo-ref').value;
-        let d1 = document.getElementById('dispo-d').value;
-        let d2 = document.getElementById('dispo-f').value;
-        if(!ref || !d1 || !d2) return;
-        let st = stock.find(s => s.ref === ref);
-        if(!st) return alert("Ref introuvable");
-        let start = new Date(d1); let end = new Date(d2);
-        let cur = new Date(start); let h = `<h3>Dispo pour ${st.nom} (Stock total: ${st.qte})</h3>`;
+        let ref = document.getElementById('dispo-ref').value.toUpperCase();
+        let d = document.getElementById('dispo-d').value;
+        let f = document.getElementById('dispo-f').value;
+        if(!ref || !d || !f) return;
+        let st = stock.find(s => s.ref === ref); if(!st) return;
+        let start = new Date(d); let end = new Date(f);
+        let h = `<h3>Disponibilité pour ${st.nom} (${ref})</h3>`;
+        let cur = new Date(start);
         while(cur <= end) {
+            let iso = cur.toISOString().split('T')[0];
             let occ = 0;
-            dossiers.forEach(d => {
-                if(d.immoD && d.immoF) {
-                    let dD = new Date(d.immoD); let dF = new Date(d.immoF);
-                    if(cur >= dD && cur <= dF) {
-                        d.cats.forEach(c => c.items.forEach(it => { if(it.ref === ref) occ += it.qte; }));
-                    }
+            dossiers.forEach(dos => {
+                if(dos.immoD && dos.immoF && iso >= dos.immoD && iso <= dos.immoF) {
+                    dos.cats.forEach(c => c.items.forEach(it => { if(it.ref === ref) occ += it.qte; }));
                 }
             });
             let reste = st.qte - occ;
-            let col = reste < 0 ? 'red' : (reste === 0 ? 'orange' : 'green');
-            h += `<div style="padding:5px; border-bottom:1px solid #ccc;">${formatDateFr(cur.toISOString().split('T')[0])} : <b style="color:${col}">${reste}</b></div>`;
+            h += `<div style="padding:5px; border-bottom:1px solid #ddd; ${reste<0?'color:red':''}">Le ${formatDateFr(iso)} : Occupé: ${occ} | <b>Libre: ${reste}</b></div>`;
             cur.setDate(cur.getDate()+1);
         }
         document.getElementById('dispo-result').innerHTML = h;
@@ -669,47 +734,37 @@
         doc.text(`Émetteur :\n${settings.nom}\n${settings.adr || ''}\n${settings.mail || ''}\n${settings.tel || ''}`, 15, 48);
         doc.text(`Destinataire :\n${client.ent || client.nom || d.cli}\n${client.email || ''}\n${client.tel || ''}`, 130, 48);
 
-        // Dates détaillées
-        let currentY = 75;
-        doc.setFont(undefined, 'bold'); doc.text(`PROJET : ${d.nom} (${d.typePresta || 'Location'})`, 15, currentY); doc.setFont(undefined, 'normal');
-        let datesText = [];
+        // Informations du document
+        doc.setFontSize(11);
+        doc.text(`Projet : ${d.nom}`, 15, 80);
+        doc.text(`Type : ${d.typePresta || 'Prestation de service'}`, 15, 86);
         
-        let formatPeriode = (debut, fin, titre) => {
-            if (debut && fin) return `${titre} : du ${formatDateFr(debut)} au ${formatDateFr(fin)}`;
-            if (debut) return `${titre} : ${formatDateFr(debut)}`;
-            return null;
-        };
-
-        let l = formatPeriode(d.livrD, d.livrF, 'Livraison'); if(l) datesText.push(l);
-        let m = formatPeriode(d.montD, d.montF, 'Montage'); if(m) datesText.push(m);
-        let s = formatPeriode(d.showD, d.showF, 'SHOW'); if(s) datesText.push(s);
-        let de = formatPeriode(d.demoD, d.demoF, 'Démontage'); if(de) datesText.push(de);
-        let r_rec = formatPeriode(d.recuD, d.recuF, 'Récupération'); if(r_rec) datesText.push(r_rec);
+        let datesText = "Dates : Non définies";
+        if (d.showD && d.showF) {
+            datesText = `Dates : du ${formatDateFr(d.showD)} au ${formatDateFr(d.showF)}`;
+        }
+        doc.text(datesText, 15, 92);
         
-        doc.setFontSize(8);
-        let dateLine = datesText.join(' | ');
-        doc.text(dateLine, 15, currentY + 5);
-        currentY += 12;
+        doc.text(`Coefficient global : ${d.coeff || 1}`, 15, 98);
 
-        // ZONE TEXTE LIBRE (NOTES)
-        if(d.notes && d.notes.trim() !== "") {
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'italic');
-            let splitNotes = doc.splitTextToSize(d.notes, 180);
-            doc.text(splitNotes, 15, currentY);
-            currentY += (splitNotes.length * 5) + 5;
-            doc.setFont(undefined, 'normal');
+        if(d.notes && type !== 'prep') {
+            doc.setFontSize(9); doc.setTextColor(80, 80, 80);
+            doc.text(`Notes : ${d.notes}`, 15, 105, { maxWidth: 180 });
+            doc.setTextColor(0, 0, 0);
         }
 
-        // Tableau Matériel
-        let body = []; let totalBrut = 0;
+        let currentY = 115;
+        let totalBrut = 0;
+        let body = [];
+
         d.cats.forEach(cat => {
-            body.push([{ 
-                content: cat.nom + (cat.remise > 0 ? ` (Remise cat: ${cat.remise}%)` : ""), 
-                colSpan: (type === 'prep' ? 3 : 6), 
-                styles: { fillColor: [10, 35, 66], textColor: [255, 255, 255], fontStyle: 'bold' } 
-            }]);
-            
+            // Ligne de catégorie (Visuel amélioré)
+            if(type === 'prep') {
+                body.push([{ content: cat.nom.toUpperCase(), colSpan: 3, styles: { fillColor: [23, 63, 107], textColor: [255,255,255], fontStyle: 'bold' } }]);
+            } else {
+                body.push([{ content: cat.nom.toUpperCase(), colSpan: 6, styles: { fillColor: [23, 63, 107], textColor: [255,255,255], fontStyle: 'bold' } }]);
+            }
+
             let catTotal = 0;
             cat.items.forEach(it => {
                 let name = it.isCustom ? it.label : (stock.find(s => s.ref === it.ref)?.nom || '???');
@@ -717,8 +772,12 @@
                 let coeffLigne = it.coeff !== undefined ? it.coeff : d.coeff;
                 let lineNet = (it.qte * pu * coeffLigne) * (1 - it.remise/100);
                 catTotal += lineNet;
-                if(type === 'prep') body.push([it.ref || 'MANU', name, it.qte]);
-                else body.push([name, it.qte, pu.toFixed(2)+'€', coeffLigne, it.remise > 0 ? it.remise+'%' : '-', lineNet.toFixed(2)+'€']);
+                
+                if(type === 'prep') {
+                    body.push([it.ref || 'MANU', name, it.qte]);
+                } else {
+                    body.push([name, it.qte, pu.toFixed(2)+'€', coeffLigne, it.remise > 0 ? it.remise+'%' : '-', lineNet.toFixed(2)+'€']);
+                }
             });
             totalBrut += catTotal * (1 - cat.remise/100);
         });
@@ -727,7 +786,8 @@
             startY: currentY,
             head: type === 'prep' ? [['Réf', 'Désignation', 'Quantité']] : [['Désignation', 'Qté', 'PU Loc/J', 'Coeff', 'Rem.', 'Total NET']],
             body: body,
-            headStyles: { fillColor: [10, 35, 66] }, theme: 'grid'
+            headStyles: { fillColor: [10, 35, 66] }, 
+            theme: 'grid'
         });
 
         // Totaux et Mentions
