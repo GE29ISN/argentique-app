@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Argentique Events - Cloud Pro</title>
-    
+
     <!-- Bibliothèques PDF & Firebase -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -33,7 +33,7 @@
             align-items: center; z-index: 3000; color: white; 
         }
         .auth-box { background: white; padding: 30px; border-radius: 8px; color: #333; width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .auth-box input { margin-bottom: 10px; }
+        .auth-box input { margin-bottom: 10px; width: 100%; padding: 10px; box-sizing: border-box; }
 
         nav { background-color: var(--bleu-marine); padding: 15px 20px; display: none; gap: 15px; position: sticky; top: 0; z-index: 1000; align-items: center; }
         nav button { background: none; border: 2px solid var(--blanc); color: var(--blanc); font-size: 15px; cursor: pointer; padding: 6px 12px; border-radius: 4px; }
@@ -42,14 +42,9 @@
 
         .container { max-width: 1300px; margin: 20px auto; background: var(--blanc); padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display:none; }
 
-        h1, h2, h3 { color: var(--bleu-marine); margin-top: 0; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--gris-bordure); }
-
-        .dates-container { display: grid; grid-template-columns: 120px repeat(6, 1fr); gap: 10px; align-items: center; margin-bottom: 20px; background: #eef2ff; padding: 15px; border-radius: 6px; }
-        .dates-label { font-weight: bold; font-size: 13px; color: var(--bleu-marine); }
-
-        input, select, textarea { padding: 8px; border: 1px solid var(--gris-bordure); border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px; font-family: inherit; }
-        label { font-size: 12px; font-weight: bold; color: var(--bleu-marine-clair); display: block; margin-bottom: 3px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-grid div { display: flex; flex-direction: column; }
+        label { font-size: 12px; color: #666; font-weight: bold; display: block; margin-bottom: 3px; }
 
         button { padding: 10px 15px; background: var(--bleu-marine); color: var(--blanc); border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { opacity: 0.9; }
@@ -73,13 +68,21 @@
         .draggable-row:active { cursor: grabbing; }
 
         .recap-final { background: var(--bleu-marine); color: white; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: right; }
-        #admin-login { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(10,35,66,0.95); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:2000; color:white; }
+
+        #admin-login { 
+            position: fixed; top:0; left:0; width:100%; height:100%; 
+            background: rgba(10,35,66,0.95); display:none; flex-direction:column; 
+            justify-content:center; align-items:center; z-index:2000; color:white; 
+        }
 
         .badge-link { 
             background: #ffffff; color: var(--bleu-marine); padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; 
             border: 1px solid var(--bleu-marine); margin-right: 5px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: bold;
         }
-        .logo-preview { max-height: 80px; display: block; margin-top: 10px; border: 1px solid #ccc; }
+        .logo-preview { max-height: 80px; display: block; margin-top: 10px; border: 1px solid #ccc; background: white; }
+
+        .dates-container { display: grid; grid-template-columns: 100px repeat(6, 1fr); gap: 5px; margin-bottom: 20px; align-items: center; }
+        .dates-label { font-weight: bold; font-size: 11px; color: var(--bleu-marine); }
     </style>
 </head>
 <body>
@@ -110,7 +113,7 @@
     </div>
 </nav>
 
-<!-- LOGIN ADMIN (SECUNDAIRE) -->
+<!-- LOGIN ADMIN -->
 <div id="admin-login">
     <h2>Accès Administration</h2>
     <input type="password" id="admin-pass" style="width:250px; text-align:center; margin-bottom: 10px;" placeholder="Mot de passe">
@@ -123,11 +126,23 @@
 <!-- ONGLET ADMIN -->
 <div id="tab-admin" class="container">
     <h1>⚙️ Paramètres de l'Association</h1>
+    
+    <!-- MODIFICATION ICI : CHAMPS EDITABLES POUR L'UTILISATEUR -->
+    <div id="user-personal-info" style="background: #eef2ff; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--bleu-marine);">
+        <h3 style="margin:0">👤 Mon Profil (Chargé d'affaire)</h3>
+        <p style="font-size: 11px; color: #555; margin-bottom: 10px;">Ces informations apparaîtront sur les PDF que vous générez.</p>
+        <div class="form-grid">
+            <div><label>Mon Nom & Prénom</label><input type="text" id="user-profile-name" placeholder="Ex: Gabin Eustratrion"></div>
+            <div><label>Mon Téléphone Direct</label><input type="text" id="user-profile-tel" placeholder="Ex: 06 00 00 00 00"></div>
+        </div>
+        <button onclick="saveUserProfile()" class="btn-mini" style="background: var(--bleu-marine-clair);">Mettre à jour mon profil</button>
+    </div>
+
     <div class="form-grid">
         <div style="grid-column: span 2;"><label>Nom de l'Asso / Structure</label><input type="text" id="adm-nom"></div>
         <div style="grid-column: span 2;"><label>Adresse</label><input type="text" id="adm-adr"></div>
-        <div><label>Email</label><input type="text" id="adm-mail"></div>
-        <div><label>Téléphone</label><input type="text" id="adm-tel"></div>
+        <div><label>Email (Affiché PDF)</label><input type="text" id="adm-mail"></div>
+        <div><label>Téléphone (Affiché PDF)</label><input type="text" id="adm-tel"></div>
         <div><label>SIRET</label><input type="text" id="adm-siret"></div>
         <div><label>Code APE</label><input type="text" id="adm-ape"></div>
         <div><label>TVA Intracom.</label><input type="text" id="adm-tva"></div>
@@ -143,7 +158,7 @@
         <div><label>IBAN</label><input type="text" id="adm-iban"></div>
         <div><label>BIC/SWIFT</label><input type="text" id="adm-bic"></div>
     </div>
-    <button onclick="saveAdminSettings()" style="background:var(--vert-ok); width: 100%;">Enregistrer les paramètres</button>
+    <button onclick="saveAdminSettings()" style="background:var(--vert-ok); width: 100%;">Enregistrer les paramètres généraux</button>
 </div>
 
 <!-- STOCK -->
@@ -156,31 +171,31 @@
         <div><label>Prix Achat (€)</label><input type="number" step="0.01" id="s-pachat"></div>
         <div><label>Prix Loc/J (€)</label><input type="number" step="0.01" id="s-ploc"></div>
     </div>
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
+    <div style="display:flex; gap:10px; margin-bottom: 20px;">
         <button id="btn-save-stock" onclick="saveStock()">Enregistrer Article</button>
-        <button class="btn-delete" style="display:none;" id="btn-cancel-stock" onclick="cancelStock()">Annuler</button>
+        <button id="btn-cancel-stock" class="btn-delete" style="display:none;" onclick="cancelStock()">Annuler</button>
     </div>
-    <input type="text" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" id="search-stock" placeholder="🔍 Rechercher un article..." onkeyup="renderStock()">
+    <input type="text" id="search-stock" placeholder="Rechercher un article..." oninput="renderStock()" style="width:100%; padding:10px; margin-bottom:10px;">
     <table>
-        <thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Achat</th><th>Loc/J</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Réf</th><th>Nom</th><th>Stock</th><th>Achat</th><th>Loc/J</th><th>Actions</th></tr></thead>
         <tbody id="table-stock-body"></tbody>
     </table>
 </div>
 
 <!-- CLIENTS -->
 <div id="tab-clients" class="container">
-    <h1>👥 Clients</h1>
+    <h1>👥 Gestion Clients</h1>
     <div class="form-grid">
         <div><label>Entreprise</label><input type="text" id="c-ent"></div>
         <div><label>Contact Nom</label><input type="text" id="c-nom"></div>
         <div><label>Téléphone</label><input type="text" id="c-tel"></div>
         <div><label>Email</label><input type="text" id="c-email"></div>
     </div>
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
+    <div style="display:flex; gap:10px; margin-bottom: 20px;">
         <button id="btn-save-client" onclick="saveClient()">Enregistrer Client</button>
-        <button class="btn-delete" style="display:none;" id="btn-cancel-client" onclick="cancelClient()">Annuler</button>
+        <button id="btn-cancel-client" class="btn-delete" style="display:none;" onclick="cancelClient()">Annuler</button>
     </div>
-    <input type="text" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" id="search-clients" placeholder="🔍 Rechercher un client..." onkeyup="renderClients()">
+    <input type="text" id="search-clients" placeholder="Rechercher un client..." oninput="renderClients()" style="width:100%; padding:10px; margin-bottom:10px;">
     <table>
         <thead><tr><th>Entreprise</th><th>Nom</th><th>Tel</th><th>Email</th><th>Actions</th></tr></thead>
         <tbody id="table-clients-body"></tbody>
@@ -190,21 +205,25 @@
 <!-- DOSSIERS -->
 <div id="tab-dossiers" class="container">
     <div id="view-list-dossiers">
-        <h1>📁 Dossiers / Devis</h1>
-        <button onclick="createDossier()" style="margin-bottom: 20px;">+ Nouveau Dossier</button>
-        <input type="text" id="search-dossiers" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" placeholder="🔍 Rechercher un projet..." onkeyup="renderDossierList()">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>📁 Dossiers / Projets</h1>
+            <button onclick="createDossier()">+ Nouveau Dossier</button>
+        </div>
+        <input type="text" id="search-dossiers" placeholder="Rechercher un projet..." oninput="renderDossierList()" style="width:100%; padding:10px; margin-top:10px;">
         <table>
-            <thead><tr><th>Immo.</th><th>Projet</th><th>Client</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date Immo</th><th>Nom Projet</th><th>Client</th><th>Actions</th></tr></thead>
             <tbody id="table-dossiers-body"></tbody>
         </table>
     </div>
 
     <div id="view-detail-dossier" style="display:none;">
-        <div style="display:flex; gap:10px; flex-wrap: wrap;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#eee; padding:10px; border-radius:4px; margin-bottom:20px;">
             <button class="btn-mini" onclick="showTab('dossiers')">⬅ Retour</button>
-            <button class="btn-mini btn-pdf" onclick="genPDF('prep')">📋 Bon de Préparation (PDF)</button>
-            <button class="btn-mini btn-pdf" onclick="genPDF('devis')">📄 Devis (PDF)</button>
-            <button class="btn-mini btn-pdf" onclick="genPDF('facture')">💰 Facture (PDF)</button>
+            <div style="display:flex; gap:5px;">
+                <button class="btn-mini btn-pdf" onclick="genPDF('prep')">📋 Prépa</button>
+                <button class="btn-mini btn-pdf" onclick="genPDF('devis')">📄 Devis</button>
+                <button class="btn-mini btn-pdf" onclick="genPDF('facture')">💰 Facture</button>
+            </div>
         </div>
 
         <h1 id="det-titre" style="margin-top:15px;">Détails Dossier</h1>
@@ -246,7 +265,7 @@
 
         <div style="margin-bottom: 20px;">
             <label>📝 Notes / Informations complémentaires</label>
-            <textarea id="det-notes" rows="4" placeholder="Ex: Lieu de prestation, consignes particulières..." onchange="syncDossier()"></textarea>
+            <textarea id="det-notes" rows="4" placeholder="Ex: Lieu de prestation, consignes particulières..." onchange="syncDossier()" style="width:100%; box-sizing:border-box;"></textarea>
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -272,16 +291,16 @@
 
 <script>
     // ==========================================
-    // CONFIGURATION FIREBASE - REMPLACE ICI
+    // CONFIGURATION FIREBASE
     // ==========================================
     const firebaseConfig = {
-  apiKey: "AIzaSyAjyBMYBiJgsGD0wY3iznSXeeXONC6aato",
-  authDomain: "argentique-events-app.firebaseapp.com",
-  projectId: "argentique-events-app",
-  storageBucket: "argentique-events-app.firebasestorage.app",
-  messagingSenderId: "801508468310",
-  appId: "1:801508468310:web:1e9a7004b14ed5cb7efdf7"
-};
+        apiKey: "AIzaSyAjyBMYBiJgsGD0wY3iznSXeeXONC6aato",
+        authDomain: "argentique-events-app.firebaseapp.com",
+        projectId: "argentique-events-app",
+        storageBucket: "argentique-events-app.firebasestorage.app",
+        messagingSenderId: "801508468310",
+        appId: "1:801508468310:web:1e9a7004b14ed5cb7efdf7"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -291,7 +310,9 @@
     // VARIABLES D'ÉTAT
     // ==========================================
     const PASS_ADMIN = "1234 ARGENTIQUE";
+    
     let stock = [], clients = [], dossiers = [], settings = {};
+    let currentUserProfile = { name: "", tel: "" }; // Stocke le profil de l'utilisateur connecté
     let activeDossierId = null;
     let editStockRef = null, editClientId = null;
     let draggedItemIdx = null, draggedFromCatId = null;
@@ -314,6 +335,16 @@
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('main-nav').style.display = 'flex';
             document.getElementById('user-display').innerText = user.email;
+
+            // Récupérer le profil utilisateur sur Firebase
+            db.collection("users").doc(user.email).get().then(doc => {
+                if(doc.exists) {
+                    currentUserProfile = doc.data();
+                    document.getElementById('user-profile-name').value = currentUserProfile.name || "";
+                    document.getElementById('user-profile-tel').value = currentUserProfile.tel || "";
+                }
+            });
+
             initSync();
             showTab('dossiers');
         } else {
@@ -322,52 +353,62 @@
         }
     });
 
+    // Sauvegarde du profil perso dans la collection "users"
+    function saveUserProfile() {
+        const email = auth.currentUser.email;
+        currentUserProfile = {
+            name: document.getElementById('user-profile-name').value,
+            tel: document.getElementById('user-profile-tel').value
+        };
+        db.collection("users").doc(email).set(currentUserProfile)
+          .then(() => alert("Profil personnel mis à jour !"))
+          .catch(e => alert("Erreur profil: " + e.message));
+    }
+
     // ==========================================
-    // SYNCHRONISATION CLOUD (FIRESTORE)
+    // SYNCHRONISATION CLOUD
     // ==========================================
     function initSync() {
-        // Paramètres
         db.collection("settings").doc("general").onSnapshot(doc => {
-            if(doc.exists) { settings = doc.data(); loadAdminFields(); }
+            if(doc.exists) { 
+                settings = doc.data(); 
+                loadAdminFields(); 
+            }
         });
-        // Stock
         db.collection("stock").onSnapshot(snap => {
             stock = snap.docs.map(d => d.data());
             renderStock(); updateDatalists();
         });
-        // Clients
         db.collection("clients").onSnapshot(snap => {
             clients = snap.docs.map(d => ({idDoc: d.id, ...d.data()}));
             renderClients(); updateDatalists();
         });
-        // Dossiers
         db.collection("dossiers").onSnapshot(snap => {
             dossiers = snap.docs.map(d => ({idDoc: d.id, ...d.data()}));
-            renderDossierList();
-            if(activeDossierId) renderCats();
+            renderDossierList(); if(activeDossierId) renderCats();
         });
     }
 
     // ==========================================
-    // NAVIGATION
+    // NAVIGATION ET ADMIN
     // ==========================================
     function showTab(t) {
         ['stock', 'clients', 'dossiers', 'dispo', 'admin'].forEach(id => {
-            document.getElementById('tab-'+id).style.display = 'none';
-            document.getElementById('nav-'+id).classList.remove('actif');
+            if(document.getElementById('tab-'+id)) document.getElementById('tab-'+id).style.display = 'none';
+            if(document.getElementById('nav-'+id)) document.getElementById('nav-'+id).classList.remove('actif');
         });
         document.getElementById('tab-'+t).style.display = 'block';
-        document.getElementById('nav-'+t).classList.add('actif');
+        if(document.getElementById('nav-'+t)) document.getElementById('nav-'+t).classList.add('actif');
+
         if(t === 'dossiers') { 
             document.getElementById('view-detail-dossier').style.display = 'none'; 
             document.getElementById('view-list-dossiers').style.display = 'block'; 
-            activeDossierId = null;
+            renderDossierList(); 
         }
+        if(t === 'admin') loadAdminFields();
+        updateDatalists();
     }
 
-    // ==========================================
-    // ADMIN
-    // ==========================================
     function checkAdmin() { document.getElementById('admin-login').style.display = 'flex'; }
     function closeAdmin() { document.getElementById('admin-login').style.display = 'none'; }
     function verifyAdmin() { if(document.getElementById('admin-pass').value === PASS_ADMIN) { closeAdmin(); showTab('admin'); } else alert("Accès refusé"); }
@@ -375,87 +416,67 @@
     function handleLogoUpload(input) {
         if (input.files && input.files[0]) {
             let reader = new FileReader();
-            reader.onload = function(e) {
-                settings.logoB64 = e.target.result;
-                document.getElementById('logo-preview').src = e.target.result;
+            reader.onload = function(e) { 
+                settings.logoB64 = e.target.result; 
+                document.getElementById('logo-preview').src = e.target.result; 
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
     function loadAdminFields() {
-        ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => {
-            if(settings[k]) document.getElementById('adm-'+k).value = settings[k];
+        ['nom','adr','siret','ape','tva','banque','iban','bic','mail','tel'].forEach(k => {
+            let el = document.getElementById('adm-'+k);
+            if(el && settings[k]) el.value = settings[k];
         });
         if(settings.logoB64) document.getElementById('logo-preview').src = settings.logoB64;
     }
 
     function saveAdminSettings() {
-        ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => {
+        ['nom','adr','siret','ape','tva','banque','iban','bic', 'mail', 'tel'].forEach(k => {
             settings[k] = document.getElementById('adm-'+k).value;
         });
-        db.collection("settings").doc("general").set(settings).then(() => alert("Paramètres Cloud enregistrés !"));
+        db.collection("settings").doc("general").set(settings)
+          .then(() => alert("Paramètres enregistrés avec succès !"))
+          .catch(e => alert("Erreur lors de l'enregistrement: " + e.message));
     }
 
     // ==========================================
-    // STOCK & CLIENTS
+    // GESTION STOCK
     // ==========================================
-    function saveStock() {
-        let r = document.getElementById('s-ref').value.toUpperCase();
-        let n = document.getElementById('s-nom').value;
-        let q = parseInt(document.getElementById('s-qte').value) || 0;
-        let pa = parseFloat(document.getElementById('s-pachat').value) || 0;
-        let pl = parseFloat(document.getElementById('s-ploc').value) || 0;
-        if(!r || !n) return;
-        db.collection("stock").doc(r).set({ref:r, nom:n, qte:q, pachat:pa, ploc:pl}).then(() => cancelStock());
-    }
-
     function renderStock() {
         let sVal = document.getElementById('search-stock').value.toLowerCase();
         document.getElementById('table-stock-body').innerHTML = stock.filter(s => s.nom.toLowerCase().includes(sVal) || s.ref.toLowerCase().includes(sVal)).map(s => `<tr>
             <td>${s.ref}</td><td>${s.nom}</td><td>${s.qte}</td><td>${s.pachat}€</td><td>${s.ploc}€</td>
             <td><button class="btn-mini btn-edit" onclick="editStock('${s.ref}')">Edit</button> <button class="btn-mini btn-delete" onclick="deleteStock('${s.ref}')">X</button></td></tr>`).join('');
     }
-
-    function editStock(r) { 
-        let s = stock.find(x => x.ref === r); 
-        editStockRef = r; 
-        document.getElementById('s-ref').value = s.ref; 
-        document.getElementById('s-nom').value = s.nom; 
-        document.getElementById('s-qte').value = s.qte; 
-        document.getElementById('s-pachat').value = s.pachat; 
-        document.getElementById('s-ploc').value = s.ploc; 
-        document.getElementById('btn-save-stock').innerText = "Mettre à jour"; 
-        document.getElementById('btn-cancel-stock').style.display = 'inline-block';
+    function saveStock() {
+        let s = { ref: document.getElementById('s-ref').value.toUpperCase(), nom: document.getElementById('s-nom').value, qte: parseInt(document.getElementById('s-qte').value), pachat: parseFloat(document.getElementById('s-pachat').value), ploc: parseFloat(document.getElementById('s-ploc').value) };
+        if(!s.ref) return; db.collection("stock").doc(s.ref).set(s); cancelStock();
     }
+    function editStock(ref) { let s = stock.find(x => x.ref === ref); document.getElementById('s-ref').value = s.ref; document.getElementById('s-nom').value = s.nom; document.getElementById('s-qte').value = s.qte; document.getElementById('s-pachat').value = s.pachat; document.getElementById('s-ploc').value = s.ploc; document.getElementById('btn-save-stock').innerText = "Mettre à jour"; document.getElementById('btn-cancel-stock').style.display = 'inline-block'; }
+    function cancelStock() { document.getElementById('s-ref').value = ""; document.getElementById('s-nom').value = ""; document.getElementById('s-qte').value = ""; document.getElementById('s-pachat').value = ""; document.getElementById('s-ploc').value = ""; document.getElementById('btn-save-stock').innerText = "Enregistrer Article"; document.getElementById('btn-cancel-stock').style.display = 'none'; }
+    function deleteStock(ref) { if(confirm("Supprimer ?")) db.collection("stock").doc(ref).delete(); }
 
-    function cancelStock() { editStockRef = null; document.getElementById('s-ref').value = ""; document.getElementById('s-nom').value = ""; document.getElementById('s-qte').value = ""; document.getElementById('s-pachat').value = ""; document.getElementById('s-ploc').value = ""; document.getElementById('btn-save-stock').innerText = "Enregistrer Article"; document.getElementById('btn-cancel-stock').style.display = 'none'; }
-    function deleteStock(r) { if(confirm("Supprimer ?")) db.collection("stock").doc(r).delete(); }
-
+    // ==========================================
+    // GESTION CLIENTS
+    // ==========================================
     function saveClient() {
-        let ent = document.getElementById('c-ent').value;
-        let nom = document.getElementById('c-nom').value;
-        let tel = document.getElementById('c-tel').value;
-        let mail = document.getElementById('c-email').value;
-        if(!ent && !nom) return;
-        let data = {ent, nom, tel, mail};
-        if(editClientId) db.collection("clients").doc(editClientId).update(data).then(() => cancelClient());
-        else db.collection("clients").add(data).then(() => cancelClient());
+        let c = { ent: document.getElementById('c-ent').value, nom: document.getElementById('c-nom').value, tel: document.getElementById('c-tel').value, mail: document.getElementById('c-email').value };
+        if(editClientId) db.collection("clients").doc(editClientId).set(c); else db.collection("clients").add(c); cancelClient();
     }
-
     function renderClients() {
         let sVal = document.getElementById('search-clients').value.toLowerCase();
         document.getElementById('table-clients-body').innerHTML = clients.filter(c => (c.ent||'').toLowerCase().includes(sVal) || (c.nom||'').toLowerCase().includes(sVal)).map(c => `<tr>
             <td>${c.ent||''}</td><td>${c.nom||''}</td><td>${c.tel||''}</td><td>${c.mail||''}</td>
             <td><button class="btn-mini btn-edit" onclick="editClient('${c.idDoc}')">Edit</button> <button class="btn-mini btn-delete" onclick="deleteClient('${c.idDoc}')">X</button></td></tr>`).join('');
     }
-
     function editClient(id) { let c = clients.find(x => x.idDoc === id); editClientId = id; document.getElementById('c-ent').value = c.ent; document.getElementById('c-nom').value = c.nom; document.getElementById('c-tel').value = c.tel; document.getElementById('c-email').value = c.mail; document.getElementById('btn-save-client').innerText = "Mettre à jour"; document.getElementById('btn-cancel-client').style.display = 'inline-block'; }
     function cancelClient() { editClientId = null; document.getElementById('c-ent').value = ""; document.getElementById('c-nom').value = ""; document.getElementById('c-tel').value = ""; document.getElementById('c-email').value = ""; document.getElementById('btn-save-client').innerText = "Enregistrer Client"; document.getElementById('btn-cancel-client').style.display = 'none'; }
     function deleteClient(id) { if(confirm("Supprimer ?")) db.collection("clients").doc(id).delete(); }
 
     // ==========================================
-    // DOSSIERS
+    // GESTION DOSSIERS
     // ==========================================
     function renderDossierList() {
         let sVal = document.getElementById('search-dossiers').value.toLowerCase();
@@ -468,12 +489,13 @@
         let n = prompt("Nom du projet :"); if(!n) return;
         let d = { 
             id: Date.now(), nom: n, cli: "", coeff: 1, remiseG: 0, cats: [], 
-            notes: "", type: "location comptoir", user: auth.currentUser.email 
+            notes: "", type: "location comptoir", user: currentUserProfile.name || auth.currentUser.email, userEmail: auth.currentUser.email 
         };
         db.collection("dossiers").add(d).then(docRef => openDossier(docRef.id));
     }
 
     function openDossier(id) {
+        showTab('dossiers');
         activeDossierId = id; let d = dossiers.find(x => x.idDoc === id);
         document.getElementById('view-list-dossiers').style.display = 'none';
         document.getElementById('view-detail-dossier').style.display = 'block';
@@ -506,22 +528,20 @@
             d[`${k}F`] = document.getElementById(`d-${k}-f`).value; 
         });
 
-        // Calcul auto coeff si dates Show changent
         if ((d.showD !== oldShowD || d.showF !== oldShowF) && d.showD && d.showF) {
             let d1 = new Date(d.showD), d2 = new Date(d.showF);
             if (!isNaN(d1) && !isNaN(d2)) {
-                let diffDays = Math.round((d2 - d1) / 86400000);
+                let diffDays = Math.round((d2 - d1) / 86400000) + 1;
                 if (diffDays <= 0) diffDays = 1;
-                d.coeff = diffDays;
-                document.getElementById('det-coeff').value = diffDays;
+                let newCoeff = 1 + ((diffDays - 1) * 0.5);
+                d.coeff = newCoeff;
+                document.getElementById('det-coeff').value = newCoeff;
             }
         }
         db.collection("dossiers").doc(activeDossierId).set(d);
     }
 
-    // ==========================================
-    // DRAG & DROP
-    // ==========================================
+    // Drag & Drop
     function onDragStart(e, catId, idx) { draggedItemIdx = idx; draggedFromCatId = catId; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.style.opacity = '0.5', 0); }
     function onDragEnd(e) { e.target.style.opacity = '1'; document.querySelectorAll('.draggable-row, table').forEach(r => r.classList.remove('drag-over')); }
     function onDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
@@ -535,13 +555,9 @@
         let item = sourceCat.items.splice(draggedItemIdx, 1)[0];
         if(targetIdx !== null) destCat.items.splice(targetIdx, 0, item);
         else destCat.items.push(item);
-        draggedItemIdx = null; draggedFromCatId = null;
-        syncDossier();
+        draggedItemIdx = null; draggedFromCatId = null; syncDossier();
     }
 
-    // ==========================================
-    // LOGIQUE ARTICLES ET CATÉGORIES
-    // ==========================================
     function renderCats() {
         let d = dossiers.find(x => x.idDoc === activeDossierId);
         if(!d) return;
@@ -553,18 +569,9 @@
                 if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
                 else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
                 let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
-                let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100); 
-                catNet += ligneNet;
+                let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100); catNet += ligneNet;
                 return `<tr class="draggable-row" draggable="true" ondragstart="onDragStart(event, ${cat.id}, ${idx})" ondragend="onDragEnd(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, ${cat.id}, ${idx})">
-                    <td>↕️ ${it.isCustom ? 'MANU' : it.ref}</td>
-                    <td><span class="${it.isCustom ? 'item-clickable item-custom' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'label')` : ''}">${nom}</span></td>
-                    <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td>
-                    <td><span class="${it.isCustom ? 'item-clickable' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'pUnit')` : ''}">${pUnit}€</span></td>
-                    <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'coeff')">${itemCoeff}</span></td>
-                    <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td>
-                    <td style="font-weight:bold;">${ligneNet.toFixed(2)}€</td>
-                    <td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td>
-                </tr>`;
+                    <td>↕️ ${it.isCustom ? 'MANU' : it.ref}</td><td><span class="${it.isCustom ? 'item-clickable item-custom' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'label')` : ''}">${nom}</span></td><td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td><td><span class="${it.isCustom ? 'item-clickable' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'pUnit')` : ''}">${pUnit}€</span></td><td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'coeff')">${itemCoeff}</span></td><td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td><td style="font-weight:bold;">${ligneNet.toFixed(2)}€</td><td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td></tr>`;
             }).join('');
             let catFinal = catNet * (1 - cat.remise/100); totalBrut += catFinal;
             let div = document.createElement('div'); div.className = 'categorie-bloc';
@@ -581,28 +588,9 @@
         document.getElementById('dossier-recap').innerHTML = `<div>Total Brut : ${totalBrut.toFixed(2)}€</div><div style="font-size:1.5em; font-weight:bold;">NET À PAYER : ${final.toFixed(2)}€</div>`;
     }
 
-    function checkAvailability(ref, addedQty, docId, isModIdx = null, catId = null) {
-        let d = dossiers.find(x => x.idDoc === docId); if(!d.immoD || !d.immoF) return true; 
-        let s = stock.find(x => x.ref === ref);
-        let start = new Date(d.immoD), end = new Date(d.immoF);
-        for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
-            let iso = day.toISOString().split('T')[0], booked = 0;
-            dossiers.forEach(dos => {
-                if(iso >= dos.immoD && iso <= dos.immoF) {
-                    dos.cats.forEach(c => c.items.forEach((it, idx) => {
-                        if(it.ref === ref && !it.isCustom) { if(dos.idDoc === docId && c.id === catId && idx === isModIdx) return; booked += it.qte; }
-                    }));
-                }
-            });
-            if(booked + addedQty > s.qte) return false;
-        }
-        return true;
-    }
-
     function addItem(catId) { 
         let r = document.getElementById('add-ref-'+catId).value.toUpperCase(), q = parseInt(document.getElementById('add-qte-'+catId).value) || 1;
         if(!stock.find(s => s.ref === r)) return;
-        if(!checkAvailability(r, q, activeDossierId, null, catId)) { if(!confirm("ALERTE STOCK : Manque sur cette période. Ajouter ?")) return; }
         dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:q, coeff:null, remise:0, isCustom:false}); syncDossier(); 
     }
 
@@ -615,10 +603,8 @@
     function editItem(catId, idx, key) { 
         let it = dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items[idx];
         let v = prompt("Nouvelle valeur :", (key === 'coeff' && !it[key]) ? '' : it[key]); if(v === null) return;
-        if(key === 'qte' && !it.isCustom && !checkAvailability(it.ref, parseFloat(v), activeDossierId, idx, catId)) { if(!confirm("ALERTE STOCK : Manque. Valider ?")) return; }
         if (key === 'coeff') it[key] = (v.trim() === '') ? null : parseFloat(v) || 1;
-        else it[key] = (key === 'label') ? v : parseFloat(v) || 0; 
-        syncDossier(); 
+        else it[key] = (key === 'label') ? v : parseFloat(v) || 0; syncDossier(); 
     }
 
     function updateCatRem(catId, v) { dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).remise = parseFloat(v) || 0; syncDossier(); }
@@ -628,9 +614,6 @@
     function removeItem(catId, idx) { dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.splice(idx, 1); syncDossier(); }
     function deleteDossier(id) { if(confirm("Supprimer dossier ?")) db.collection("dossiers").doc(id).delete(); }
 
-    // ==========================================
-    // DISPONIBILITÉS
-    // ==========================================
     function checkDispo() {
         let ref = document.getElementById('dispo-ref').value.toUpperCase(), dStr = document.getElementById('dispo-d').value, fStr = document.getElementById('dispo-f').value;
         if(!ref || !dStr || !fStr) return;
@@ -651,14 +634,15 @@
         document.getElementById('dispo-result').innerHTML = h;
     }
 
-    // ==========================================
-    // GÉNÉRATION PDF
-    // ==========================================
     function genPDF(type) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+        const { jsPDF } = window.jspdf; const doc = new jsPDF();
         let d = dossiers.find(x => x.idDoc === activeDossierId);
         let client = clients.find(c => c.ent === d.cli || c.nom === d.cli) || { nom: d.cli };
+
+        // MODIFICATION : Utilise les infos du profil personnel
+        let managerName = currentUserProfile.name || d.user || auth.currentUser.email;
+        let managerTel = currentUserProfile.tel || settings.tel || "";
+        let managerMail = auth.currentUser.email;
 
         doc.setFillColor(10, 35, 66); doc.rect(0, 0, 210, 40, 'F');
         if(settings.logoB64) try { doc.addImage(settings.logoB64, 'PNG', 10, 5, 30, 30); } catch(e){}
@@ -667,44 +651,46 @@
         doc.setFontSize(10); doc.text(labelDoc, 195, 20, { align: 'right' });
 
         doc.setTextColor(0, 0, 0); doc.setFontSize(9);
-        doc.text(`Émetteur :\n${settings.nom}\n${settings.adr || ''}\n${settings.mail || ''}\n${settings.tel || ''}`, 15, 48);
+        doc.text(`Émetteur :\n${settings.nom || ''}\nChargé d'affaire: ${managerName}\n${managerMail}\n${managerTel}`, 15, 48);
         doc.text(`Destinataire :\n${client.ent || client.nom || d.cli}\n${client.mail || ''}\n${client.tel || ''}`, 130, 48);
 
-        let currentY = 75;
-        doc.setFont(undefined, 'bold'); doc.text(`PROJET : ${d.nom} (${d.type || ''})`, 15, currentY); doc.setFont(undefined, 'normal');
+        let currentY = 75; doc.setFont(undefined, 'bold'); doc.text(`PROJET : ${d.nom} (${d.type || ''})`, 15, currentY); doc.setFont(undefined, 'normal');
 
         const fmtFR = (iso) => iso ? iso.split('-').reverse().join('/') : null;
         let datesText = [];
         [['Livraison','livr'],['Montage','mont'],['SHOW','show'],['Démontage','demo'],['Récupération','recu']].forEach(k => {
-            if(d[k[1]+'D']) {
-                let s = fmtFR(d[k[1]+'D']), e = fmtFR(d[k[1]+'F']);
-                datesText.push(`${k[0]} : ${s === e || !e ? s : 'du '+s+' au '+e}`);
-            }
+            if(d[k[1]+'D']) { let s = fmtFR(d[k[1]+'D']), e = fmtFR(d[k[1]+'F']); datesText.push(`${k[0]} : ${s === e || !e ? s : 'du '+s+' au '+e}`); }
         });
-        doc.setFontSize(8); let dateLine = datesText.join(' | ');
-        let splitDate = doc.splitTextToSize(dateLine, 180); doc.text(splitDate, 15, currentY + 5);
+        doc.setFontSize(8); let dateLine = datesText.join(' | '); let splitDate = doc.splitTextToSize(dateLine, 180); doc.text(splitDate, 15, currentY + 5);
         currentY += (splitDate.length * 5) + 7;
 
-        if(d.notes) {
-            doc.setFont(undefined, 'italic'); let sn = doc.splitTextToSize(d.notes, 180);
-            doc.text(sn, 15, currentY); currentY += (sn.length * 5) + 5; doc.setFont(undefined, 'normal');
-        }
+        if(d.notes) { doc.setFont(undefined, 'italic'); let sn = doc.splitTextToSize(d.notes, 180); doc.text(sn, 15, currentY); currentY += (sn.length * 5) + 5; doc.setFont(undefined, 'normal'); }
 
         let columns = [{ header: 'Réf', dataKey: 'ref' }, { header: 'Désignation', dataKey: 'nom' }, { header: 'Qté', dataKey: 'qte' }];
-        if(type !== 'prep') { columns.push({ header: 'P.U.', dataKey: 'pu' },{ header: 'Rem.', dataKey: 'rem' },{ header: 'Total HT', dataKey: 'total' }); }
+        if(type !== 'prep') { columns.push({ header: 'P.U.', dataKey: 'pu' },{ header: 'Coeff', dataKey: 'cf' },{ header: 'Rem.', dataKey: 'rem' },{ header: 'Total HT', dataKey: 'total' }); }
 
         let tableData = [], totalBrut = 0;
         d.cats.forEach(cat => {
-            tableData.push({ ref: '', nom: cat.nom.toUpperCase(), qte: '', pu: '', rem: '', total: '', isCat: true });
+            tableData.push({ ref: '', nom: cat.nom.toUpperCase(), qte: '', pu: '', cf:'', rem: '', total: '', isCat: true });
+            let catTotal = 0;
             cat.items.forEach(it => {
                 let nom, pUnit;
-                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
-                else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
+                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; } else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
                 let itemCoeff = it.coeff || d.coeff;
-                let ligneHT = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100); totalBrut += ligneHT;
-                tableData.push({ ref: it.isCustom ? 'MANU' : it.ref, nom: nom, qte: it.qte, pu: type!=='prep'?pUnit.toFixed(2)+'€':'', rem: type!=='prep'?(it.remise?it.remise+'%':''):'', total: type!=='prep'?ligneHT.toFixed(2)+'€':'' });
+                let ligneHT = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
+                catTotal += ligneHT;
+                tableData.push({ 
+                    ref: it.isCustom ? 'MANU' : it.ref, nom: nom, qte: it.qte, 
+                    pu: type!=='prep'?pUnit.toFixed(2)+'€':'', cf: type!=='prep'?itemCoeff:'',
+                    rem: type!=='prep'?(it.remise?it.remise+'%':''):'', 
+                    total: type!=='prep'?ligneHT.toFixed(2)+'€':'' 
+                });
             });
-            if(type !== 'prep' && cat.remise > 0) tableData.push({ ref: '', nom: `> Remise cat. (${cat.remise}%)`, qte: '', pu: '', rem: '', total: `-${(totalBrut*(cat.remise/100)).toFixed(2)}€` });
+            let catRemiseVal = catTotal * (cat.remise/100);
+            totalBrut += (catTotal - catRemiseVal);
+            if(type !== 'prep' && cat.remise > 0) {
+                tableData.push({ ref: '', nom: `> Remise catégorie (${cat.remise}%)`, qte: '', pu: '', cf:'', rem: '', total: `-${catRemiseVal.toFixed(2)}€` });
+            }
         });
 
         doc.autoTable({
@@ -715,10 +701,9 @@
         let finalY = doc.lastAutoTable.finalY + 10;
         if(type !== 'prep') {
             doc.setFontSize(12); doc.setFont(undefined, 'bold');
-            let finalTotal = totalBrut * (1 - d.remiseG/100);
-            doc.text(`TOTAL NET À PAYER : ${finalTotal.toFixed(2)} €`, 195, finalY, { align: 'right' });
+            let finalTotal = totalBrut * (1 - d.remiseG/100); doc.text(`TOTAL NET À PAYER : ${finalTotal.toFixed(2)} €`, 195, finalY, { align: 'right' });
             doc.setFontSize(8); doc.setFont(undefined, 'normal');
-            doc.text(`Chargé d'affaire : ${d.user || ''} | TVA non applicable (art. 293 B).`, 15, finalY + 10);
+            doc.text(`Chargé d'affaire : ${managerName} | TVA non applicable (art. 293 B).`, 15, finalY + 10);
             if(type === 'facture' && settings.iban) doc.text(`RIB : ${settings.banque || ''} - IBAN : ${settings.iban}`, 15, finalY + 18);
         }
         doc.save(`${type.toUpperCase()}_${d.nom}.pdf`);
