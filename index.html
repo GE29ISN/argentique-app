@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Argentique Events - Cloud Pro</title>
-    
-    <!-- Bibliothèques PDF & Firebase -->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -27,60 +26,72 @@
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--gris-fond); padding: 0; margin: 0; color: #333; }
 
-        /* Écran de Connexion */
         #auth-container { 
             position: fixed; top:0; left:0; width:100%; height:100%; 
             background: var(--bleu-marine); display: flex; justify-content: center; 
             align-items: center; z-index: 3000; color: white; 
         }
-        .auth-box { background: white; padding: 30px; border-radius: 8px; color: #333; width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .auth-box input { margin-bottom: 10px; }
+        .auth-box { background: white; padding: 40px; border-radius: 16px; color: #333; width: 320px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+        .auth-box input { margin-bottom: 12px; border-radius: 10px; }
 
-        nav { background-color: var(--bleu-marine); padding: 15px 20px; display: none; gap: 15px; position: sticky; top: 0; z-index: 1000; align-items: center; }
-        nav button { background: none; border: 2px solid var(--blanc); color: var(--blanc); font-size: 15px; cursor: pointer; padding: 6px 12px; border-radius: 4px; }
+        nav { background-color: var(--bleu-marine); padding: 15px 20px; display: none; gap: 15px; position: sticky; top: 0; z-index: 1000; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        nav button { background: none; border: 2px solid var(--blanc); color: var(--blanc); font-size: 15px; cursor: pointer; padding: 6px 14px; border-radius: 20px; transition: all 0.2s; }
         nav button.actif { background: var(--blanc); color: var(--bleu-marine); font-weight: bold; }
+        nav button:hover { opacity: 0.85; }
         .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; color: white; font-size: 12px;}
 
-        .container { max-width: 1300px; margin: 20px auto; background: var(--blanc); padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display:none; }
+        .container { max-width: 1300px; margin: 24px auto; background: var(--blanc); padding: 28px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.10); display:none; }
 
-        h1, h2, h3 { color: var(--bleu-marine); margin-top: 0; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--gris-bordure); }
+        h1, h2, h3 { color: var(--bleu-marine); }
 
-        .dates-container { display: grid; grid-template-columns: 120px repeat(6, 1fr); gap: 10px; align-items: center; margin-bottom: 20px; background: #eef2ff; padding: 15px; border-radius: 6px; }
-        .dates-label { font-weight: bold; font-size: 13px; color: var(--bleu-marine); }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
 
-        input, select, textarea { padding: 8px; border: 1px solid var(--gris-bordure); border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px; font-family: inherit; }
-        label { font-size: 12px; font-weight: bold; color: var(--bleu-marine-clair); display: block; margin-bottom: 3px; }
+        input, select, textarea { padding: 9px 12px; border: 1.5px solid var(--gris-bordure); border-radius: 10px; width: 100%; box-sizing: border-box; font-size: 14px; font-family: inherit; transition: border 0.2s; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--bleu-marine-clair); box-shadow: 0 0 0 3px rgba(23,63,107,0.1); }
+        label { font-size: 12px; font-weight: bold; color: var(--bleu-marine-clair); display: block; margin-bottom: 4px; }
 
-        button { padding: 10px 15px; background: var(--bleu-marine); color: var(--blanc); border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { opacity: 0.9; }
+        button { padding: 10px 18px; background: var(--bleu-marine); color: var(--blanc); border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: opacity 0.2s, box-shadow 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+        button:hover { opacity: 0.9; box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
         .btn-delete { background: var(--rouge-alerte); }
         .btn-edit { background: var(--jaune-edit); color: #000; }
         .btn-custom { background: #6c757d; font-size: 11px; }
-        .btn-mini { padding: 4px 8px; font-size: 11px; }
+        .btn-mini { padding: 5px 10px; font-size: 11px; border-radius: 8px; }
         .btn-pdf { background: #555; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--gris-bordure); font-size: 13px; }
-        th { background-color: #f1f1f1; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--gris-bordure); font-size: 13px; }
+        th { background-color: #f1f5fb; }
+        tr:last-child td { border-bottom: none; }
 
-        .categorie-bloc { border: 1px solid var(--gris-bordure); border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
-        .categorie-header { background: #edf2f7; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .item-clickable { cursor: pointer; color: var(--bleu-marine); font-weight: bold; background: #eef2ff; padding: 2px 6px; border-radius: 4px; }
+        .categorie-bloc { border: 1.5px solid var(--gris-bordure); border-radius: 14px; margin-bottom: 22px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .categorie-header { background: #edf2f7; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .item-clickable { cursor: pointer; color: var(--bleu-marine); font-weight: bold; background: #eef2ff; padding: 2px 8px; border-radius: 8px; }
         .item-custom { color: #d63384; }
 
         .drag-over { background-color: #ffeeba !important; border: 2px dashed #ffc107; }
         .draggable-row { cursor: grab; }
         .draggable-row:active { cursor: grabbing; }
 
-        .recap-final { background: var(--bleu-marine); color: white; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: right; }
-        #admin-login { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(10,35,66,0.95); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:2000; color:white; }
+        .recap-final { background: var(--bleu-marine); color: white; padding: 24px; border-radius: 14px; margin-top: 20px; text-align: right; box-shadow: 0 4px 16px rgba(10,35,66,0.18); }
+        #admin-login { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(10,35,66,0.95); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:2000; color:white; gap: 14px; }
+        #admin-login input { border-radius: 10px; }
 
         .badge-link { 
-            background: #ffffff; color: var(--bleu-marine); padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; 
-            border: 1px solid var(--bleu-marine); margin-right: 5px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: bold;
+            background: #ffffff; color: var(--bleu-marine); padding: 4px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; 
+            border: 1px solid var(--bleu-marine); margin-right: 5px; display: inline-block; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-weight: bold;
         }
-        .logo-preview { max-height: 80px; display: block; margin-top: 10px; border: 1px solid #ccc; }
+        .logo-preview { max-height: 80px; display: block; margin-top: 10px; border: 1px solid #ccc; border-radius: 8px; }
+
+        .dates-container { display: grid; grid-template-columns: auto repeat(6, 1fr); gap: 8px; margin-bottom: 20px; align-items: center; }
+        .dates-label { font-weight: bold; color: var(--bleu-marine); font-size: 12px; }
+
+        #view-list-dossiers, #view-detail-dossier { display: none; }
+
+        .admin-tabs { display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 2px solid var(--gris-bordure); padding-bottom: 10px; }
+        .admin-tab-btn { background: none; border: 2px solid var(--gris-bordure); color: var(--bleu-marine); box-shadow: none; }
+        .admin-tab-btn.actif { background: var(--bleu-marine); color: white; border-color: var(--bleu-marine); }
+        .admin-section { display: none; }
+        .admin-section.visible { display: block; }
     </style>
 </head>
 <body>
@@ -114,8 +125,8 @@
 <!-- LOGIN ADMIN (SECUNDAIRE) -->
 <div id="admin-login">
     <h2>Accès Administration</h2>
-    <input type="password" id="admin-pass" style="width:250px; text-align:center; margin-bottom: 10px;" placeholder="Mot de passe">
-    <div>
+    <input type="password" id="admin-pass" style="width:250px; text-align:center;" placeholder="Mot de passe">
+    <div style="display:flex; gap:10px;">
         <button onclick="verifyAdmin()">Connexion</button>
         <button class="btn-delete" onclick="closeAdmin()">Annuler</button>
     </div>
@@ -123,28 +134,47 @@
 
 <!-- ONGLET ADMIN -->
 <div id="tab-admin" class="container">
-    <h1>⚙️ Paramètres de l'Association</h1>
-    <div class="form-grid">
-        <div style="grid-column: span 2;"><label>Nom de l'Asso / Structure</label><input type="text" id="adm-nom"></div>
-        <div style="grid-column: span 2;"><label>Adresse</label><input type="text" id="adm-adr"></div>
-        <div><label>Email</label><input type="text" id="adm-mail"></div>
-        <div><label>Téléphone</label><input type="text" id="adm-tel"></div>
-        <div><label>SIRET</label><input type="text" id="adm-siret"></div>
-        <div><label>Code APE</label><input type="text" id="adm-ape"></div>
-        <div><label>TVA Intracom.</label><input type="text" id="adm-tva"></div>
-        <div style="grid-column: span 2;">
-            <label>Logo de l'entreprise (Import PC)</label>
-            <input type="file" id="adm-logo-file" accept="image/*" onchange="handleLogoUpload(this)">
-            <img id="logo-preview" class="logo-preview" src="">
+    <h1>⚙️ Paramètres</h1>
+    <div class="admin-tabs">
+        <button class="admin-tab-btn actif" id="admin-tab-generale" onclick="switchAdminTab('generale')">🏢 Générale</button>
+        <button class="admin-tab-btn" id="admin-tab-user" onclick="switchAdminTab('user')">👤 Utilisateur</button>
+    </div>
+
+    <!-- Section Générale -->
+    <div class="admin-section visible" id="admin-section-generale">
+        <div class="form-grid">
+            <div style="grid-column: span 2;"><label>Nom de l'Asso / Structure</label><input type="text" id="adm-nom"></div>
+            <div style="grid-column: span 2;"><label>Adresse</label><input type="text" id="adm-adr"></div>
+            <div><label>Email</label><input type="text" id="adm-mail"></div>
+            <div><label>Téléphone</label><input type="text" id="adm-tel"></div>
+            <div><label>SIRET</label><input type="text" id="adm-siret"></div>
+            <div><label>Code APE</label><input type="text" id="adm-ape"></div>
+            <div><label>TVA Intracom.</label><input type="text" id="adm-tva"></div>
+            <div style="grid-column: span 2;">
+                <label>Logo de l'entreprise (Import PC)</label>
+                <input type="file" id="adm-logo-file" accept="image/*" onchange="handleLogoUpload(this)">
+                <img id="logo-preview" class="logo-preview" src="" style="display:none;">
+            </div>
         </div>
+        <h3>🏦 Coordonnées Bancaires (RIB)</h3>
+        <div class="form-grid">
+            <div style="grid-column: span 2;"><label>Banque</label><input type="text" id="adm-banque"></div>
+            <div><label>IBAN</label><input type="text" id="adm-iban"></div>
+            <div><label>BIC/SWIFT</label><input type="text" id="adm-bic"></div>
+        </div>
+        <button onclick="saveAdminSettings()" style="background:var(--vert-ok); width: 100%; border-radius:10px;">Enregistrer les paramètres</button>
     </div>
-    <h3>🏦 Coordonnées Bancaires (RIB)</h3>
-    <div class="form-grid">
-        <div style="grid-column: span 2;"><label>Banque</label><input type="text" id="adm-banque"></div>
-        <div><label>IBAN</label><input type="text" id="adm-iban"></div>
-        <div><label>BIC/SWIFT</label><input type="text" id="adm-bic"></div>
+
+    <!-- Section User -->
+    <div class="admin-section" id="admin-section-user">
+        <div class="form-grid">
+            <div style="grid-column: span 2;"><label>Email du compte connecté</label><input type="text" id="adm-user-email" readonly style="background:#f5f5f5;"></div>
+            <div><label>Prénom</label><input type="text" id="adm-user-prenom"></div>
+            <div><label>Nom</label><input type="text" id="adm-user-nom"></div>
+            <div><label>Téléphone</label><input type="text" id="adm-user-tel"></div>
+        </div>
+        <button onclick="saveUserProfile()" style="background:var(--vert-ok); width: 100%; border-radius:10px;">Enregistrer mon profil</button>
     </div>
-    <button onclick="saveAdminSettings()" style="background:var(--vert-ok); width: 100%;">Enregistrer les paramètres</button>
 </div>
 
 <!-- STOCK -->
@@ -161,9 +191,9 @@
         <button id="btn-save-stock" onclick="saveStock()">Enregistrer Article</button>
         <button class="btn-delete" style="display:none;" id="btn-cancel-stock" onclick="cancelStock()">Annuler</button>
     </div>
-    <input type="text" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" id="search-stock" placeholder="🔍 Rechercher un article..." onkeyup="renderStock()">
+    <input type="text" id="search-stock" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine); border-radius:10px;" placeholder="🔍 Rechercher un article..." oninput="renderStock()">
     <table>
-        <thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Achat</th><th>Loc/J</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>P. Achat</th><th>P. Loc/J</th><th>Actions</th></tr></thead>
         <tbody id="table-stock-body"></tbody>
     </table>
 </div>
@@ -172,8 +202,8 @@
 <div id="tab-clients" class="container">
     <h1>👥 Clients</h1>
     <div class="form-grid">
-        <div><label>Entreprise</label><input type="text" id="c-ent"></div>
-        <div><label>Contact Nom</label><input type="text" id="c-nom"></div>
+        <div><label>Entreprise / Asso</label><input type="text" id="c-ent"></div>
+        <div><label>Nom Contact</label><input type="text" id="c-nom"></div>
         <div><label>Téléphone</label><input type="text" id="c-tel"></div>
         <div><label>Email</label><input type="text" id="c-email"></div>
     </div>
@@ -181,9 +211,9 @@
         <button id="btn-save-client" onclick="saveClient()">Enregistrer Client</button>
         <button class="btn-delete" style="display:none;" id="btn-cancel-client" onclick="cancelClient()">Annuler</button>
     </div>
-    <input type="text" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" id="search-clients" placeholder="🔍 Rechercher un client..." onkeyup="renderClients()">
+    <input type="text" id="search-clients" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine); border-radius:10px;" placeholder="🔍 Rechercher un client..." oninput="renderClients()">
     <table>
-        <thead><tr><th>Entreprise</th><th>Nom</th><th>Tel</th><th>Email</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Entreprise</th><th>Contact</th><th>Tél</th><th>Email</th><th>Actions</th></tr></thead>
         <tbody id="table-clients-body"></tbody>
     </table>
 </div>
@@ -191,17 +221,19 @@
 <!-- DOSSIERS -->
 <div id="tab-dossiers" class="container">
     <div id="view-list-dossiers">
-        <h1>📁 Dossiers / Devis</h1>
-        <button onclick="createDossier()" style="margin-bottom: 20px;">+ Nouveau Dossier</button>
-        <input type="text" id="search-dossiers" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine-clair); border-radius:6px; width:100%; box-sizing:border-box;" placeholder="🔍 Rechercher un projet..." onkeyup="renderDossierList()">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h1 style="margin:0;">📁 Dossiers</h1>
+            <button onclick="createDossier()">+ Nouveau Dossier</button>
+        </div>
+        <input type="text" id="search-dossiers" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine); border-radius:10px;" placeholder="🔍 Rechercher un dossier..." oninput="renderDossierList()">
         <table>
-            <thead><tr><th>Immo.</th><th>Projet</th><th>Client</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date Immo</th><th>Projet</th><th>Client</th><th>Actions</th></tr></thead>
             <tbody id="table-dossiers-body"></tbody>
         </table>
     </div>
 
-    <div id="view-detail-dossier" style="display:none;">
-        <div style="display:flex; gap:10px; flex-wrap: wrap;">
+    <div id="view-detail-dossier">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button class="btn-mini" onclick="showTab('dossiers')">⬅ Retour</button>
             <button class="btn-mini btn-pdf" onclick="genPDF('prep')">📋 Bon de Préparation (PDF)</button>
             <button class="btn-mini btn-pdf" onclick="genPDF('devis')">📄 Devis (PDF)</button>
@@ -271,31 +303,69 @@
     <div id="dispo-result" style="margin-top:20px;"></div>
 </div>
 
+
 <script>
-    // ==========================================
-    // CONFIGURATION FIREBASE - REMPLACE ICI
-    // ==========================================
     const firebaseConfig = {
-  apiKey: "AIzaSyAjyBMYBiJgsGD0wY3iznSXeeXONC6aato",
-  authDomain: "argentique-events-app.firebaseapp.com",
-  projectId: "argentique-events-app",
-  storageBucket: "argentique-events-app.firebasestorage.app",
-  messagingSenderId: "801508468310",
-  appId: "1:801508468310:web:1e9a7004b14ed5cb7efdf7"
-};
+        apiKey: "AIzaSyAjyBMYBiJgsGD0wY3iznSXeeXONC6aato",
+        authDomain: "argentique-events-app.firebaseapp.com",
+        projectId: "argentique-events-app",
+        storageBucket: "argentique-events-app.firebasestorage.app",
+        messagingSenderId: "801508468310",
+        appId: "1:801508468310:web:1e9a7004b14ed5cb7efdf7"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // ==========================================
-    // VARIABLES D'ÉTAT
-    // ==========================================
     const PASS_ADMIN = "1234 ARGENTIQUE";
     let stock = [], clients = [], dossiers = [], settings = {};
     let activeDossierId = null;
     let editStockRef = null, editClientId = null;
     let draggedItemIdx = null, draggedFromCatId = null;
+    let currentUserEmail = '';
+
+    // ==========================================
+    // ADMIN TABS
+    // ==========================================
+    function switchAdminTab(tab) {
+        ['generale', 'user'].forEach(t => {
+            document.getElementById('admin-section-' + t).classList.remove('visible');
+            document.getElementById('admin-tab-' + t).classList.remove('actif');
+        });
+        document.getElementById('admin-section-' + tab).classList.add('visible');
+        document.getElementById('admin-tab-' + tab).classList.add('actif');
+        if (tab === 'user') loadUserProfile();
+    }
+
+    // ==========================================
+    // USER PROFILE
+    // ==========================================
+    function loadUserProfile() {
+        if (!currentUserEmail) return;
+        document.getElementById('adm-user-email').value = currentUserEmail;
+        db.collection("users").doc(currentUserEmail).get().then(doc => {
+            if (doc.exists) {
+                let u = doc.data();
+                document.getElementById('adm-user-prenom').value = u.prenom || '';
+                document.getElementById('adm-user-nom').value = u.nom || '';
+                document.getElementById('adm-user-tel').value = u.tel || '';
+            } else {
+                document.getElementById('adm-user-prenom').value = '';
+                document.getElementById('adm-user-nom').value = '';
+                document.getElementById('adm-user-tel').value = '';
+            }
+        });
+    }
+
+    function saveUserProfile() {
+        if (!currentUserEmail) return;
+        let prenom = document.getElementById('adm-user-prenom').value;
+        let nom = document.getElementById('adm-user-nom').value;
+        let tel = document.getElementById('adm-user-tel').value;
+        db.collection("users").doc(currentUserEmail).set({ prenom, nom, tel, email: currentUserEmail })
+            .then(() => alert("Profil enregistré !"));
+    }
 
     // ==========================================
     // AUTHENTIFICATION
@@ -312,12 +382,14 @@
 
     auth.onAuthStateChanged(user => {
         if (user) {
+            currentUserEmail = user.email;
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('main-nav').style.display = 'flex';
             document.getElementById('user-display').innerText = user.email;
             initSync();
             showTab('dossiers');
         } else {
+            currentUserEmail = '';
             document.getElementById('auth-container').style.display = 'flex';
             document.getElementById('main-nav').style.display = 'none';
         }
@@ -327,23 +399,21 @@
     // SYNCHRONISATION CLOUD (FIRESTORE)
     // ==========================================
     function initSync() {
-        // Paramètres
         db.collection("settings").doc("general").onSnapshot(doc => {
             if(doc.exists) { settings = doc.data(); loadAdminFields(); }
         });
-        // Stock
         db.collection("stock").onSnapshot(snap => {
-            stock = snap.docs.map(d => d.data());
-            renderStock(); updateDatalists();
+            stock = snap.docs.map(d => ({ ...d.data(), idDoc: d.id }));
+            renderStock();
+            updateDatalists();
         });
-        // Clients
         db.collection("clients").onSnapshot(snap => {
-            clients = snap.docs.map(d => ({idDoc: d.id, ...d.data()}));
-            renderClients(); updateDatalists();
+            clients = snap.docs.map(d => ({ ...d.data(), idDoc: d.id }));
+            renderClients();
+            updateDatalists();
         });
-        // Dossiers
         db.collection("dossiers").onSnapshot(snap => {
-            dossiers = snap.docs.map(d => ({idDoc: d.id, ...d.data()}));
+            dossiers = snap.docs.map(d => ({ ...d.data(), idDoc: d.id }));
             renderDossierList();
             if(activeDossierId) renderCats();
         });
@@ -352,140 +422,233 @@
     // ==========================================
     // NAVIGATION
     // ==========================================
-    function showTab(t) {
-        ['stock', 'clients', 'dossiers', 'dispo', 'admin'].forEach(id => {
-            document.getElementById('tab-'+id).style.display = 'none';
-            document.getElementById('nav-'+id).classList.remove('actif');
+    function showTab(tab) {
+        ['dossiers','stock','clients','dispo','admin'].forEach(id => {
+            let el = document.getElementById('tab-'+id);
+            if(el) el.style.display = 'none';
+            let nav = document.getElementById('nav-'+id);
+            if(nav) nav.classList.remove('actif');
         });
-        document.getElementById('tab-'+t).style.display = 'block';
-        document.getElementById('nav-'+t).classList.add('actif');
-        if(t === 'dossiers') { 
-            document.getElementById('view-detail-dossier').style.display = 'none'; 
-            document.getElementById('view-list-dossiers').style.display = 'block'; 
-            activeDossierId = null;
+        document.getElementById('tab-'+tab).style.display = 'block';
+        let navEl = document.getElementById('nav-'+tab);
+        if(navEl) navEl.classList.add('actif');
+
+        if(tab === 'dossiers') {
+            if(activeDossierId) {
+                document.getElementById('view-list-dossiers').style.display = 'none';
+                document.getElementById('view-detail-dossier').style.display = 'block';
+            } else {
+                document.getElementById('view-list-dossiers').style.display = 'block';
+                document.getElementById('view-detail-dossier').style.display = 'none';
+                renderDossierList();
+            }
         }
+        if(tab === 'dossiers' && !activeDossierId) activeDossierId = null;
     }
 
     // ==========================================
     // ADMIN
     // ==========================================
     function checkAdmin() { document.getElementById('admin-login').style.display = 'flex'; }
-    function closeAdmin() { document.getElementById('admin-login').style.display = 'none'; }
-    function verifyAdmin() { if(document.getElementById('admin-pass').value === PASS_ADMIN) { closeAdmin(); showTab('admin'); } else alert("Accès refusé"); }
-
-    function handleLogoUpload(input) {
-        if (input.files && input.files[0]) {
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                settings.logoB64 = e.target.result;
-                document.getElementById('logo-preview').src = e.target.result;
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
+    function closeAdmin() { document.getElementById('admin-login').style.display = 'none'; document.getElementById('admin-pass').value = ''; }
+    function verifyAdmin() {
+        if(document.getElementById('admin-pass').value === PASS_ADMIN) {
+            closeAdmin(); showTab('admin');
+            document.getElementById('nav-admin').classList.add('actif');
+            switchAdminTab('generale');
+        } else { alert("Mot de passe incorrect"); }
     }
 
     function loadAdminFields() {
-        ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => {
-            if(settings[k]) document.getElementById('adm-'+k).value = settings[k];
-        });
-        if(settings.logoB64) document.getElementById('logo-preview').src = settings.logoB64;
+        if(!settings) return;
+        document.getElementById('adm-nom').value = settings.nom || '';
+        document.getElementById('adm-adr').value = settings.adr || '';
+        document.getElementById('adm-mail').value = settings.mail || '';
+        document.getElementById('adm-tel').value = settings.tel || '';
+        document.getElementById('adm-siret').value = settings.siret || '';
+        document.getElementById('adm-ape').value = settings.ape || '';
+        document.getElementById('adm-tva').value = settings.tva || '';
+        document.getElementById('adm-banque').value = settings.banque || '';
+        document.getElementById('adm-iban').value = settings.iban || '';
+        document.getElementById('adm-bic').value = settings.bic || '';
+        if(settings.logoB64) {
+            let prev = document.getElementById('logo-preview');
+            prev.src = settings.logoB64; prev.style.display = 'block';
+        }
+    }
+
+    function handleLogoUpload(input) {
+        let file = input.files[0]; if(!file) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let b64 = e.target.result;
+            let prev = document.getElementById('logo-preview');
+            prev.src = b64; prev.style.display = 'block';
+            settings.logoB64 = b64;
+        };
+        reader.readAsDataURL(file);
     }
 
     function saveAdminSettings() {
-        ['nom','adr','tel','mail','siret','ape','tva','banque','iban','bic'].forEach(k => {
-            settings[k] = document.getElementById('adm-'+k).value;
-        });
-        db.collection("settings").doc("general").set(settings).then(() => alert("Paramètres Cloud enregistrés !"));
+        let data = {
+            nom: document.getElementById('adm-nom').value,
+            adr: document.getElementById('adm-adr').value,
+            mail: document.getElementById('adm-mail').value,
+            tel: document.getElementById('adm-tel').value,
+            siret: document.getElementById('adm-siret').value,
+            ape: document.getElementById('adm-ape').value,
+            tva: document.getElementById('adm-tva').value,
+            banque: document.getElementById('adm-banque').value,
+            iban: document.getElementById('adm-iban').value,
+            bic: document.getElementById('adm-bic').value,
+        };
+        if(settings.logoB64) data.logoB64 = settings.logoB64;
+        db.collection("settings").doc("general").set(data).then(() => alert("Paramètres enregistrés !"));
     }
 
     // ==========================================
-    // STOCK & CLIENTS
+    // STOCK
     // ==========================================
-    function saveStock() {
-        let r = document.getElementById('s-ref').value.toUpperCase();
-        let n = document.getElementById('s-nom').value;
-        let q = parseInt(document.getElementById('s-qte').value) || 0;
-        let pa = parseFloat(document.getElementById('s-pachat').value) || 0;
-        let pl = parseFloat(document.getElementById('s-ploc').value) || 0;
-        if(!r || !n) return;
-        db.collection("stock").doc(r).set({ref:r, nom:n, qte:q, pachat:pa, ploc:pl}).then(() => cancelStock());
-    }
-
     function renderStock() {
-        let sVal = document.getElementById('search-stock').value.toLowerCase();
-        document.getElementById('table-stock-body').innerHTML = stock.filter(s => s.nom.toLowerCase().includes(sVal) || s.ref.toLowerCase().includes(sVal)).map(s => `<tr>
-            <td>${s.ref}</td><td>${s.nom}</td><td>${s.qte}</td><td>${s.pachat}€</td><td>${s.ploc}€</td>
-            <td><button class="btn-mini btn-edit" onclick="editStock('${s.ref}')">Edit</button> <button class="btn-mini btn-delete" onclick="deleteStock('${s.ref}')">X</button></td></tr>`).join('');
+        let search = (document.getElementById('search-stock') ? document.getElementById('search-stock').value || '' : '').toLowerCase();
+        let body = document.getElementById('table-stock-body'); if(!body) return; body.innerHTML = '';
+        stock.filter(s => (s.ref||'').toLowerCase().includes(search) || (s.nom||'').toLowerCase().includes(search)).forEach(s => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td>${s.ref}</td><td>${s.nom}</td><td>${s.qte}</td><td>${s.pachat||0}€</td><td>${s.ploc||0}€</td>
+                <td><button class="btn-mini btn-edit" onclick="editStock('${s.ref}')">✏️</button> <button class="btn-mini btn-delete" onclick="deleteStock('${s.ref}')">🗑️</button></td>`;
+            body.appendChild(tr);
+        });
     }
 
-    function editStock(r) { 
-        let s = stock.find(x => x.ref === r); 
-        editStockRef = r; 
-        document.getElementById('s-ref').value = s.ref; 
-        document.getElementById('s-nom').value = s.nom; 
-        document.getElementById('s-qte').value = s.qte; 
-        document.getElementById('s-pachat').value = s.pachat; 
-        document.getElementById('s-ploc').value = s.ploc; 
-        document.getElementById('btn-save-stock').innerText = "Mettre à jour"; 
-        document.getElementById('btn-cancel-stock').style.display = 'inline-block';
+    function saveStock() {
+        let ref = document.getElementById('s-ref').value.toUpperCase();
+        let nom = document.getElementById('s-nom').value;
+        let qte = parseInt(document.getElementById('s-qte').value) || 0;
+        let pachat = parseFloat(document.getElementById('s-pachat').value) || 0;
+        let ploc = parseFloat(document.getElementById('s-ploc').value) || 0;
+        if(!ref || !nom) return alert("Réf et Nom obligatoires");
+        db.collection("stock").doc(ref).set({ref, nom, qte, pachat, ploc}).then(() => {
+            document.getElementById('s-ref').value=''; document.getElementById('s-nom').value='';
+            document.getElementById('s-qte').value=''; document.getElementById('s-pachat').value='';
+            document.getElementById('s-ploc').value='';
+            editStockRef = null; document.getElementById('btn-cancel-stock').style.display='none';
+        });
     }
 
-    function cancelStock() { editStockRef = null; document.getElementById('s-ref').value = ""; document.getElementById('s-nom').value = ""; document.getElementById('s-qte').value = ""; document.getElementById('s-pachat').value = ""; document.getElementById('s-ploc').value = ""; document.getElementById('btn-save-stock').innerText = "Enregistrer Article"; document.getElementById('btn-cancel-stock').style.display = 'none'; }
-    function deleteStock(r) { if(confirm("Supprimer ?")) db.collection("stock").doc(r).delete(); }
+    function editStock(ref) {
+        let s = stock.find(x => x.ref === ref); if(!s) return;
+        document.getElementById('s-ref').value = s.ref; document.getElementById('s-nom').value = s.nom;
+        document.getElementById('s-qte').value = s.qte; document.getElementById('s-pachat').value = s.pachat||0;
+        document.getElementById('s-ploc').value = s.ploc||0;
+        editStockRef = ref; document.getElementById('btn-cancel-stock').style.display='inline-block';
+    }
+
+    function cancelStock() {
+        document.getElementById('s-ref').value=''; document.getElementById('s-nom').value='';
+        document.getElementById('s-qte').value=''; document.getElementById('s-pachat').value='';
+        document.getElementById('s-ploc').value='';
+        editStockRef = null; document.getElementById('btn-cancel-stock').style.display='none';
+    }
+
+    function deleteStock(ref) { if(confirm("Supprimer "+ref+" ?")) db.collection("stock").doc(ref).delete(); }
+
+    // ==========================================
+    // CLIENTS
+    // ==========================================
+    function renderClients() {
+        let search = (document.getElementById('search-clients') ? document.getElementById('search-clients').value || '' : '').toLowerCase();
+        let body = document.getElementById('table-clients-body'); if(!body) return; body.innerHTML = '';
+        clients.filter(c => (c.ent||'').toLowerCase().includes(search) || (c.nom||'').toLowerCase().includes(search)).forEach(c => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td>${c.ent||''}</td><td>${c.nom||''}</td><td>${c.tel||''}</td><td>${c.mail||''}</td>
+                <td><button class="btn-mini btn-edit" onclick="editClient('${c.idDoc}')">✏️</button> <button class="btn-mini btn-delete" onclick="deleteClient('${c.idDoc}')">🗑️</button></td>`;
+            body.appendChild(tr);
+        });
+    }
 
     function saveClient() {
         let ent = document.getElementById('c-ent').value;
         let nom = document.getElementById('c-nom').value;
         let tel = document.getElementById('c-tel').value;
         let mail = document.getElementById('c-email').value;
-        if(!ent && !nom) return;
         let data = {ent, nom, tel, mail};
-        if(editClientId) db.collection("clients").doc(editClientId).update(data).then(() => cancelClient());
-        else db.collection("clients").add(data).then(() => cancelClient());
+        let p = editClientId ? db.collection("clients").doc(editClientId).set(data) : db.collection("clients").add(data);
+        p.then(() => {
+            document.getElementById('c-ent').value=''; document.getElementById('c-nom').value='';
+            document.getElementById('c-tel').value=''; document.getElementById('c-email').value='';
+            editClientId = null; document.getElementById('btn-cancel-client').style.display='none';
+        });
     }
 
-    function renderClients() {
-        let sVal = document.getElementById('search-clients').value.toLowerCase();
-        document.getElementById('table-clients-body').innerHTML = clients.filter(c => (c.ent||'').toLowerCase().includes(sVal) || (c.nom||'').toLowerCase().includes(sVal)).map(c => `<tr>
-            <td>${c.ent||''}</td><td>${c.nom||''}</td><td>${c.tel||''}</td><td>${c.mail||''}</td>
-            <td><button class="btn-mini btn-edit" onclick="editClient('${c.idDoc}')">Edit</button> <button class="btn-mini btn-delete" onclick="deleteClient('${c.idDoc}')">X</button></td></tr>`).join('');
+    function editClient(id) {
+        let c = clients.find(x => x.idDoc === id); if(!c) return;
+        document.getElementById('c-ent').value = c.ent||''; document.getElementById('c-nom').value = c.nom||'';
+        document.getElementById('c-tel').value = c.tel||''; document.getElementById('c-email').value = c.mail||'';
+        editClientId = id; document.getElementById('btn-cancel-client').style.display='inline-block';
     }
 
-    function editClient(id) { let c = clients.find(x => x.idDoc === id); editClientId = id; document.getElementById('c-ent').value = c.ent; document.getElementById('c-nom').value = c.nom; document.getElementById('c-tel').value = c.tel; document.getElementById('c-email').value = c.mail; document.getElementById('btn-save-client').innerText = "Mettre à jour"; document.getElementById('btn-cancel-client').style.display = 'inline-block'; }
-    function cancelClient() { editClientId = null; document.getElementById('c-ent').value = ""; document.getElementById('c-nom').value = ""; document.getElementById('c-tel').value = ""; document.getElementById('c-email').value = ""; document.getElementById('btn-save-client').innerText = "Enregistrer Client"; document.getElementById('btn-cancel-client').style.display = 'none'; }
-    function deleteClient(id) { if(confirm("Supprimer ?")) db.collection("clients").doc(id).delete(); }
+    function cancelClient() {
+        document.getElementById('c-ent').value=''; document.getElementById('c-nom').value='';
+        document.getElementById('c-tel').value=''; document.getElementById('c-email').value='';
+        editClientId = null; document.getElementById('btn-cancel-client').style.display='none';
+    }
+
+    function deleteClient(id) { if(confirm("Supprimer ce client ?")) db.collection("clients").doc(id).delete(); }
 
     // ==========================================
     // DOSSIERS
     // ==========================================
     function renderDossierList() {
-        let sVal = document.getElementById('search-dossiers').value.toLowerCase();
-        document.getElementById('table-dossiers-body').innerHTML = dossiers.filter(d => d.nom.toLowerCase().includes(sVal)).sort((a,b) => b.id - a.id).map(d => `<tr>
-            <td>${d.immoD || '-'}</td><td><b>${d.nom}</b></td><td>${d.cli || '-'}</td>
-            <td><button class="btn-mini btn-edit" onclick="openDossier('${d.idDoc}')">Ouvrir</button> <button class="btn-mini btn-delete" onclick="deleteDossier('${d.idDoc}')">X</button></td></tr>`).join('');
+        let search = (document.getElementById('search-dossiers') ? document.getElementById('search-dossiers').value || '' : '').toLowerCase();
+        let body = document.getElementById('table-dossiers-body'); if(!body) return; body.innerHTML = '';
+        let sorted = [...dossiers].sort((a, b) => {
+            let da = a.immoD || '', db2 = b.immoD || '';
+            if(da < db2) return -1; if(da > db2) return 1; return 0;
+        });
+        sorted.filter(d => (d.nom||'').toLowerCase().includes(search) || (d.cli||'').toLowerCase().includes(search)).forEach(d => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td>${d.immoD || '-'}</td><td>${d.nom}</td><td>${d.cli||''}</td>
+                <td><button class="btn-mini" onclick="openDossier('${d.idDoc}')">Ouvrir</button> <button class="btn-mini btn-delete" onclick="deleteDossier('${d.idDoc}')">🗑️</button></td>`;
+            body.appendChild(tr);
+        });
     }
 
     function createDossier() {
-        let n = prompt("Nom du projet :"); if(!n) return;
-        let d = { 
-            id: Date.now(), nom: n, cli: "", coeff: 1, remiseG: 0, cats: [], 
-            notes: "", type: "location comptoir", user: auth.currentUser.email 
-        };
-        db.collection("dossiers").add(d).then(docRef => openDossier(docRef.id));
+        let nom = prompt("Nom du projet :"); if(!nom) return;
+        db.collection("dossiers").add({nom, cli:'', type:'location comptoir', coeff:1, remiseG:0, cats:[], notes:'', user:'', immoD:'', immoF:''})
+            .then(ref => openDossier(ref.id));
     }
 
     function openDossier(id) {
-        activeDossierId = id; let d = dossiers.find(x => x.idDoc === id);
+        activeDossierId = id;
+        let d = dossiers.find(x => x.idDoc === id); if(!d) return;
+
+        // Ensure dossiers tab is shown
+        ['stock', 'clients', 'dispo', 'admin'].forEach(tid => {
+            let el = document.getElementById('tab-'+tid);
+            if(el) el.style.display = 'none';
+            let nav = document.getElementById('nav-'+tid);
+            if(nav) nav.classList.remove('actif');
+        });
+        document.getElementById('tab-dossiers').style.display = 'block';
+        let navDos = document.getElementById('nav-dossiers');
+        if(navDos) navDos.classList.add('actif');
+
         document.getElementById('view-list-dossiers').style.display = 'none';
         document.getElementById('view-detail-dossier').style.display = 'block';
-        document.getElementById('det-nom').value = d.nom; 
-        document.getElementById('det-type').value = d.type || 'location comptoir'; 
-        document.getElementById('det-cli').value = d.cli || ''; 
-        document.getElementById('det-coeff').value = d.coeff || 1; 
+
+        document.getElementById('det-titre').innerText = d.nom;
+        document.getElementById('det-nom').value = d.nom;
+        document.getElementById('det-type').value = d.type || 'location comptoir';
+        document.getElementById('det-cli').value = d.cli || '';
+        document.getElementById('det-coeff').value = d.coeff || 1;
         document.getElementById('det-rem-g').value = d.remiseG || 0;
-        document.getElementById('det-notes').value = d.notes || "";
-        document.getElementById('det-user').value = d.user || "";
-        ['immo','livr','mont','show','demo','recu'].forEach(k => { document.getElementById(`d-${k}-d`).value = d[`${k}D`] || ''; document.getElementById(`d-${k}-f`).value = d[`${k}F`] || ''; });
+        document.getElementById('det-notes').value = d.notes || '';
+        document.getElementById('det-user').value = d.user || '';
+        ['immo','livr','mont','show','demo','recu'].forEach(k => {
+            document.getElementById(`d-${k}-d`).value = d[`${k}D`] || '';
+            document.getElementById(`d-${k}-f`).value = d[`${k}F`] || '';
+        });
         renderCats();
     }
 
@@ -494,20 +657,19 @@
         let d = dossiers.find(x => x.idDoc === activeDossierId);
         let oldShowD = d.showD, oldShowF = d.showF;
 
-        d.nom = document.getElementById('det-nom').value; 
-        d.type = document.getElementById('det-type').value; 
-        d.cli = document.getElementById('det-cli').value; 
-        d.coeff = parseFloat(document.getElementById('det-coeff').value) || 1; 
+        d.nom = document.getElementById('det-nom').value;
+        d.type = document.getElementById('det-type').value;
+        d.cli = document.getElementById('det-cli').value;
+        d.coeff = parseFloat(document.getElementById('det-coeff').value) || 1;
         d.remiseG = parseFloat(document.getElementById('det-rem-g').value) || 0;
         d.notes = document.getElementById('det-notes').value;
         d.user = document.getElementById('det-user').value;
 
-        ['immo','livr','mont','show','demo','recu'].forEach(k => { 
-            d[`${k}D`] = document.getElementById(`d-${k}-d`).value; 
-            d[`${k}F`] = document.getElementById(`d-${k}-f`).value; 
+        ['immo','livr','mont','show','demo','recu'].forEach(k => {
+            d[`${k}D`] = document.getElementById(`d-${k}-d`).value;
+            d[`${k}F`] = document.getElementById(`d-${k}-f`).value;
         });
 
-        // Calcul auto coeff si dates Show changent
         if ((d.showD !== oldShowD || d.showF !== oldShowF) && d.showD && d.showF) {
             let d1 = new Date(d.showD), d2 = new Date(d.showF);
             if (!isNaN(d1) && !isNaN(d2)) {
@@ -520,9 +682,6 @@
         db.collection("dossiers").doc(activeDossierId).set(d);
     }
 
-    // ==========================================
-    // DRAG & DROP
-    // ==========================================
     function onDragStart(e, catId, idx) { draggedItemIdx = idx; draggedFromCatId = catId; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.style.opacity = '0.5', 0); }
     function onDragEnd(e) { e.target.style.opacity = '1'; document.querySelectorAll('.draggable-row, table').forEach(r => r.classList.remove('drag-over')); }
     function onDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
@@ -540,9 +699,6 @@
         syncDossier();
     }
 
-    // ==========================================
-    // LOGIQUE ARTICLES ET CATÉGORIES
-    // ==========================================
     function renderCats() {
         let d = dossiers.find(x => x.idDoc === activeDossierId);
         if(!d) return;
@@ -554,7 +710,7 @@
                 if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
                 else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
                 let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
-                let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100); 
+                let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
                 catNet += ligneNet;
                 return `<tr class="draggable-row" draggable="true" ondragstart="onDragStart(event, ${cat.id}, ${idx})" ondragend="onDragEnd(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, ${cat.id}, ${idx})">
                     <td>↕️ ${it.isCustom ? 'MANU' : it.ref}</td>
@@ -569,29 +725,34 @@
             }).join('');
             let catFinal = catNet * (1 - cat.remise/100); totalBrut += catFinal;
             let div = document.createElement('div'); div.className = 'categorie-bloc';
-            div.innerHTML = `<div class="categorie-header"><b onclick="renameCat(${cat.id})" style="cursor:pointer;">${cat.nom}</b><div>Remise: <input type="number" style="width:50px" value="${cat.remise}" onchange="updateCatRem(${cat.id},this.value)">%</div><button class="btn-mini btn-delete" onclick="removeCat(${cat.id})">Suppr</button></div>
-                <div style="padding:10px; background:#f8f9fa; display:flex; gap:10px;"><input type="text" id="add-ref-${cat.id}" list="dl-stock" placeholder="Réf Stock" style="width:150px;"><input type="number" id="add-qte-${cat.id}" placeholder="Qté" style="width:70px;"><button class="btn-mini" onclick="addItem(${cat.id})">Ajouter</button><button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})">+ Ligne Manuelle</button></div>
+            div.innerHTML = `<div class="categorie-header"><b onclick="renameCat(${cat.id})" style="cursor:pointer;">${cat.nom}</b><div style="display:flex;align-items:center;gap:8px;">Remise: <input type="number" style="width:60px;border-radius:8px;" value="${cat.remise}" onchange="updateCatRem(${cat.id},this.value)">%</div><button class="btn-mini btn-delete" onclick="removeCat(${cat.id})">Suppr</button></div>
+                <div style="padding:12px; background:#f8f9fa; display:flex; gap:10px; flex-wrap:wrap;"><input type="text" id="add-ref-${cat.id}" list="dl-stock" placeholder="Réf Stock" style="width:150px; border-radius:10px;"><input type="number" id="add-qte-${cat.id}" placeholder="Qté" style="width:80px; border-radius:10px;"><button class="btn-mini" onclick="addItem(${cat.id})">Ajouter</button><button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})">+ Ligne Manuelle</button></div>
                 <table ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, ${cat.id}, null)">
                     <thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Unit/J</th><th>Coeff</th><th>Rem.</th><th>Total</th><th></th></tr></thead>
                     <tbody>${itemsHtml}</tbody>
                 </table>
-                <div style="text-align:right; padding:10px; font-weight:bold; background:#eee;">Sous-total : ${catFinal.toFixed(2)}€</div>`;
+                <div style="text-align:right; padding:12px 16px; font-weight:bold; background:#edf2f7; border-top:1px solid var(--gris-bordure);">Sous-total : ${catFinal.toFixed(2)}€</div>`;
             cont.appendChild(div);
         });
         let final = totalBrut * (1 - d.remiseG/100);
-        document.getElementById('dossier-recap').innerHTML = `<div>Total Brut : ${totalBrut.toFixed(2)}€</div><div style="font-size:1.5em; font-weight:bold;">NET À PAYER : ${final.toFixed(2)}€</div>`;
+        document.getElementById('dossier-recap').innerHTML = `<div>Total Brut : ${totalBrut.toFixed(2)}€</div>${d.remiseG > 0 ? `<div>Remise Globale (${d.remiseG}%) : -${(totalBrut * d.remiseG/100).toFixed(2)}€</div>` : ''}<div style="font-size:1.5em; font-weight:bold; margin-top:8px;">NET À PAYER : ${final.toFixed(2)}€</div>`;
     }
 
-    function checkAvailability(ref, addedQty, docId, isModIdx = null, catId = null) {
-        let d = dossiers.find(x => x.idDoc === docId); if(!d.immoD || !d.immoF) return true; 
+    function checkAvailability(ref, addedQty, docId, isModIdx, catId) {
+        let d = dossiers.find(x => x.idDoc === docId);
+        if(!d.immoD || !d.immoF) return true;
         let s = stock.find(x => x.ref === ref);
+        if(!s) return true;
         let start = new Date(d.immoD), end = new Date(d.immoF);
         for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
             let iso = day.toISOString().split('T')[0], booked = 0;
             dossiers.forEach(dos => {
-                if(iso >= dos.immoD && iso <= dos.immoF) {
+                if(dos.immoD && dos.immoF && iso >= dos.immoD && iso <= dos.immoF) {
                     dos.cats.forEach(c => c.items.forEach((it, idx) => {
-                        if(it.ref === ref && !it.isCustom) { if(dos.idDoc === docId && c.id === catId && idx === isModIdx) return; booked += it.qte; }
+                        if(it.ref === ref && !it.isCustom) {
+                            if(dos.idDoc === docId && c.id === catId && idx === isModIdx) return;
+                            booked += it.qte;
+                        }
                     }));
                 }
             });
@@ -600,11 +761,15 @@
         return true;
     }
 
-    function addItem(catId) { 
-        let r = document.getElementById('add-ref-'+catId).value.toUpperCase(), q = parseInt(document.getElementById('add-qte-'+catId).value) || 1;
-        if(!stock.find(s => s.ref === r)) return;
-        if(!checkAvailability(r, q, activeDossierId, null, catId)) { if(!confirm("ALERTE STOCK : Manque sur cette période. Ajouter ?")) return; }
-        dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:q, coeff:null, remise:0, isCustom:false}); syncDossier(); 
+    function addItem(catId) {
+        let r = document.getElementById('add-ref-'+catId).value.toUpperCase();
+        let q = parseInt(document.getElementById('add-qte-'+catId).value) || 1;
+        if(!stock.find(s => s.ref === r)) return alert("Article introuvable dans le stock");
+        if(!checkAvailability(r, q, activeDossierId, null, catId)) {
+            if(!confirm("⚠️ ALERTE STOCK : La quantité demandée dépasse le stock disponible sur cette période. Ajouter quand même ?")) return;
+        }
+        dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:q, coeff:null, remise:0, isCustom:false});
+        syncDossier();
     }
 
     function addCustomItem(catId) {
@@ -613,13 +778,18 @@
         dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.push({label:label, pUnit:pUnit, qte:1, coeff:null, remise:0, isCustom:true}); syncDossier();
     }
 
-    function editItem(catId, idx, key) { 
+    function editItem(catId, idx, key) {
         let it = dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items[idx];
         let v = prompt("Nouvelle valeur :", (key === 'coeff' && !it[key]) ? '' : it[key]); if(v === null) return;
-        if(key === 'qte' && !it.isCustom && !checkAvailability(it.ref, parseFloat(v), activeDossierId, idx, catId)) { if(!confirm("ALERTE STOCK : Manque. Valider ?")) return; }
+        if(key === 'qte' && !it.isCustom) {
+            let newQty = parseFloat(v) || 0;
+            if(!checkAvailability(it.ref, newQty, activeDossierId, idx, catId)) {
+                if(!confirm("⚠️ ALERTE STOCK : La quantité demandée dépasse le stock disponible sur cette période. Valider quand même ?")) return;
+            }
+        }
         if (key === 'coeff') it[key] = (v.trim() === '') ? null : parseFloat(v) || 1;
-        else it[key] = (key === 'label') ? v : parseFloat(v) || 0; 
-        syncDossier(); 
+        else it[key] = (key === 'label') ? v : parseFloat(v) || 0;
+        syncDossier();
     }
 
     function updateCatRem(catId, v) { dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).remise = parseFloat(v) || 0; syncDossier(); }
@@ -627,33 +797,37 @@
     function renameCat(id) { let c = dossiers.find(x => x.idDoc === activeDossierId).cats.find(x => x.id === id); let n = prompt("Nom :", c.nom); if(n) { c.nom = n; syncDossier(); } }
     function removeCat(id) { if(confirm("Supprimer ?")) { let d = dossiers.find(x => x.idDoc === activeDossierId); d.cats = d.cats.filter(c => c.id !== id); syncDossier(); } }
     function removeItem(catId, idx) { dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.splice(idx, 1); syncDossier(); }
-    function deleteDossier(id) { if(confirm("Supprimer dossier ?")) db.collection("dossiers").doc(id).delete(); }
+    function deleteDossier(id) { if(confirm("Supprimer dossier ?")) { db.collection("dossiers").doc(id).delete(); activeDossierId = null; showTab('dossiers'); } }
 
     // ==========================================
     // DISPONIBILITÉS
     // ==========================================
     function checkDispo() {
-        let ref = document.getElementById('dispo-ref').value.toUpperCase(), dStr = document.getElementById('dispo-d').value, fStr = document.getElementById('dispo-f').value;
+        let ref = document.getElementById('dispo-ref').value.toUpperCase();
+        let dStr = document.getElementById('dispo-d').value;
+        let fStr = document.getElementById('dispo-f').value;
         if(!ref || !dStr || !fStr) return;
         let s = stock.find(x => x.ref === ref); if(!s) return alert("Article inexistant");
-        let cur = new Date(dStr), end = new Date(fStr), h = `<h3>${s.nom} (Total: ${s.qte})</h3>`;
+        let cur = new Date(dStr), end = new Date(fStr);
+        let h = `<h3>${s.nom} (Total stock: ${s.qte})</h3>`;
         while(cur <= end) {
             let iso = cur.toISOString().split('T')[0], qPrise = 0, bads = [];
-            dossiers.forEach(d => {
-                if(d.immoD && d.immoF && iso >= d.immoD && iso <= d.immoF) {
-                    let qd = 0; d.cats.forEach(c => c.items.forEach(it => { if(!it.isCustom && it.ref === ref) qd += it.qte; }));
-                    if(qd > 0) bads.push(`<span class="badge-link" onclick="openDossier('${d.idDoc}')">📁 ${d.nom} (-${qd})</span>`); qPrise += qd;
+            dossiers.forEach(dos => {
+                if(dos.immoD && dos.immoF && iso >= dos.immoD && iso <= dos.immoF) {
+                    let qd = 0; dos.cats.forEach(c => c.items.forEach(it => { if(!it.isCustom && it.ref === ref) qd += it.qte; }));
+                    if(qd > 0) bads.push(`<span class="badge-link" onclick="openDossier('${dos.idDoc}')">📁 ${dos.nom} (-${qd})</span>`);
+                    qPrise += qd;
                 }
             });
             let reste = s.qte - qPrise, color = reste < 0 ? '#f8d7da' : (reste === 0 ? '#fff3cd' : '#d4edda');
-            h += `<div style="background:${color}; padding:10px; border:1px solid #ccc; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; border-radius:6px;"><b>${iso}</b> <div style="flex:1;">${bads.join('') || '<i>Libre</i>'}</div> <b>Reste : ${reste}</b></div>`;
+            h += `<div style="background:${color}; padding:10px; border:1px solid #ccc; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; border-radius:10px;"><b>${iso}</b> <div style="flex:1; margin: 0 10px;">${bads.join('') || '<i>Libre</i>'}</div> <b>Reste : ${reste}</b></div>`;
             cur.setDate(cur.getDate()+1);
         }
         document.getElementById('dispo-result').innerHTML = h;
     }
 
     // ==========================================
-    // GÉNÉRATION PDF
+    // PDF
     // ==========================================
     function genPDF(type) {
         const { jsPDF } = window.jspdf;
@@ -661,68 +835,119 @@
         let d = dossiers.find(x => x.idDoc === activeDossierId);
         let client = clients.find(c => c.ent === d.cli || c.nom === d.cli) || { nom: d.cli };
 
-        doc.setFillColor(10, 35, 66); doc.rect(0, 0, 210, 40, 'F');
-        if(settings.logoB64) try { doc.addImage(settings.logoB64, 'PNG', 10, 5, 30, 30); } catch(e){}
-        doc.setTextColor(255, 255, 255); doc.setFontSize(18); doc.text(settings.nom || "L'Argentique Events", 45, 20);
-        let labelDoc = type === 'prep' ? 'BON DE PRÉPARATION' : (type === 'devis' ? 'DEVIS' : 'FACTURE');
-        doc.setFontSize(10); doc.text(labelDoc, 195, 20, { align: 'right' });
+        // Récupération du profil utilisateur courant pour le PDF
+        let userProfilePromise = currentUserEmail
+            ? db.collection("users").doc(currentUserEmail).get()
+            : Promise.resolve(null);
 
-        doc.setTextColor(0, 0, 0); doc.setFontSize(9);
-        doc.text(`Émetteur :\n${settings.nom}\n${settings.adr || ''}\n${settings.mail || ''}\n${settings.tel || ''}`, 15, 48);
-        doc.text(`Destinataire :\n${client.ent || client.nom || d.cli}\n${client.mail || ''}\n${client.tel || ''}`, 130, 48);
+        userProfilePromise.then(userDoc => {
+            let userProfile = (userDoc && userDoc.exists) ? userDoc.data() : {};
+            let userFullName = ((userProfile.prenom || '') + ' ' + (userProfile.nom || '')).trim() || d.user || '';
+            let userMail = userProfile.email || currentUserEmail || '';
+            let userTel = userProfile.tel || '';
 
-        let currentY = 75;
-        doc.setFont(undefined, 'bold'); doc.text(`PROJET : ${d.nom} (${d.type || ''})`, 15, currentY); doc.setFont(undefined, 'normal');
+            // En-tête
+            doc.setFillColor(10, 35, 66); doc.rect(0, 0, 210, 40, 'F');
+            if(settings.logoB64) try { doc.addImage(settings.logoB64, 'PNG', 10, 5, 30, 30); } catch(e){}
+            doc.setTextColor(255, 255, 255); doc.setFontSize(18); doc.text(settings.nom || "L'Argentique Events", 45, 20);
+            let labelDoc = type === 'prep' ? 'BON DE PRÉPARATION' : (type === 'devis' ? 'DEVIS' : 'FACTURE');
+            doc.setFontSize(10); doc.text(labelDoc, 195, 20, { align: 'right' });
+doc.setFontSize(8); doc.text(`N° : ${activeDossierId} | Date : ${new Date().toLocaleDateString('fr-FR')}`, 195, 28, { align: 'right' });
 
-        const fmtFR = (iso) => iso ? iso.split('-').reverse().join('/') : null;
-        let datesText = [];
-        [['Livraison','livr'],['Montage','mont'],['SHOW','show'],['Démontage','demo'],['Récupération','recu']].forEach(k => {
-            if(d[k[1]+'D']) {
-                let s = fmtFR(d[k[1]+'D']), e = fmtFR(d[k[1]+'F']);
-                datesText.push(`${k[0]} : ${s === e || !e ? s : 'du '+s+' au '+e}`);
-            }
-        });
-        doc.setFontSize(8); let dateLine = datesText.join(' | ');
-        let splitDate = doc.splitTextToSize(dateLine, 180); doc.text(splitDate, 15, currentY + 5);
-        currentY += (splitDate.length * 5) + 7;
+            doc.setTextColor(0, 0, 0); doc.setFontSize(9);
+            doc.text(`Émetteur :\n${settings.nom||''}\n${settings.adr||''}\n${settings.mail||''}\n${settings.tel||''}`, 15, 48);
+            doc.text(`Destinataire :\n${client.ent||client.nom||d.cli}\n${client.mail||''}\n${client.tel||''}`, 130, 48);
 
-        if(d.notes) {
-            doc.setFont(undefined, 'italic'); let sn = doc.splitTextToSize(d.notes, 180);
-            doc.text(sn, 15, currentY); currentY += (sn.length * 5) + 5; doc.setFont(undefined, 'normal');
-        }
+            let currentY = 75;
+            doc.setFont(undefined, 'bold'); doc.text(`PROJET : ${d.nom} (${d.type || ''})`, 15, currentY); doc.setFont(undefined, 'normal');
 
-        let columns = [{ header: 'Réf', dataKey: 'ref' }, { header: 'Désignation', dataKey: 'nom' }, { header: 'Qté', dataKey: 'qte' }];
-        if(type !== 'prep') { columns.push({ header: 'P.U.', dataKey: 'pu' },{ header: 'Rem.', dataKey: 'rem' },{ header: 'Total HT', dataKey: 'total' }); }
-
-        let tableData = [], totalBrut = 0;
-        d.cats.forEach(cat => {
-            tableData.push({ ref: '', nom: cat.nom.toUpperCase(), qte: '', pu: '', rem: '', total: '', isCat: true });
-            cat.items.forEach(it => {
-                let nom, pUnit;
-                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
-                else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
-                let itemCoeff = it.coeff || d.coeff;
-                let ligneHT = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100); totalBrut += ligneHT;
-                tableData.push({ ref: it.isCustom ? 'MANU' : it.ref, nom: nom, qte: it.qte, pu: type!=='prep'?pUnit.toFixed(2)+'€':'', rem: type!=='prep'?(it.remise?it.remise+'%':''):'', total: type!=='prep'?ligneHT.toFixed(2)+'€':'' });
+            const fmtFR = (iso) => iso ? iso.split('-').reverse().join('/') : null;
+            let datesText = [];
+            [['Livraison','livr'],['Montage','mont'],['SHOW','show'],['Démontage','demo'],['Récupération','recu']].forEach(k => {
+                if(d[k[1]+'D']) {
+                    let s = fmtFR(d[k[1]+'D']), e = fmtFR(d[k[1]+'F']);
+                    datesText.push(`${k[0]} : ${s === e || !e ? s : 'du '+s+' au '+e}`);
+                }
             });
-            if(type !== 'prep' && cat.remise > 0) tableData.push({ ref: '', nom: `> Remise cat. (${cat.remise}%)`, qte: '', pu: '', rem: '', total: `-${(totalBrut*(cat.remise/100)).toFixed(2)}€` });
-        });
+            doc.setFontSize(8); let dateLine = datesText.join(' | ');
+            let splitDate = doc.splitTextToSize(dateLine, 180); doc.text(splitDate, 15, currentY + 5);
+            currentY += (splitDate.length * 5) + 7;
 
-        doc.autoTable({
-            startY: currentY, columns: columns, body: tableData, theme: 'striped', headStyles: { fillColor: [10, 35, 66] },
-            didParseCell: (data) => { if (data.row.raw && data.row.raw.isCat) { data.cell.styles.fillColor = [200, 215, 235]; data.cell.styles.fontStyle = 'bold'; } }
-        });
+            if(d.notes) {
+                doc.setFont(undefined, 'italic'); let sn = doc.splitTextToSize(d.notes, 180);
+                doc.text(sn, 15, currentY); currentY += (sn.length * 5) + 5; doc.setFont(undefined, 'normal');
+            }
 
-        let finalY = doc.lastAutoTable.finalY + 10;
-        if(type !== 'prep') {
-            doc.setFontSize(12); doc.setFont(undefined, 'bold');
-            let finalTotal = totalBrut * (1 - d.remiseG/100);
-            doc.text(`TOTAL NET À PAYER : ${finalTotal.toFixed(2)} €`, 195, finalY, { align: 'right' });
-            doc.setFontSize(8); doc.setFont(undefined, 'normal');
-            doc.text(`Chargé d'affaire : ${d.user || ''} | TVA non applicable (art. 293 B).`, 15, finalY + 10);
-            if(type === 'facture' && settings.iban) doc.text(`RIB : ${settings.banque || ''} - IBAN : ${settings.iban}`, 15, finalY + 18);
-        }
-        doc.save(`${type.toUpperCase()}_${d.nom}.pdf`);
+            let columns = type === 'prep'
+                ? [{ header: 'Réf', dataKey: 'ref' },{ header: 'Désignation', dataKey: 'nom' },{ header: 'Qté', dataKey: 'qte' }]
+                : [{ header: 'Réf', dataKey: 'ref' },{ header: 'Désignation', dataKey: 'nom' },{ header: 'Qté', dataKey: 'qte' },{ header: 'PU/J', dataKey: 'pu' },{ header: 'Remise', dataKey: 'rem' },{ header: 'Total HT', dataKey: 'total' }];
+
+            let tableData = [], totalBrut = 0;
+            d.cats.forEach(cat => {
+                tableData.push({ ref: '', nom: cat.nom.toUpperCase(), qte: '', pu: '', rem: '', total: '', isCat: true });
+                let catBrut = 0;
+                cat.items.forEach(it => {
+                    let nom, pUnit;
+                    if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
+                    else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
+                    let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
+                    let ligneHT = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
+                    catBrut += ligneHT;
+                    tableData.push({
+                        ref: it.isCustom ? 'MANU' : it.ref,
+                        nom: nom,
+                        qte: it.qte,
+                        pu: type!=='prep' ? pUnit.toFixed(2)+'€' : '',
+                        rem: type!=='prep' ? (it.remise ? it.remise+'%' : '') : '',
+                        total: type!=='prep' ? ligneHT.toFixed(2)+'€' : ''
+                    });
+                });
+                if(type !== 'prep' && cat.remise > 0) {
+                    let remCat = catBrut * (cat.remise / 100);
+                    tableData.push({ ref: '', nom: `Remise catégorie (${cat.remise}%)`, qte: '', pu: '', rem: '', total: `-${remCat.toFixed(2)}€`, isRemise: true });
+                }
+                let catNet = catBrut * (1 - cat.remise/100);
+                totalBrut += catNet;
+            });
+
+            doc.autoTable({
+                startY: currentY, columns: columns, body: tableData, theme: 'striped',
+                headStyles: { fillColor: [10, 35, 66] },
+                didParseCell: (data) => {
+                    if (data.row.raw && data.row.raw.isCat) {
+                        data.cell.styles.fillColor = [200, 215, 235];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                    if (data.row.raw && data.row.raw.isRemise) {
+                        data.cell.styles.textColor = [180, 0, 0];
+                        data.cell.styles.fontStyle = 'italic';
+                    }
+                }
+            });
+
+            let finalY = doc.lastAutoTable.finalY + 10;
+            if(type !== 'prep') {
+                doc.setFontSize(10); doc.setFont(undefined, 'normal');
+                let finalTotal = totalBrut * (1 - d.remiseG/100);
+                if(d.remiseG > 0) {
+                    doc.text(`Sous-total HT : ${totalBrut.toFixed(2)} €`, 195, finalY, { align: 'right' });
+                    finalY += 6;
+                    doc.setTextColor(180, 0, 0);
+                    doc.text(`Remise globale (${d.remiseG}%) : -${(totalBrut * d.remiseG/100).toFixed(2)} €`, 195, finalY, { align: 'right' });
+                    finalY += 6;
+                    doc.setTextColor(0, 0, 0);
+                }
+                doc.setFontSize(12); doc.setFont(undefined, 'bold');
+                doc.text(`TOTAL NET À PAYER : ${finalTotal.toFixed(2)} €`, 195, finalY, { align: 'right' });
+                doc.setFontSize(8); doc.setFont(undefined, 'normal');
+                finalY += 10;
+                doc.text(`Chargé d'affaire : ${userFullName}${userMail ? ' | ' + userMail : ''}${userTel ? ' | ' + userTel : ''}`, 15, finalY);
+                finalY += 6;
+                doc.text(`TVA non applicable (art. 293 B).`, 15, finalY);
+                if(type === 'facture' && settings.iban) doc.text(`RIB : ${settings.banque || ''} - IBAN : ${settings.iban}`, 15, finalY + 8);
+            }
+            doc.save(`${type.toUpperCase()}_${d.nom}.pdf`);
+        });
     }
 
     function updateDatalists() {
