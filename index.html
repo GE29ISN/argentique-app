@@ -153,7 +153,7 @@
             <div style="grid-column: span 2;">
                 <label>Logo de l'entreprise (Import PC)</label>
                 <input type="file" id="adm-logo-file" accept="image/*" onchange="handleLogoUpload(this)">
-                <img id="logo-preview" class="logo-preview" src="" style="display:none;">
+                <img id="logo-preview" class="logo-preview" src="https://raw.githubusercontent.com/GE29ISN/argentique-app/main/ChatGPT%20Image%2022%20avr.%202026%2C%2014_43_36.png" style="display:block;">
             </div>
         </div>
         <h3>🏦 Coordonnées Bancaires (RIB)</h3>
@@ -465,7 +465,7 @@
         document.getElementById('adm-nom').value = settings.nom || '';
         document.getElementById('adm-adr').value = settings.adr || '';
         
-        document.getElementById('adm-tel').value = settings.tel || '';
+        
         document.getElementById('adm-siret').value = settings.siret || '';
         document.getElementById('adm-ape').value = settings.ape || '';
         document.getElementById('adm-tva').value = settings.tva || '';
@@ -492,7 +492,7 @@
         reader.readAsDataURL(file);
     }
 
-   function saveAdminSettings() {
+  function saveAdminSettings() {
     let data = {
         nom: document.getElementById('adm-nom').value,
         adr: document.getElementById('adm-adr').value,
@@ -504,15 +504,19 @@
         bic: document.getElementById('adm-bic').value,
     };
 
+ console.log("Data à enregistrer :", data);
+
     // On utilise settings.logoB64 qui est toujours à jour
     if(settings.logoB64) {
         data.logoB64 = settings.logoB64;
     }
 
-    db.collection("settings").doc("general").set(data).then(() => {
+    db.collection("settings").doc("general").set(data, { merge: true }).then(() => {
         alert("Paramètres enregistrés !");
-    });
-}
+console.log("Succès !");  // 👈 ET CA
+    }).catch(err => {
+        console.error("Erreur :", err);  // 👈 ET CA
+    });}
 
     // ==========================================
     // STOCK
@@ -856,8 +860,8 @@ document.getElementById('det-coeff').value = d.coeff;
 
             // En-tête
             doc.setFillColor(10, 35, 66); doc.rect(0, 0, 210, 40, 'F');
-            if(settings.logoB64) try { doc.addImage(settings.logoB64, 'PNG', 10, 5, 30, 30); } catch(e){}
-            doc.setTextColor(255, 255, 255); doc.setFontSize(18); doc.text(settings.nom || "L'Argentique Events", 45, 20);
+            const LOGO_URL = "https://raw.githubusercontent.com/GE29ISN/argentique-app/49ae7b076c641b104bdbb369d99c46bc7215f9b8/ChatGPT%20Image%2025%20avr.%202026%2C%2011_12_01.png";
+try { doc.addImage(LOGO_URL, 'PNG', 10, 5, 30, 30); } catch(e){}            doc.setTextColor(255, 255, 255); doc.setFontSize(18); doc.text(settings.nom || "L'Argentique Events", 45, 20);
             let labelDoc = type === 'prep' ? 'BON DE PRÉPARATION' : (type === 'devis' ? 'DEVIS' : 'FACTURE');
             doc.setFontSize(10); doc.text(labelDoc, 195, 20, { align: 'right' });
 doc.setFontSize(8); doc.text(`N° : ${activeDossierId} | Date : ${new Date().toLocaleDateString('fr-FR')}`, 195, 28, { align: 'right' });
@@ -965,4 +969,3 @@ doc.setFontSize(8); doc.text(`N° : ${activeDossierId} | Date : ${new Date().toL
 </script>
 </body>
 </html>
-
