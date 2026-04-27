@@ -860,7 +860,7 @@ document.getElementById('det-coeff').value = d.coeff;
 
             // En-tête
             doc.setFillColor(10, 35, 66); doc.rect(0, 0, 210, 40, 'F');
-            const LOGO_URL = "https://raw.githubusercontent.com/GE29ISN/argentique-app/49ae7b076c641b104bdbb369d99c46bc7215f9b8/ChatGPT%20Image%2025%20avr.%202026%2C%2011_12_01.png";
+            const LOGO_URL = "https://raw.githubusercontent.com/GE29ISN/argentique-app/main/logo%20argentique%20events-modified%20PNG%20BLANC.png";
 try { doc.addImage(LOGO_URL, 'PNG', 10, 5, 30, 30); } catch(e){}            doc.setTextColor(255, 255, 255); doc.setFontSize(18); doc.text(settings.nom || "L'Argentique Events", 45, 20);
             let labelDoc = type === 'prep' ? 'BON DE PRÉPARATION' : (type === 'devis' ? 'DEVIS' : 'FACTURE');
             doc.setFontSize(10); doc.text(labelDoc, 195, 20, { align: 'right' });
