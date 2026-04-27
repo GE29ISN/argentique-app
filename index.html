@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -91,6 +92,40 @@
         .admin-tab-btn.actif { background: var(--bleu-marine); color: white; border-color: var(--bleu-marine); }
         .admin-section { display: none; }
         .admin-section.visible { display: block; }
+
+/* Tabs statut */
+.tab-statut {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 2px solid #ddd;
+    background: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #444;
+    transition: all 0.2s;
+}
+.tab-statut:hover {
+    border-color: var(--bleu-marine);
+    color: var(--bleu-marine);
+}
+.tab-statut.actif {
+    background: var(--bleu-marine);
+    border-color: var(--bleu-marine);
+    color: white;
+}
+.categorie-bloc {
+    cursor: grab;
+}
+.categorie-bloc.drag-over-cat {
+    border: 2px dashed var(--bleu-marine);
+    background: #e8f0fe;
+}
+.categorie-bloc.drag-over-cat {
+    border: 2px dashed #4a90d9;
+    background: #f0f6ff;
+}
+
     </style>
 </head>
 <body>
@@ -101,7 +136,7 @@
         <h2 style="margin-top:0">L'Argentique Cloud</h2>
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Mot de passe">
-        <button onclick="login()" style="width:100%">Se connecter</button>
+       <button id="btn-login" style="width:100%">Se connecter</button>
         <p id="auth-error" style="color:red; font-size:12px; margin-top:10px;"></p>
     </div>
 </div>
@@ -220,17 +255,55 @@
 
 <!-- DOSSIERS -->
 <div id="tab-dossiers" class="container">
-    <div id="view-list-dossiers">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <h1 style="margin:0;">📁 Dossiers</h1>
-            <button onclick="createDossier()">+ Nouveau Dossier</button>
-        </div>
-        <input type="text" id="search-dossiers" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine); border-radius:10px;" placeholder="🔍 Rechercher un dossier..." oninput="renderDossierList()">
-        <table>
-            <thead><tr><th>Date Immo</th><th>Projet</th><th>Client</th><th>Actions</th></tr></thead>
-            <tbody id="table-dossiers-body"></tbody>
-        </table>
+   <div id="view-list-dossiers">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h1 style="margin:0;">📁 Dossiers</h1>
+        <button onclick="createDossier()">+ Nouveau Dossier</button>
     </div>
+
+    <!-- Barre de recherche -->
+    <input type="text" id="search-dossiers" 
+        style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine); border-radius:10px; width:100%; box-sizing:border-box;" 
+        placeholder="🔍 Rechercher un dossier..." 
+        oninput="renderDossierList()">
+
+    <!-- Tabs de filtrage par statut -->
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+        <button class="tab-statut actif" data-statut="tous" onclick="setStatutFilter(this)">
+            Tous <span class="tab-count" style="background:rgba(0,0,0,0.15); padding:1px 7px; border-radius:10px; font-size:0.8rem; margin-left:4px;">0</span>
+        </button>
+        <button class="tab-statut" data-statut="devis" onclick="setStatutFilter(this)">
+            📝 Devis <span class="tab-count" style="background:rgba(0,0,0,0.15); padding:1px 7px; border-radius:10px; font-size:0.8rem; margin-left:4px;">0</span>
+        </button>
+        <button class="tab-statut" data-statut="confirme" onclick="setStatutFilter(this)">
+            ✅ Confirmé <span class="tab-count" style="background:rgba(0,0,0,0.15); padding:1px 7px; border-radius:10px; font-size:0.8rem; margin-left:4px;">0</span>
+        </button>
+        <button class="tab-statut" data-statut="en_cours" onclick="setStatutFilter(this)">
+            🔧 En cours <span class="tab-count" style="background:rgba(0,0,0,0.15); padding:1px 7px; border-radius:10px; font-size:0.8rem; margin-left:4px;">0</span>
+        </button>
+        <button class="tab-statut" data-statut="facture_envoye" onclick="setStatutFilter(this)">
+            📧 Facture envoyée <span class="tab-count" style="background:rgba(0,0,0,0.15); padding:1px 7px; border-radius:10px; font-size:0.8rem; margin-left:4px;">0</span>
+        </button>
+        <button class="tab-statut" data-statut="paye" onclick="setStatutFilter(this)">
+            💰 Payé <span class="tab-count" style="background:rgba(0,0,0,0.15); padding:1px 7px; border-radius:10px; font-size:0.8rem; margin-left:4px;">0</span>
+        </button>
+    </div>
+
+    <!-- Tableau -->
+    <table>
+        <thead>
+            <tr>
+                <th>Date Immo</th>
+                <th>Projet</th>
+                <th>Client</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="table-dossiers-body"></tbody>
+    </table>
+</div>
+
 
     <div id="view-detail-dossier">
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -257,8 +330,20 @@
             <div><label>Coeff. Durée (Global)</label><input type="number" step="0.1" id="det-coeff" onchange="syncDossier()"></div>
             <div><label>Remise Globale (%)</label><input type="number" id="det-rem-g" onchange="syncDossier()"></div>
             <div><label>Chargé d'affaire</label><input type="text" id="det-user" onchange="syncDossier()"></div>
-        </div>
 
+           <div>
+            <label>Statut du dossier</label>
+            <select id="det-status" onchange="changeStatutDossier(this.value)">
+                <option value="devis">📝 Devis</option>
+                <option value="confirme">✅ Confirmé</option>
+                <option value="en_cours">🔧 En cours</option>
+                <option value="facture_envoye">📧 Facture envoyée</option>
+                <option value="paye">💰 Payé</option>
+            </select>
+        </div>
+    </div><!-- fin form-grid -->
+
+   
         <h3>📅 Dates Détaillées</h3>
         <div class="dates-container">
             <div class="dates-label">DÉBUT</div>
@@ -376,6 +461,8 @@
         const pass = document.getElementById('login-pass').value;
         auth.signInWithEmailAndPassword(email, pass).catch(e => {
             document.getElementById('auth-error').innerText = "Erreur: " + e.message;
+document.getElementById('btn-login').addEventListener('click', login);
+
         });
     }
 
@@ -610,26 +697,111 @@ console.log("Succès !");  // 👈 ET CA
     // ==========================================
     // DOSSIERS
     // ==========================================
-    function renderDossierList() {
-        let search = (document.getElementById('search-dossiers') ? document.getElementById('search-dossiers').value || '' : '').toLowerCase();
-        let body = document.getElementById('table-dossiers-body'); if(!body) return; body.innerHTML = '';
-        let sorted = [...dossiers].sort((a, b) => {
-            let da = a.immoD || '', db2 = b.immoD || '';
-            if(da < db2) return -1; if(da > db2) return 1; return 0;
-        });
-        sorted.filter(d => (d.nom||'').toLowerCase().includes(search) || (d.cli||'').toLowerCase().includes(search)).forEach(d => {
-            let tr = document.createElement('tr');
-            tr.innerHTML = `<td>${d.immoD || '-'}</td><td>${d.nom}</td><td>${d.cli||''}</td>
-                <td><button class="btn-mini" onclick="openDossier('${d.idDoc}')">Ouvrir</button> <button class="btn-mini btn-delete" onclick="deleteDossier('${d.idDoc}')">🗑️</button></td>`;
-            body.appendChild(tr);
-        });
+    // Config statuts (centralisé, on va s'en resservir partout)
+const STATUTS = {
+    'devis':            { label: '📝 Devis',            color: '#6b7280' },
+    'confirme':         { label: '✅ Confirmé',          color: '#3b82f6' },
+    'en_cours':         { label: '🔧 En cours',          color: '#f59e0b' },
+    'facture_envoye':   { label: '📧 Facture envoyée',   color: '#8b5cf6' },
+    'paye':             { label: '💰 Payé',              color: '#10b981' }
+};
+
+function renderDossierList() {
+    let search = (document.getElementById('search-dossiers')?.value || '').toLowerCase();
+    let activeFilter = document.querySelector('.tab-statut.actif')?.dataset.statut || 'tous';
+    let body = document.getElementById('table-dossiers-body'); 
+    if(!body) return; 
+    body.innerHTML = '';
+
+    let sorted = [...dossiers].sort((a, b) => {
+        let da = a.immoD || '', db2 = b.immoD || '';
+        if(da < db2) return -1; if(da > db2) return 1; return 0;
+    });
+
+    let filtered = sorted.filter(d => {
+        let matchSearch = (d.nom||'').toLowerCase().includes(search) || (d.cli||'').toLowerCase().includes(search);
+        let matchStatut = activeFilter === 'tous' || (d.status || 'devis') === activeFilter;
+        return matchSearch && matchStatut;
+    });
+
+    filtered.forEach(d => {
+        let statut = d.status || 'devis';
+        let s = STATUTS[statut] || STATUTS['devis'];
+        let badge = `<span style="
+            background:${s.color}; color:white; 
+            padding:3px 10px; border-radius:20px; 
+            font-size:0.75rem; font-weight:600; white-space:nowrap;
+        ">${s.label}</span>`;
+
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${d.immoD || '-'}</td>
+            <td>${d.nom}</td>
+            <td>${d.cli||''}</td>
+            <td>${badge}</td>
+            <td>
+                <button class="btn-mini" onclick="openDossier('${d.idDoc}')">Ouvrir</button> 
+                <button class="btn-mini btn-delete" onclick="deleteDossier('${d.idDoc}')">🗑️</button>
+            </td>`;
+        body.appendChild(tr);
+    });
+
+    // Mise à jour des compteurs dans les tabs
+    updateStatutTabCounts();
+}
+
+function setStatutFilter(btn) {
+    document.querySelectorAll('.tab-statut').forEach(b => b.classList.remove('actif'));
+    btn.classList.add('actif');
+    renderDossierList();
+}
+
+function changeStatutDossier(newStatus) {
+    if(!activeDossierId) return;
+    let d = dossiers.find(x => x.idDoc === activeDossierId);
+    if(!d) return;
+
+    const ordre = ['devis','confirme','en_cours','facture_envoye','paye'];
+    let ancienIndex = ordre.indexOf(d.status || 'devis');
+    let nouveauIndex = ordre.indexOf(newStatus);
+
+    // Confirmation si retour en arrière
+    if(nouveauIndex < ancienIndex) {
+        let ancien = STATUTS[d.status || 'devis'].label;
+        let nouveau = STATUTS[newStatus].label;
+        if(!confirm(`⚠️ Retour en arrière ?\n\n${ancien} → ${nouveau}\n\nConfirmer ?`)) {
+            // Annuler : remettre l'ancienne valeur dans le select
+            document.getElementById('det-status').value = d.status || 'devis';
+            return;
+        }
     }
 
-    function createDossier() {
-        let nom = prompt("Nom du projet :"); if(!nom) return;
-        db.collection("dossiers").add({nom, cli:'', type:'location comptoir', coeff:1, remiseG:0, cats:[], notes:'', user:'', immoD:'', immoF:''})
-            .then(ref => openDossier(ref.id));
-    }
+    db.collection("dossiers").doc(activeDossierId).update({ status: newStatus });
+}
+
+
+function updateStatutTabCounts() {
+    // Compteur "Tous"
+    let tabTous = document.querySelector('.tab-statut[data-statut="tous"] .tab-count');
+    if(tabTous) tabTous.textContent = dossiers.length;
+
+    // Compteurs par statut
+    Object.keys(STATUTS).forEach(key => {
+        let tab = document.querySelector(`.tab-statut[data-statut="${key}"] .tab-count`);
+        if(!tab) return;
+        let count = dossiers.filter(d => (d.status || 'devis') === key).length;
+        tab.textContent = count;
+    });
+}
+
+function createDossier() {
+    let nom = prompt("Nom du projet :"); if(!nom) return;
+    db.collection("dossiers").add({
+        nom, cli:'', type:'location comptoir', coeff:1, remiseG:0, 
+        cats:[], notes:'', user:'', immoD:'', immoF:'',
+        status: 'devis'  // ← AJOUT
+    }).then(ref => openDossier(ref.id));
+}
 
     function openDossier(id) {
         activeDossierId = id;
@@ -641,6 +813,7 @@ console.log("Succès !");  // 👈 ET CA
             if(el) el.style.display = 'none';
             let nav = document.getElementById('nav-'+tid);
             if(nav) nav.classList.remove('actif');
+
         });
         document.getElementById('tab-dossiers').style.display = 'block';
         let navDos = document.getElementById('nav-dossiers');
@@ -657,6 +830,10 @@ console.log("Succès !");  // 👈 ET CA
         document.getElementById('det-rem-g').value = d.remiseG || 0;
         document.getElementById('det-notes').value = d.notes || '';
         document.getElementById('det-user').value = d.user || '';
+
+let selStatus = document.getElementById('det-status');
+if(selStatus) selStatus.value = d.status || 'devis';
+
         ['immo','livr','mont','show','demo','recu'].forEach(k => {
             document.getElementById(`d-${k}-d`).value = d[`${k}D`] || '';
             document.getElementById(`d-${k}-f`).value = d[`${k}F`] || '';
@@ -705,81 +882,199 @@ document.getElementById('det-coeff').value = d.coeff;
         let sourceCat = d.cats.find(c => c.id === draggedFromCatId);
         let destCat = d.cats.find(c => c.id === targetCatId);
         let item = sourceCat.items.splice(draggedItemIdx, 1)[0];
+	let draggedCatId = null;
+
         if(targetIdx !== null) destCat.items.splice(targetIdx, 0, item);
         else destCat.items.push(item);
         draggedItemIdx = null; draggedFromCatId = null;
         syncDossier();
     }
 
-    function renderCats() {
-        let d = dossiers.find(x => x.idDoc === activeDossierId);
-        if(!d) return;
-        let cont = document.getElementById('dossier-cats-container'); cont.innerHTML = ""; let totalBrut = 0;
-        d.cats.forEach(cat => {
-            let catNet = 0;
-            let itemsHtml = cat.items.map((it, idx) => {
-                let nom, pUnit;
-                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
-                else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
-                let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
-                let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
-                catNet += ligneNet;
-                return `<tr class="draggable-row" draggable="true" ondragstart="onDragStart(event, ${cat.id}, ${idx})" ondragend="onDragEnd(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, ${cat.id}, ${idx})">
-                    <td>↕️ ${it.isCustom ? 'MANU' : it.ref}</td>
-                    <td><span class="${it.isCustom ? 'item-clickable item-custom' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'label')` : ''}">${nom}</span></td>
-                    <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td>
-                    <td><span class="${it.isCustom ? 'item-clickable' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'pUnit')` : ''}">${pUnit}€</span></td>
-                    <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'coeff')">${itemCoeff}</span></td>
-                    <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td>
-                    <td style="font-weight:bold;">${ligneNet.toFixed(2)}€</td>
-                    <td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td>
-                </tr>`;
-            }).join('');
-            let catFinal = catNet * (1 - cat.remise/100); totalBrut += catFinal;
-            let div = document.createElement('div'); div.className = 'categorie-bloc';
-            div.innerHTML = `<div class="categorie-header"><b onclick="renameCat(${cat.id})" style="cursor:pointer;">${cat.nom}</b><div style="display:flex;align-items:center;gap:8px;">Remise: <input type="number" style="width:60px;border-radius:8px;" value="${cat.remise}" onchange="updateCatRem(${cat.id},this.value)">%</div><button class="btn-mini btn-delete" onclick="removeCat(${cat.id})">Suppr</button></div>
-                <div style="padding:12px; background:#f8f9fa; display:flex; gap:10px; flex-wrap:wrap;"><input type="text" id="add-ref-${cat.id}" list="dl-stock" placeholder="Réf Stock" style="width:150px; border-radius:10px;"><input type="number" id="add-qte-${cat.id}" placeholder="Qté" style="width:80px; border-radius:10px;"><button class="btn-mini" onclick="addItem(${cat.id})">Ajouter</button><button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})">+ Ligne Manuelle</button></div>
-                <table ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, ${cat.id}, null)">
-                    <thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Unit/J</th><th>Coeff</th><th>Rem.</th><th>Total</th><th></th></tr></thead>
-                    <tbody>${itemsHtml}</tbody>
-                </table>
-                <div style="text-align:right; padding:12px 16px; font-weight:bold; background:#edf2f7; border-top:1px solid var(--gris-bordure);">Sous-total : ${catFinal.toFixed(2)}€</div>`;
-            cont.appendChild(div);
-        });
-        let final = totalBrut * (1 - d.remiseG/100);
-        document.getElementById('dossier-recap').innerHTML = `<div>Total Brut : ${totalBrut.toFixed(2)}€</div>${d.remiseG > 0 ? `<div>Remise Globale (${d.remiseG}%) : -${(totalBrut * d.remiseG/100).toFixed(2)}€</div>` : ''}<div style="font-size:1.5em; font-weight:bold; margin-top:8px;">NET À PAYER : ${final.toFixed(2)}€</div>`;
-    }
+function onCatDragStart(e, catId) {
+    draggedCatId = catId;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => e.currentTarget.style.opacity = '0.5', 0);
+}
+function onCatDragEnd(e) {
+    e.currentTarget.style.opacity = '1';
+    document.querySelectorAll('.categorie-bloc').forEach(b => b.classList.remove('drag-over-cat'));
+}
+function onCatDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add('drag-over-cat');
+}
+function onCatDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over-cat');
+}
+function onCatDrop(e, targetCatId) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('drag-over-cat');
+    if(!draggedCatId || draggedCatId === targetCatId) return;
+    let d = dossiers.find(x => x.idDoc === activeDossierId);
+    let fromIdx = d.cats.findIndex(c => c.id === draggedCatId);
+    let toIdx = d.cats.findIndex(c => c.id === targetCatId);
+    let [moved] = d.cats.splice(fromIdx, 1);
+    d.cats.splice(toIdx, 0, moved);
+    draggedCatId = null;
+    syncDossier();
+}
 
-    function checkAvailability(ref, addedQty, docId, isModIdx, catId) {
-        let d = dossiers.find(x => x.idDoc === docId);
-        if(!d.immoD || !d.immoF) return true;
-        let s = stock.find(x => x.ref === ref);
-        if(!s) return true;
-        let start = new Date(d.immoD), end = new Date(d.immoF);
-        for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
-            let iso = day.toISOString().split('T')[0], booked = 0;
-            dossiers.forEach(dos => {
-                if(dos.immoD && dos.immoF && iso >= dos.immoD && iso <= dos.immoF) {
-                    dos.cats.forEach(c => c.items.forEach((it, idx) => {
-                        if(it.ref === ref && !it.isCustom) {
-                            if(dos.idDoc === docId && c.id === catId && idx === isModIdx) return;
-                            booked += it.qte;
-                        }
-                    }));
-                }
-            });
-            if(booked + addedQty > s.qte) return false;
-        }
-        return true;
+
+    function renderCats() {
+    let d = dossiers.find(x => x.idDoc === activeDossierId);
+    if(!d) return;
+    let cont = document.getElementById('dossier-cats-container'); 
+    cont.innerHTML = ""; 
+    let totalBrut = 0;
+
+    d.cats.forEach(cat => {
+        let catNet = 0;
+        let itemsHtml = cat.items.map((it, idx) => {
+            let nom, pUnit;
+            if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
+            else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
+            let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
+            let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
+            catNet += ligneNet;
+            return `<tr class="draggable-row" draggable="true" 
+                ondragstart="onDragStart(event, ${cat.id}, ${idx})" 
+                ondragend="onDragEnd(event)" 
+                ondragover="onDragOver(event)" 
+                ondragleave="onDragLeave(event)" 
+                ondrop="onDrop(event, ${cat.id}, ${idx})">
+                <td>↕️ ${it.isCustom ? 'MANU' : it.ref}</td>
+                <td><span class="${it.isCustom ? 'item-clickable item-custom' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'label')` : ''}">${nom}</span></td>
+                <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td>
+                <td><span class="${it.isCustom ? 'item-clickable' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'pUnit')` : ''}">${pUnit}€</span></td>
+                <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'coeff')">${itemCoeff}</span></td>
+                <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td>
+                <td style="font-weight:bold;">${ligneNet.toFixed(2)}€</td>
+                <td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td>
+            </tr>`;
+        }).join('');
+
+        let catFinal = catNet * (1 - cat.remise/100); 
+        totalBrut += catFinal;
+
+        let div = document.createElement('div'); 
+        div.className = 'categorie-bloc';
+        div.dataset.catId = cat.id;
+        div.innerHTML = `
+            <div class="categorie-header" style="cursor:grab;">
+                <b>☰ <span onclick="renameCat(${cat.id})" style="cursor:pointer;">${cat.nom}</span></b>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    Remise: <input type="number" style="width:60px;border-radius:8px;" value="${cat.remise}" onchange="updateCatRem(${cat.id},this.value)">%
+                    <button class="btn-mini btn-delete" onclick="removeCat(${cat.id})">Suppr</button>
+                </div>
+            </div>
+            <div style="padding:12px; background:#f8f9fa; display:flex; gap:10px; flex-wrap:wrap;">
+                <input type="text" id="add-ref-${cat.id}" list="dl-stock" placeholder="Réf Stock" style="width:150px; border-radius:10px;">
+                <input type="number" id="add-qte-${cat.id}" placeholder="Qté" style="width:80px; border-radius:10px;">
+                <button class="btn-mini" onclick="addItem(${cat.id})">Ajouter</button>
+                <button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})">+ Ligne Manuelle</button>
+            </div>
+            <table ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, ${cat.id}, null)">
+                <thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Unit/J</th><th>Coeff</th><th>Rem.</th><th>Total</th><th></th></tr></thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+            <div style="text-align:right; padding:12px 16px; font-weight:bold; background:#edf2f7; border-top:1px solid var(--gris-bordure);">
+                Sous-total : ${catFinal.toFixed(2)}€
+            </div>`;
+
+        // Drag & drop catégories — sur le header uniquement pour éviter les conflits
+        let header = div.querySelector('.categorie-header');
+        header.addEventListener('dragstart', (e) => {
+            e.stopPropagation();
+            draggedCatId = cat.id;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => div.style.opacity = '0.4', 0);
+        });
+        header.addEventListener('dragend', (e) => {
+            div.style.opacity = '1';
+            document.querySelectorAll('.categorie-bloc').forEach(b => b.classList.remove('drag-over-cat'));
+            draggedCatId = null;
+        });
+
+        // Réception du drop sur tout le bloc
+        div.addEventListener('dragover', (e) => {
+            if(draggedCatId === null) return; // c'est un item, pas une cat
+            e.preventDefault();
+            e.stopPropagation();
+            div.classList.add('drag-over-cat');
+        });
+        div.addEventListener('dragleave', (e) => {
+            if(!div.contains(e.relatedTarget)) {
+                div.classList.remove('drag-over-cat');
+            }
+        });
+        div.addEventListener('drop', (e) => {
+            if(draggedCatId === null) return;
+            e.preventDefault();
+            e.stopPropagation();
+            div.classList.remove('drag-over-cat');
+            if(draggedCatId === cat.id) return;
+            let dd = dossiers.find(x => x.idDoc === activeDossierId);
+            let fromIdx = dd.cats.findIndex(c => c.id === draggedCatId);
+            let toIdx = dd.cats.findIndex(c => c.id === cat.id);
+            if(fromIdx === -1 || toIdx === -1) return;
+            let [moved] = dd.cats.splice(fromIdx, 1);
+            dd.cats.splice(toIdx, 0, moved);
+            draggedCatId = null;
+            syncDossier();
+        });
+
+        // Rendre le header draggable
+        header.draggable = true;
+
+        cont.appendChild(div);
+    });
+
+    let final = totalBrut * (1 - d.remiseG/100);
+    document.getElementById('dossier-recap').innerHTML = `
+        <div>Total Brut : ${totalBrut.toFixed(2)}€</div>
+        ${d.remiseG > 0 ? `<div>Remise Globale (${d.remiseG}%) : -${(totalBrut * d.remiseG/100).toFixed(2)}€</div>` : ''}
+        <div style="font-size:1.5em; font-weight:bold; margin-top:8px;">NET À PAYER : ${final.toFixed(2)}€</div>`;
+}
+
+
+function checkAvailability(ref, addedQty, docId, isModIdx, catId) {
+    let d = dossiers.find(x => x.idDoc === docId);
+    if(!d.immoD || !d.immoF) return { ok: true };
+    let s = stock.find(x => x.ref === ref);
+    if(!s) return { ok: true };
+    let start = new Date(d.immoD), end = new Date(d.immoF);
+    let minDispo = Infinity;
+
+    for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
+        let iso = day.toISOString().split('T')[0], booked = 0;
+        dossiers.forEach(dos => {
+            if(dos.immoD && dos.immoF && iso >= dos.immoD && iso <= dos.immoF) {
+                dos.cats.forEach(c => c.items.forEach((it, idx) => {
+                    if(it.ref === ref && !it.isCustom) {
+                        if(dos.idDoc === docId && c.id === catId && idx === isModIdx) return;
+                        booked += it.qte;
+                    }
+                }));
+            }
+        });
+        let dispo = s.qte - booked;
+        if(dispo < minDispo) minDispo = dispo;
+        if(booked + addedQty > s.qte) return { ok: false, dispo: Math.max(0, dispo), nom: s.nom };
     }
+    return { ok: true };
+}
+
 
     function addItem(catId) {
         let r = document.getElementById('add-ref-'+catId).value.toUpperCase();
         let q = parseInt(document.getElementById('add-qte-'+catId).value) || 1;
         if(!stock.find(s => s.ref === r)) return alert("Article introuvable dans le stock");
-        if(!checkAvailability(r, q, activeDossierId, null, catId)) {
-            if(!confirm("⚠️ ALERTE STOCK : La quantité demandée dépasse le stock disponible sur cette période. Ajouter quand même ?")) return;
-        }
+        let check = checkAvailability(r, q, activeDossierId, null, catId);
+if(!check.ok) {
+    if(!confirm(`⚠️ ALERTE STOCK\n\nArticle : ${check.nom} (${r})\nQuantité demandée : ${q}\nQuantité disponible : ${check.dispo}\n\nAjouter quand même ?`)) return;
+}
         dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:q, coeff:null, remise:0, isCustom:false});
         syncDossier();
     }
@@ -795,9 +1090,10 @@ document.getElementById('det-coeff').value = d.coeff;
         let v = prompt("Nouvelle valeur :", (key === 'coeff' && !it[key]) ? '' : it[key]); if(v === null) return;
         if(key === 'qte' && !it.isCustom) {
             let newQty = parseFloat(v) || 0;
-            if(!checkAvailability(it.ref, newQty, activeDossierId, idx, catId)) {
-                if(!confirm("⚠️ ALERTE STOCK : La quantité demandée dépasse le stock disponible sur cette période. Valider quand même ?")) return;
-            }
+            let check = checkAvailability(it.ref, newQty, activeDossierId, idx, catId);
+if(!check.ok) {
+    if(!confirm(`⚠️ ALERTE STOCK\n\nArticle : ${check.nom} (${it.ref})\nQuantité demandée : ${newQty}\nQuantité disponible : ${check.dispo}\n\nValider quand même ?`)) return;
+}
         }
         if (key === 'coeff') it[key] = (v.trim() === '') ? null : parseFloat(v) || 1;
         else it[key] = (key === 'label') ? v : parseFloat(v) || 0;
@@ -822,6 +1118,7 @@ document.getElementById('det-coeff').value = d.coeff;
         let s = stock.find(x => x.ref === ref); if(!s) return alert("Article inexistant");
         let cur = new Date(dStr), end = new Date(fStr);
         let h = `<h3>${s.nom} (Total stock: ${s.qte})</h3>`;
+
         while(cur <= end) {
             let iso = cur.toISOString().split('T')[0], qPrise = 0, bads = [];
             dossiers.forEach(dos => {
@@ -956,7 +1253,243 @@ doc.setFontSize(8); doc.text(`N° : ${activeDossierId} | Date : ${new Date().toL
                 doc.text(`Chargé d'affaire : ${userFullName}${userMail ? ' | ' + userMail : ''}${userTel ? ' | ' + userTel : ''}`, 15, finalY);
                 finalY += 6;
                 doc.text(`TVA non applicable (art. 293 B).`, 15, finalY);
-                if(type === 'facture' && settings.iban) doc.text(`RIB : ${settings.banque || ''} - IBAN : ${settings.iban}`, 15, finalY + 8);
+// ===== BLOC BON POUR ACCORD (DEVIS uniquement) =====
+if(type === 'devis') {
+    let accordY = finalY + 12;
+    
+    // Validité du devis
+    doc.setFontSize(9); doc.setFont(undefined, 'italic');
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Devis valable 30 jours à compter du ${new Date().toLocaleDateString('fr-FR')}.`, 15, accordY);
+    accordY += 8;
+    
+    // Cadre principal
+    doc.setFillColor(240, 245, 250);
+    doc.setDrawColor(10, 35, 66);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(15, accordY, 180, 45, 2, 2, 'FD');
+    
+    // Titre
+    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+    doc.setTextColor(10, 35, 66);
+    doc.text('BON POUR ACCORD', 105, accordY + 7, { align: 'center' });
+    
+    // Mention
+    doc.setFontSize(8); doc.setFont(undefined, 'italic');
+    doc.setTextColor(60, 60, 60);
+    doc.text('À retourner daté et signé, avec la mention manuscrite "Bon pour accord"', 105, accordY + 13, { align: 'center' });
+    
+    // Ligne de séparation interne
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.2);
+    doc.line(105, accordY + 17, 105, accordY + 44);
+    
+    // Colonne GAUCHE - Date
+    doc.setFontSize(9); doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('Date :', 20, accordY + 23);
+    doc.setDrawColor(150, 150, 150);
+    doc.line(35, accordY + 23, 100, accordY + 23);
+    
+    doc.text('Nom & Prénom :', 20, accordY + 32);
+    doc.line(50, accordY + 32, 100, accordY + 32);
+    
+    doc.setFont(undefined, 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text('Cachet de l\'entreprise (si applicable)', 20, accordY + 41);
+    
+    // Colonne DROITE - Signature
+    doc.setFontSize(9); doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('Signature du client :', 110, accordY + 23);
+    
+    doc.setFont(undefined, 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text('(précédée de "Bon pour accord")', 110, accordY + 28);
+    
+    // Mise à jour finalY au cas où d'autres éléments suivent
+    finalY = accordY + 45;
+}
+
+                if(type === 'facture' && (settings.iban || settings.banque)) {
+    let bankY = finalY + 12;
+    
+    // Cadre avec fond bleu pâle
+    doc.setFillColor(240, 245, 250);
+    doc.setDrawColor(10, 35, 66);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(15, bankY, 180, 24, 2, 2, 'FD');
+    
+    // Titre
+    doc.setFontSize(10); doc.setFont(undefined, 'bold');
+    doc.setTextColor(10, 35, 66);
+    doc.text('COORDONNÉES BANCAIRES', 20, bankY + 6);
+    
+    // Contenu
+    doc.setTextColor(0, 0, 0);
+    let by = bankY + 13;
+    
+    if(settings.banque) {
+        doc.setFontSize(9); doc.setFont(undefined, 'normal');
+        doc.text(`Banque : ${settings.banque}`, 20, by);
+        by += 5;
+    }
+    if(settings.iban) {
+        doc.setFontSize(10); doc.setFont(undefined, 'bold');
+        doc.text(`IBAN : ${settings.iban}`, 20, by);
+        by += 5;
+    }
+    if(settings.bic) {
+        doc.setFontSize(9); doc.setFont(undefined, 'normal');
+        doc.text(`BIC / SWIFT : ${settings.bic}`, 20, by);
+    }
+}
+// ===== PIED DE PAGE sur toutes les pages =====
+const pageCount = doc.internal.getNumberOfPages();
+for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    
+    // Ligne de séparation
+    doc.setDrawColor(10, 35, 66);
+    doc.setLineWidth(0.3);
+    doc.line(15, 285, 195, 285);
+    
+    // Infos asso (gauche)
+    doc.setFontSize(8); doc.setFont(undefined, 'normal');
+    doc.setTextColor(80, 80, 80);
+    doc.text(settings.nom || "L'Argentique Events", 15, 290);
+    
+    // Chargé d'affaire (centre)
+    let contactInfo = [];
+    if(userFullName) contactInfo.push(userFullName);
+    if(userTel) contactInfo.push(userTel);
+    if(userMail) contactInfo.push(userMail);
+    doc.text(contactInfo.join(' | '), 105, 290, { align: 'center' });
+    
+    // Numéro de page (droite)
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(10, 35, 66);
+    doc.text(`Page ${i} / ${pageCount}`, 195, 290, { align: 'right' });
+}
+// ==========================================
+// CGV - uniquement pour les devis
+// ==========================================
+if(type === 'devis') {
+    doc.addPage();
+    let y = 20;
+    
+    // Titre
+    doc.setFillColor(10, 35, 66);
+    doc.rect(0, 0, 210, 14, 'F');
+    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text('CONDITIONS GÉNÉRALES DE LOCATION ET DE PRESTATION', 105, 9, { align: 'center' });
+    y = 22;
+
+    const articles = [
+        {
+            titre: 'ARTICLE 1 : OBJET ET ACCEPTATION',
+            texte: "Les présentes conditions générales s'appliquent à toutes les locations de matériel et prestations de services effectuées par l'association L'argentique Events. La signature du devis implique l'acceptation sans réserve de ces conditions par le client."
+        },
+        {
+            titre: 'ARTICLE 2 : RÉSERVATION ET PAIEMENT',
+            texte: "• Validation : La réservation est ferme dès la réception du devis signé avec la mention « Bon pour accord ».\n• Règlement : Le paiement intégral de la prestation s'effectue impérativement le jour de la récupération du matériel (ou au début de la prestation).\n• Modes de paiement : Les règlements acceptés sont : Espèces / Chèque / Virement.\n• TVA : Conformément à l'article 293 B du CGI, la TVA est non applicable."
+        },
+        {
+            titre: 'ARTICLE 3 : RESPONSABILITÉ ET GARDIENNAGE',
+            texte: "• Responsabilité : Le client est responsable du matériel dès qu'il en prend possession (enlèvement ou livraison) et jusqu'à sa restitution. En cas de casse, perte ou vol, le client s'engage à rembourser le matériel à sa valeur de remplacement à neuf.\n• Gardiennage : Le matériel doit être impérativement gardienné et sécurisé par le client dès lors que le site de l'événement est inoccupé ou que le personnel de l'association n'est plus présent sur les lieux. Le matériel ne doit jamais rester sans surveillance dans un lieu ouvert au public ou non sécurisé."
+        },
+        {
+            titre: 'ARTICLE 4 : ACCUEIL DES TECHNICIENS (RESTAURATION)',
+            texte: "Dans le cadre d'une prestation incluant la présence de personnel (roads, techniciens, régisseurs, chef de chantier) :\n• Restauration : Le client s'engage à fournir de l'eau à volonté ainsi qu'un repas par personne et par vacation.\n• Forfait : Si la restauration n'est pas prise en charge par le client, chaque repas sera facturé forfaitairement à hauteur de 20 € par technicien."
+        },
+        {
+            titre: 'ARTICLE 5 : ÉTAT ET UTILISATION DU MATÉRIEL',
+            texte: "Le matériel est remis en bon état de fonctionnement. Le client doit vérifier l'état du matériel lors de la remise. Aucune réclamation ne sera admise après le départ du matériel.\nLe client s'engage à utiliser le matériel selon les règles de sécurité et à ne pas le sous-louer."
+        },
+        {
+            titre: 'ARTICLE 6 : RESTITUTION ET PROPRETÉ',
+            texte: "• Retard : Tout retard de restitution entraînera une facturation supplémentaire d'une journée par tranche de 24h.\n• Propreté : Le matériel doit être rendu propre et rangé. À défaut, des frais de nettoyage forfaitaires de 50 € seront facturés."
+        },
+        {
+            titre: 'ARTICLE 7 : ANNULATION',
+            texte: "En cas d'annulation par le client moins de 7 jours avant la date prévue, l'association se réserve le droit de facturer une indemnité de dédit égale à 30 % du montant total du devis."
+        },
+        {
+            titre: 'ARTICLE 8 : SÉCURITÉ ET ACCÈS (PRESTATION)',
+            texte: "Le client doit garantir un accès sécurisé au site et une alimentation électrique conforme. L'association se réserve le droit d'interrompre la prestation si les conditions de sécurité ne sont plus assurées (intempéries, installations électriques non conformes, etc.)."
+        },
+        {
+            titre: 'ARTICLE 9 : ASSURANCE ET FORCE MAJEURE',
+            texte: "Le client doit posséder une assurance Responsabilité Civile couvrant son événement. L'association ne pourra être tenue responsable des retards ou impossibilités d'exécuter la prestation en cas de force majeure (tempête, accident, panne majeure, etc.)."
+        }
+    ];
+
+    articles.forEach(art => {
+        // Vérif saut de page
+        if(y > 260) { doc.addPage(); y = 20; }
+
+        // Titre article
+        doc.setFontSize(8.5); doc.setFont(undefined, 'bold');
+        doc.setTextColor(10, 35, 66);
+        doc.text(art.titre, 15, y);
+        y += 5;
+
+        // Texte article
+        doc.setFontSize(7.5); doc.setFont(undefined, 'normal');
+        doc.setTextColor(50, 50, 50);
+        let lines = art.texte.split('\n');
+        lines.forEach(line => {
+            let split = doc.splitTextToSize(line, 180);
+            split.forEach(l => {
+                if(y > 275) { doc.addPage(); y = 20; }
+                doc.text(l, 15, y);
+                y += 4.5;
+            });
+        });
+        y += 4; // espace entre articles
+    });
+
+    // ---- Bloc signature CGV ----
+    if(y > 230) { doc.addPage(); y = 20; }
+    y += 5;
+    doc.setFillColor(240, 245, 250);
+    doc.setDrawColor(10, 35, 66);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(15, y, 180, 40, 2, 2, 'FD');
+
+    doc.setFontSize(10); doc.setFont(undefined, 'bold');
+    doc.setTextColor(10, 35, 66);
+    doc.text('BON POUR ACCORD — LU ET APPROUVÉ, CONDITIONS GÉNÉRALES ACCEPTÉES', 105, y + 7, { align: 'center' });
+
+    doc.setFontSize(7.5); doc.setFont(undefined, 'italic');
+    doc.setTextColor(60, 60, 60);
+    doc.text('À retourner daté et signé, avec la mention manuscrite "Bon pour accord, lu et approuvé"', 105, y + 13, { align: 'center' });
+
+    // Séparateur vertical
+    doc.setDrawColor(180, 180, 180); doc.setLineWidth(0.2);
+    doc.line(105, y + 17, 105, y + 39);
+
+    // Gauche
+    doc.setFontSize(8.5); doc.setFont(undefined, 'bold'); doc.setTextColor(0,0,0);
+    doc.text('Date :', 20, y + 23);
+    doc.setDrawColor(150,150,150);
+    doc.line(35, y + 23, 100, y + 23);
+    doc.text('Nom & Prénom :', 20, y + 31);
+    doc.line(50, y + 31, 100, y + 31);
+    doc.setFont(undefined, 'italic'); doc.setFontSize(7.5); doc.setTextColor(120,120,120);
+    doc.text("Cachet de l'entreprise (si applicable)", 20, y + 38);
+
+    // Droite
+    doc.setFontSize(8.5); doc.setFont(undefined, 'bold'); doc.setTextColor(0,0,0);
+    doc.text('Signature :', 110, y + 23);
+}
+// ==========================================
+// FIN CGV
+// ==========================================
+
             }
             doc.save(`${type.toUpperCase()}_${d.nom}.pdf`);
         });
