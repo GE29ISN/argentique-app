@@ -3,6 +3,8 @@
 
 
 
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -131,6 +133,245 @@
     border: 2px dashed #4a90d9;
     background: #f0f6ff;
 }
+/* ========== DÉPENSES ========== */
+.despenses-card {
+    background: white;
+    border: 2px solid var(--bleu-marine);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+}
+
+.despenses-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.despenses-card .montant {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--bleu-marine);
+}
+
+.despenses-card.benefice .montant {
+    color: #27ae60;
+}
+
+.despenses-card.alerte .montant {
+    color: #e74c3c;
+}
+
+.categorie-depenses {
+    background: white;
+    border: 1px solid #ecf0f1;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.cat-depenses-header {
+    background: linear-gradient(135deg, var(--bleu-marine), #5a7fa0);
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+
+.cat-depenses-header .icon {
+    font-size: 1.5rem;
+    margin-right: 10px;
+}
+
+.cat-depenses-total {
+    background: #ecf0f1;
+    padding: 8px 15px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.depense-row {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ecf0f1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.depense-row:last-child {
+    border-bottom: none;
+}
+
+.depense-row:hover {
+    background: #f8f9fa;
+}
+
+.depense-info {
+    flex: 1;
+}
+
+.depense-label {
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.depense-desc {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+}
+
+.depense-montant {
+    font-weight: bold;
+    min-width: 80px;
+    text-align: right;
+}
+
+.depense-statut {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.depense-statut.payee {
+    background: #d5f4e6;
+    color: #27ae60;
+}
+
+.depense-statut.en_attente {
+    background: #fce5e5;
+    color: #e74c3c;
+}
+
+.depense-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-edit-despense,
+.btn-delete-despense {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.btn-edit-despense {
+    background: #3498db;
+    color: white;
+}
+
+.btn-edit-despense:hover {
+    background: #2980b9;
+}
+
+.btn-delete-despense {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-delete-despense:hover {
+    background: #c0392b;
+}
+
+.form-ajout-despense {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.form-ajout-despense input,
+.form-ajout-despense select {
+    padding: 10px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.form-ajout-despense button {
+    grid-column: 1 / -1;
+    padding: 10px;
+    background: var(--bleu-marine);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.form-ajout-despense button:hover {
+    background: #465b7a;
+}
+
+.no-despenses {
+    text-align: center;
+    padding: 40px;
+    color: #95a5a6;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .despenses-card {
+        padding: 15px;
+    }
+
+    .despenses-card .montant {
+        font-size: 1.5rem;
+    }
+
+    .depense-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .depense-montant {
+        width: 100%;
+        text-align: left;
+        margin-top: 8px;
+    }
+
+    .depense-actions {
+        width: 100%;
+    }
+
+    .form-ajout-despense {
+        grid-template-columns: 1fr;
+    }
+}
+/* Affichage spécifique des salaires */
+.depense-row.salaire {
+    background: #f0f8ff;
+    border-left: 4px solid #3498db;
+}
+
+.depense-poste {
+    font-size: 0.8rem;
+    color: #3498db;
+    font-weight: bold;
+    margin-top: 3px;
+}
+
+.depense-calcul {
+    font-size: 0.75rem;
+    color: #7f8c8d;
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid #ecf0f1;
+}
+
 
     </style>
 </head>
@@ -204,7 +445,24 @@
             <div><label>BIC/SWIFT</label><input type="text" id="adm-bic"></div>
         </div>
         <button onclick="saveAdminSettings()" style="background:var(--vert-ok); width: 100%; border-radius:10px;">Enregistrer les paramètres</button>
+    <hr style="margin:30px 0; border:none; border-top:2px solid var(--gris-bordure);">
+    
+    <h3 style="color:var(--bleu-marine); margin-top:20px;">💾 Sauvegardes & Restauration</h3>
+    <p style="color:#666; font-size:13px;">Télécharge une sauvegarde complète de toutes tes données. À faire régulièrement !</p>
+    
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+        <button onclick="exportBackupComplet()" class="btn-mini btn-pdf" style="background:#27ae60; font-size:14px; padding:12px;">
+            💾 Télécharger Backup
+        </button>
+        <button onclick="document.getElementById('restore-file').click()" class="btn-mini btn-pdf" style="background:#3498db; font-size:14px; padding:12px;">
+            📥 Restaurer depuis Backup
+        </button>
     </div>
+    
+    <input type="file" id="restore-file" style="display:none;" accept=".json" onchange="restoreFromBackup(this)">
+    
+    <div id="backup-status" style="margin-top:15px; padding:10px; border-radius:8px; font-size:13px; display:none;"></div>
+</div>
 
     <!-- Section User -->
     <div class="admin-section" id="admin-section-user">
@@ -319,6 +577,8 @@
     <button class="btn-mini btn-pdf" onclick="genPDF('devis')">📄 Devis (PDF)</button>
     <button class="btn-mini btn-pdf" onclick="genPDF('facture')">💰 Facture (PDF)</button>
 
+    <button class="btn-mini" style="background:#e74c3c;" onclick="showDespensesView()">📊 Gestion Dépenses</button>
+
     <button class="btn-mini" style="margin-left:auto; background:#4a6fa5;" onclick="document.getElementById('modal-pj').style.display='flex'">📎 Pièces jointes</button>
 </div>
 
@@ -383,6 +643,20 @@
         <div id="dossier-cats-container"></div>
         <div class="recap-final" id="dossier-recap"></div>
 <!-- ========== PIÈCES JOINTES ========== -->
+    </div>
+ <div id="view-despenses-dossier" style="display:none;">
+        <button class="btn-mini" onclick="closeDespensesView()" style="margin-bottom:15px;">⬅ Retour au dossier</button>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1 id="despenses-titre">📊 Dépenses du projet</h1>
+            
+        </div>
+
+        <!-- Résumé financier -->
+        <div id="despenses-resume" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:30px;"></div>
+
+        <!-- Tableau des dépenses -->
+        <div id="despenses-content"></div>
     </div>
 </div>
 
@@ -512,7 +786,23 @@ auth.onAuthStateChanged(user => {
             renderDossierList();
             if(activeDossierId) renderCats();
         });
+ despensesCache = {};
     }
+function updateDatalists() {
+    let dlStock = document.getElementById('dl-stock');
+    if(dlStock) {
+        dlStock.innerHTML = stock.map(s => 
+            `<option value="${s.ref}">${s.nom} (${s.ref})</option>`
+        ).join('');
+    }
+
+    let dlClients = document.getElementById('dl-clients');
+    if(dlClients) {
+        dlClients.innerHTML = clients.map(c => 
+            `<option value="${c.ent || c.nom}">${c.ent || c.nom}</option>`
+        ).join('');
+    }
+}
 
     // ==========================================
     // NAVIGATION
@@ -1620,6 +1910,691 @@ function getIconePJ(nom) {
     };
     return map[ext] || '📎';
 }
+
+// ==========================================
+// DÉPENSES
+// ==========================================
+
+const CATEGORIES_DESPENSES = {
+    'sous-location': { icon: '🎤', label: 'Sous-locations' },
+    'camion': { icon: '🚚', label: 'Location Camions' },
+    'defrai': { icon: '💸', label: 'Défraiements' },
+    'annexe': { icon: '⚙️', label: 'Frais Annexes' },
+    'imprevue': { icon: '⚠️', label: 'Imprévus' },
+    'salaire': { icon: '👨‍💼', label: 'Salaires & Techniciens' },
+};
+let despensesCache = {}; // { dossierId: [dépenses] }
+
+function showDespensesView() {
+    document.getElementById('view-detail-dossier').style.display = 'none';
+    document.getElementById('view-despenses-dossier').style.display = 'block';
+    let d = dossiers.find(x => x.idDoc === activeDossierId);
+    document.getElementById('despenses-titre').innerText = `📊 Dépenses - ${d.nom}`;
+    loadDespenses();
+}
+
+function closeDespensesView() {
+    document.getElementById('view-despenses-dossier').style.display = 'none';
+    document.getElementById('view-detail-dossier').style.display = 'block';
+}
+
+function loadDespenses() {
+    if (!activeDossierId) return;
+    
+    // Si déjà en cache et listener actif, skip
+    if (despensesCache[activeDossierId]) {
+        renderDespenses();
+        return;
+    }
+
+    // Sinon, charger et mettre en place le listener
+    let subCol = db.collection('dossiers').doc(activeDossierId).collection('depenses');
+    
+    subCol.onSnapshot(snapshot => {
+        despensesCache[activeDossierId] = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            dateAjout: doc.data().dateAjout ? doc.data().dateAjout.toDate() : new Date()
+        }));
+        renderDespenses();
+    });
+}
+
+function renderDespenses() {
+    if (!activeDossierId || !despensesCache[activeDossierId]) return;
+
+    let depenses = despensesCache[activeDossierId];
+    let d = dossiers.find(x => x.idDoc === activeDossierId);
+    
+    // Récupérer le total du devis (net)
+    let devisTotal = 0;
+    if (d && d.cats) {
+        d.cats.forEach(cat => {
+            let catNet = 0;
+            cat.items.forEach(it => {
+                let nom, pUnit;
+                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
+                else { let s = stock.find(x => x.ref === it.ref); pUnit = s ? s.ploc : 0; }
+                let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
+                let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
+                catNet += ligneNet;
+            });
+            let catFinal = catNet * (1 - cat.remise/100);
+            devisTotal += catFinal;
+        });
+        devisTotal = devisTotal * (1 - d.remiseG/100);
+    }
+
+    // Calculer les totaux
+    let totalDespenses = depenses.reduce((sum, dep) => sum + (dep.montant || 0), 0);
+    let totalPayee = depenses.filter(dep => dep.statut === 'payee').reduce((sum, dep) => sum + (dep.montant || 0), 0);
+    let totalEnAttente = depenses.filter(dep => dep.statut === 'en attente').reduce((sum, dep) => sum + (dep.montant || 0), 0);
+    let benefice = devisTotal - totalDespenses;
+    let pourcentBenefice = devisTotal > 0 ? ((benefice / devisTotal) * 100).toFixed(2) : 0;
+
+    // Afficher le résumé
+    let resumeHtml = `
+        <div class="despenses-card">
+            <h3>Devis HT</h3>
+            <div class="montant">${devisTotal.toFixed(2)}€</div>
+        </div>
+        <div class="despenses-card">
+            <h3>Total Dépenses</h3>
+            <div class="montant">${totalDespenses.toFixed(2)}€</div>
+        </div>
+        <div class="despenses-card benefice">
+            <h3>Bénéfice</h3>
+            <div class="montant">${benefice.toFixed(2)}€</div>
+            <div style="font-size:0.9rem; margin-top:8px;">${pourcentBenefice}%</div>
+        </div>
+        <div class="despenses-card">
+            <h3>Payé</h3>
+            <div class="montant">${totalPayee.toFixed(2)}€</div>
+        </div>
+        <div class="despenses-card ${totalEnAttente > 0 ? 'alerte' : ''}">
+            <h3>En attente</h3>
+            <div class="montant">${totalEnAttente.toFixed(2)}€</div>
+        </div>
+    `;
+    document.getElementById('despenses-resume').innerHTML = resumeHtml;
+
+    // Grouper par catégorie
+    let parCategorie = {};
+    Object.keys(CATEGORIES_DESPENSES).forEach(cat => {
+        parCategorie[cat] = depenses.filter(dep => dep.categorie === cat);
+    });
+
+    // Afficher les catégories
+    let contentHtml = '';
+    Object.keys(CATEGORIES_DESPENSES).forEach(catKey => {
+        let deps = parCategorie[catKey];
+        let catInfo = CATEGORIES_DESPENSES[catKey];
+        let catTotal = deps.reduce((sum, dep) => sum + (dep.montant || 0), 0);
+
+        contentHtml += `
+            <div class="categorie-depenses">
+                <div class="cat-depenses-header">
+                    <span><span class="icon">${catInfo.icon}</span>${catInfo.label}</span>
+                </div>
+        `;
+
+        if (deps.length === 0) {
+            contentHtml += `<div class="no-depenses">Aucune dépense</div>`;
+        } else {
+            deps.forEach((dep, idx) => {
+                let isMoneyClass = catKey === 'salaire' ? 'salaire' : '';
+                let extraInfo = catKey === 'salaire' ? `
+                    <div class="depense-poste">${dep.description}</div>
+                    <div class="depense-calcul">👤 ${dep.souCategorie}</div>
+                ` : '';
+
+                contentHtml += `
+                    <div class="depense-row ${isMoneyClass}">
+                        <div class="depense-info">
+                            <div class="depense-label">${catKey === 'salaire' ? `👨‍💼 ${dep.souCategorie}` : dep.souCategorie}</div>
+                            ${catKey === 'salaire' ? `<div class="depense-poste">${dep.description}</div>` : `<div class="depense-desc">${dep.description || ''}</div>`}
+                        </div>
+                        <div class="depense-montant">${dep.montant.toFixed(2)}€</div>
+                        <span class="depense-statut ${dep.statut}">${dep.statut === 'payee' ? '✅ Payée' : '⏳ En attente'}</span>
+                        <div class="depense-actions">
+                            <button class="btn-edit-despense" onclick="editDespense('${dep.id}')">✏️</button>
+                            <button class="btn-delete-despense" onclick="deleteDespense('${dep.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        contentHtml += `
+                <div class="cat-depenses-total">
+                    Total ${catInfo.label}: <strong>${catTotal.toFixed(2)}€</strong>
+                </div>
+            </div>
+        `;
+    });
+
+    // Ajouter un formulaire pour chaque catégorie
+     contentHtml += `
+        <div style="margin-top:30px;">
+            <h3>➕ Ajouter une dépense</h3>
+            <div class="form-ajout-despense">
+                <select id="new-dep-categorie" onchange="updateFormDespense()">
+                    ${Object.keys(CATEGORIES_DESPENSES).map(cat => 
+                        `<option value="${cat}">${CATEGORIES_DESPENSES[cat].label}</option>`
+                    ).join('')}
+                </select>
+                
+                <!-- Champs normaux (caché pour salaires) -->
+                <div id="form-normal-fields" style="display:contents;">
+                    <input type="text" id="new-dep-sous-cat" placeholder="Sous-catégorie (ex: Sono Dupont)">
+                    <input type="text" id="new-dep-desc" placeholder="Description (optionnel)">
+                    <input type="number" step="0.01" id="new-dep-montant" placeholder="Montant (€)">
+                </div>
+
+                <!-- Champs pour les salaires (caché par défaut) -->
+                <div id="form-salaire-fields" style="display:none; grid-column: 1 / -1;">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px;">
+                        <input type="text" id="new-sal-nom" placeholder="Nom du technicien">
+                        <input type="text" id="new-sal-poste" placeholder="Poste (ex: Technicien Son)">
+                        <input type="number" step="0.01" id="new-sal-montant" placeholder="Salaire journée (€)">
+                        <input type="number" id="new-sal-jours" placeholder="Nombre de jours" value="1">
+                    </div>
+                </div>
+
+                <select id="new-dep-statut">
+                    <option value="en attente">⏳ En attente</option>
+                    <option value="payee">✅ Payée</option>
+                </select>
+                <button onclick="addDespense()">💾 Enregistrer la dépense</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('despenses-content').innerHTML = contentHtml;
+}
+
+async function addDespense() {
+    if (!activeDossierId) return;
+
+    let categorie = document.getElementById('new-dep-categorie').value;
+    let statut = document.getElementById('new-dep-statut').value;
+
+    let souCategorie, description, montant;
+
+    if (categorie === 'salaire') {
+        // Mode salaires
+        let nom = document.getElementById('new-sal-nom').value;
+        let poste = document.getElementById('new-sal-poste').value;
+        let salaireMj = parseFloat(document.getElementById('new-sal-montant').value);
+        let nbJours = parseInt(document.getElementById('new-sal-jours').value) || 1;
+
+        if (!nom || !poste || !salaireMj) {
+            alert('❌ Remplis le nom, le poste et le salaire journée');
+            return;
+        }
+
+        souCategorie = nom;
+        description = `${poste} - ${nbJours} jour(s)`;
+        montant = salaireMj * nbJours;
+    } else {
+        // Mode normal
+        souCategorie = document.getElementById('new-dep-sous-cat').value;
+        description = document.getElementById('new-dep-desc').value;
+        montant = parseFloat(document.getElementById('new-dep-montant').value);
+
+        if (!souCategorie || !montant) {
+            alert('❌ Remplis la sous-catégorie et le montant');
+            return;
+        }
+    }
+
+    try {
+        let user = firebase.auth().currentUser;
+        let creePar = user ? user.email : 'anonyme';
+
+        await db.collection('dossiers').doc(activeDossierId).collection('depenses').add({
+            categorie,
+            souCategorie,
+            description,
+            montant,
+            statut,
+            dateAjout: firebase.firestore.Timestamp.now(),
+            creePar,
+            devise: 'EUR'
+        });
+
+        // Vider les formulaires
+        document.getElementById('new-dep-sous-cat').value = '';
+        document.getElementById('new-dep-desc').value = '';
+        document.getElementById('new-dep-montant').value = '';
+        document.getElementById('new-sal-nom').value = '';
+        document.getElementById('new-sal-poste').value = '';
+        document.getElementById('new-sal-montant').value = '';
+        document.getElementById('new-sal-jours').value = '1';
+        document.getElementById('new-dep-statut').value = 'en attente';
+
+        renderDespenses();
+    } catch (err) {
+        console.error('Erreur lors de l\'ajout:', err);
+        alert('❌ Erreur lors de l\'ajout');
+    }
+}
+
+function updateFormDespense() {
+    let categorie = document.getElementById('new-dep-categorie').value;
+    let normalFields = document.getElementById('form-normal-fields');
+    let salaireFields = document.getElementById('form-salaire-fields');
+
+    if (categorie === 'salaire') {
+        normalFields.style.display = 'none';
+        salaireFields.style.display = 'block';
+    } else {
+        normalFields.style.display = 'contents';
+        salaireFields.style.display = 'none';
+    }
+}
+
+async function editDespense(depId) {
+    if (!activeDossierId) return;
+    
+    let deps = despensesCache[activeDossierId] || [];
+    let dep = deps.find(d => d.id === depId);
+    if (!dep) return;
+
+    let newMontant = prompt('Montant (€):', dep.montant);
+    if (newMontant === null) return;
+    newMontant = parseFloat(newMontant);
+    if (isNaN(newMontant)) return;
+
+    let newStatut = confirm('Marquer comme payée ?') ? 'payee' : 'en attente';
+
+    try {
+        await db.collection('dossiers').doc(activeDossierId).collection('depenses').doc(depId).update({
+            montant: newMontant,
+            statut: newStatut
+        });
+        renderDespenses();
+    } catch (err) {
+        console.error('Erreur:', err);
+    }
+}
+
+async function deleteDespense(depId) {
+    if (!confirm('❌ Supprimer cette dépense ?')) return;
+
+    try {
+        await db.collection('dossiers').doc(activeDossierId).collection('depenses').doc(depId).delete();
+        renderDespenses();
+    } catch (err) {
+        console.error('Erreur:', err);
+    }
+}
+
+function genPDFDespenses() {
+    if (!activeDossierId) return;
+
+    let d = dossiers.find(x => x.idDoc === activeDossierId);
+    let depenses = despensesCache[activeDossierId] || [];
+
+    // Créer le PDF
+    let doc = new jsPDF();
+    let pageWidth = doc.internal.pageSize.getWidth();
+    let pageHeight = doc.internal.pageSize.getHeight();
+    let margin = 15;
+    let y = margin;
+
+    // En-tête
+    doc.setFontSize(18);
+    doc.text('📊 Synthèse Dépenses', margin, y);
+    y += 10;
+
+    doc.setFontSize(12);
+    doc.text(`Projet: ${d.nom}`, margin, y);
+    y += 5;
+    doc.text(`Client: ${d.cli}`, margin, y);
+    y += 5;
+    doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, margin, y);
+    y += 10;
+
+    // Tableau
+    let tableData = [];
+    Object.keys(CATEGORIES_DESPENSES).forEach(catKey => {
+        let deps = depenses.filter(dep => dep.categorie === catKey);
+        if (deps.length > 0) {
+            tableData.push([
+                { content: CATEGORIES_DESPENSES[catKey].label, styles: { fontStyle: 'bold', fillColor: [200, 220, 255] } },
+                '', '', ''
+            ]);
+            deps.forEach(dep => {
+                tableData.push([
+                    dep.souCategorie,
+                    dep.description || '-',
+                    `${dep.montant.toFixed(2)}€`,
+                    dep.statut === 'payee' ? '✅' : '⏳'
+                ]);
+            });
+        }
+    });
+
+    doc.autoTable({
+        head: [['Catégorie', 'Description', 'Montant', 'Statut']],
+        body: tableData,
+        startY: y,
+        margin: margin,
+        theme: 'grid'
+    });
+
+    // Total
+    let totalDespenses = depenses.reduce((sum, dep) => sum + dep.montant, 0);
+    y = doc.lastAutoTable.finalY + 10;
+
+    doc.setFontSize(12);
+    doc.text(`TOTAL DÉPENSES: ${totalDespenses.toFixed(2)}€`, margin, y);
+
+    // Télécharger
+    doc.save(`Despenses_${d.nom}_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+// ==========================================
+// SAUVEGARDES & RESTAURATION
+// ==========================================
+
+async function exportBackupComplet() {
+    const btnStatus = document.getElementById('backup-status');
+    btnStatus.style.display = 'block';
+    btnStatus.style.background = '#e3f2fd';
+    btnStatus.style.color = '#1976d2';
+    btnStatus.innerHTML = '⏳ Préparation du backup en cours...';
+
+    try {
+        // Fonction pour convertir les Timestamps en ISO string
+        function convertTimestamps(obj) {
+            if (obj === null || obj === undefined) return obj;
+            
+            if (obj.toDate && typeof obj.toDate === 'function') {
+                return obj.toDate().toISOString();
+            }
+            
+            if (typeof obj === 'object') {
+                if (Array.isArray(obj)) {
+                    return obj.map(item => convertTimestamps(item));
+                }
+                const converted = {};
+                for (const key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        converted[key] = convertTimestamps(obj[key]);
+                    }
+                }
+                return converted;
+            }
+            
+            return obj;
+        }
+
+        // Récupérer TOUTES les collections
+        const collections = {
+            stock: [],
+            clients: [],
+            dossiers: [],
+            settings: [],
+            users: []
+        };
+
+        btnStatus.innerHTML = '⏳ Lecture des données...';
+
+        // 1️⃣ COLLECTIONS PRINCIPALES
+        for (const collName of ['stock', 'clients', 'dossiers', 'settings', 'users']) {
+            try {
+                const snapshot = await db.collection(collName).get();
+                collections[collName] = snapshot.docs.map(doc => {
+                    return {
+                        id: doc.id,
+                        ...convertTimestamps(doc.data())
+                    };
+                });
+                console.log(`✅ ${collName}: ${collections[collName].length} docs`);
+            } catch (err) {
+                console.warn(`⚠️ Collection ${collName}:`, err.message);
+                collections[collName] = [];
+            }
+        }
+
+        btnStatus.innerHTML = '⏳ Lecture des dépenses...';
+
+        // 2️⃣ SOUS-COLLECTIONS (Dépenses)
+        const dossiersDepenses = {};
+        for (const dossier of collections.dossiers) {
+            try {
+                const depSnapshot = await db.collection('dossiers')
+                    .doc(dossier.id)
+                    .collection('depenses')
+                    .get();
+
+                if (!depSnapshot.empty) {
+                    dossiersDepenses[dossier.id] = depSnapshot.docs.map(doc => {
+                        return {
+                            id: doc.id,
+                            ...convertTimestamps(doc.data())
+                        };
+                    });
+                }
+            } catch (err) {
+                console.warn(`⚠️ Dépenses ${dossier.id}:`, err.message);
+            }
+        }
+
+        btnStatus.innerHTML = '⏳ Assemblage du fichier...';
+
+        // 3️⃣ ASSEMBLER LE BACKUP
+        const backup = {
+            version: '1.0',
+            date: new Date().toISOString(),
+            appName: 'L\'Argentique Cloud',
+            collections: collections,
+            subCollections: {
+                dossiersDepenses: dossiersDepenses
+            },
+            stats: {
+                totalStock: collections.stock.length,
+                totalClients: collections.clients.length,
+                totalDossiers: collections.dossiers.length,
+                totalUsers: collections.users.length,
+                totalDepenses: Object.values(dossiersDepenses).reduce((acc, arr) => acc + arr.length, 0)
+            }
+        };
+
+        console.log('✅ Backup préparé:', backup);
+
+        // 4️⃣ TÉLÉCHARGER
+        const blob = new Blob([JSON.stringify(backup, null, 2)], {
+            type: 'application/json;charset=utf-8'
+        });
+        
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        const today = new Date().toISOString().split('T')[0];
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `argentique-backup-${today}.json`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        // 5️⃣ SUCCÈS
+        btnStatus.style.background = '#d4edda';
+        btnStatus.style.color = '#155724';
+        btnStatus.innerHTML = `✅ Backup téléchargé ! 
+            <br><small>📦 ${collections.stock.length} articles | 👥 ${collections.clients.length} clients | 📁 ${collections.dossiers.length} dossiers</small>`;
+
+    } catch (error) {
+        console.error('❌ Erreur backup:', error);
+        btnStatus.style.background = '#f8d7da';
+        btnStatus.style.color = '#721c24';
+        btnStatus.innerHTML = `❌ Erreur : ${error.message}`;
+    }
+}
+
+async function restoreFromBackup(inputElement) {
+    const file = inputElement.files[0];
+    if (!file) return;
+
+    const btnStatus = document.getElementById('backup-status');
+    btnStatus.style.display = 'block';
+    btnStatus.style.background = '#fff3cd';
+    btnStatus.style.color = '#856404';
+    btnStatus.innerHTML = '⏳ Lecture du fichier...';
+
+    try {
+        const fileContent = await file.text();
+        const backup = JSON.parse(fileContent);
+
+        // Vérification basique
+        if (!backup.collections) {
+            throw new Error('Format de backup invalide');
+        }
+
+        if (!confirm(`⚠️ ATTENTION : Cette action est IRRÉVERSIBLE !\n\n📦 ${backup.stats?.totalStock || 0} articles\n👥 ${backup.stats?.totalClients || 0} clients\n📁 ${backup.stats?.totalDossiers || 0} dossiers\n📅 ${new Date(backup.date).toLocaleDateString('fr-FR')}\n\nVos données actuelles seront REMPLACÉES !\n\nContinuer ?`)) {
+            btnStatus.style.background = '#e2e3e5';
+            btnStatus.innerHTML = '❌ Restauration annulée';
+            inputElement.value = '';
+            return;
+        }
+
+        btnStatus.innerHTML = '⏳ Restauration en cours... (cela peut prendre du temps)';
+
+        let totalRestored = 0;
+
+        // ✅ RESTAURER LES COLLECTIONS PRINCIPALES
+        for (const [collName, docs] of Object.entries(backup.collections)) {
+            if (!Array.isArray(docs) || docs.length === 0) continue;
+
+            for (const docData of docs) {
+                if (!docData || typeof docData !== 'object') continue;
+
+                // 🔑 NETTOYER L'ID (c'est CRITIQUE !)
+                let id = docData.id;
+                
+                // Si pas d'ID, on la saute
+                if (!id || typeof id !== 'string') {
+                    console.warn(`⚠️ Document sans ID valide dans ${collName}:`, docData);
+                    continue;
+                }
+
+                // Copier les données SANS l'ID
+                const { id: _, ...data } = docData;
+
+                try {
+                    // 🧹 Nettoyer les données (supprimer les métadonnées bizarres)
+                    const cleanedData = {};
+                    for (const [key, value] of Object.entries(data)) {
+                        // Ignorer les propriétés suspectes
+                        if (key.startsWith('_') || key === '_metadata') continue;
+                        
+                        // Convertir les dates ISO string en Date
+                        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+                            cleanedData[key] = new Date(value);
+                        } else {
+                            cleanedData[key] = value;
+                        }
+                    }
+
+                    // ✅ Sauvegarder
+                    await db.collection(collName).doc(id).set(cleanedData, { merge: true });
+                    totalRestored++;
+                    console.log(`✅ ${collName}/${id} restauré`);
+
+                } catch (err) {
+                    console.error(`⚠️ Erreur restauration ${collName}/${id}:`, err);
+                }
+            }
+        }
+
+        // ✅ RESTAURER LES SUB-COLLECTIONS (Dépenses)
+        if (backup.subCollections?.dossiersDepenses) {
+            for (const [dosId, despenses] of Object.entries(backup.subCollections.dossiersDepenses)) {
+                if (!Array.isArray(despenses)) continue;
+
+                for (const dep of despenses) {
+                    if (!dep || typeof dep !== 'object') continue;
+
+                    let id = dep.id;
+                    if (!id || typeof id !== 'string') {
+                        console.warn(`⚠️ Dépense sans ID valide dans dossier ${dosId}`);
+                        continue;
+                    }
+
+                    const { id: _, ...data } = dep;
+
+                    try {
+                        const cleanedData = {};
+                        for (const [key, value] of Object.entries(data)) {
+                            if (key.startsWith('_') || key === '_metadata') continue;
+                            
+                            if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+                                cleanedData[key] = new Date(value);
+                            } else {
+                                cleanedData[key] = value;
+                            }
+                        }
+
+                        await db.collection('dossiers')
+                            .doc(dosId)
+                            .collection('depenses')
+                            .doc(id)
+                            .set(cleanedData, { merge: true });
+                        totalRestored++;
+                        console.log(`✅ dossiers/${dosId}/depenses/${id} restaurée`);
+
+                    } catch (err) {
+                        console.error(`⚠️ Erreur dépense:`, err);
+                    }
+                }
+            }
+        }
+
+        btnStatus.style.background = '#d4edda';
+        btnStatus.style.color = '#155724';
+        btnStatus.innerHTML = `✅ Restauration réussie ! 
+            <br><small>✨ ${totalRestored} documents restaurés</small>
+            <br><small>🔄 Rechargement dans 2 secondes...</small>`;
+
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+
+    } catch (error) {
+        console.error('❌ Erreur restauration complète:', error);
+        btnStatus.style.background = '#f8d7da';
+        btnStatus.style.color = '#721c24';
+        btnStatus.innerHTML = `❌ Erreur de restauration : <br><small>${error.message}</small>`;
+    }
+
+    inputElement.value = '';
+}
+
+function checkAndAutoBackup() {
+    const lastBackup = localStorage.getItem('lastBackupDate');
+    const today = new Date().toISOString().split('T')[0];
+
+    if (lastBackup !== today) {
+        console.log('💾 Auto-backup quotidien...');
+        localStorage.setItem('lastBackupDate', today);
+        // Tu peux faire un backup silencieux ici si tu veux
+        // (sans télécharger, juste stocker en local comme sauvegarde de secours)
+    }
+}
+
+// Appeler au démarrage
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        checkAndAutoBackup();
+    }
+});
+
+
 
 </script>
 
