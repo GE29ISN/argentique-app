@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1147,367 +1148,379 @@ if(!check.ok) {
     // PDF
     // ==========================================
     function genPDF(type) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        let d = dossiers.find(x => x.idDoc === activeDossierId);
-        let client = clients.find(c => c.ent === d.cli || c.nom === d.cli) || { nom: d.cli };
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let d = dossiers.find(x => x.idDoc === activeDossierId);
+    let client = clients.find(c => c.ent === d.cli || c.nom === d.cli) || { nom: d.cli };
 
-        // Récupération du profil utilisateur courant pour le PDF
-        let userProfilePromise = currentUserEmail
-            ? db.collection("users").doc(currentUserEmail).get()
-            : Promise.resolve(null);
+    let userProfilePromise = currentUserEmail
+        ? db.collection("users").doc(currentUserEmail).get()
+        : Promise.resolve(null);
 
-        userProfilePromise.then(userDoc => {
-            let userProfile = (userDoc && userDoc.exists) ? userDoc.data() : {};
-            let userFullName = ((userProfile.prenom || '') + ' ' + (userProfile.nom || '')).trim() || d.user || '';
-            let userMail = userProfile.email || currentUserEmail || '';
-            let userTel = userProfile.tel || '';
+    userProfilePromise.then(userDoc => {
+        let userProfile = (userDoc && userDoc.exists) ? userDoc.data() : {};
+        let userFullName = ((userProfile.prenom || '') + ' ' + (userProfile.nom || '')).trim() || d.user || '';
+        let userMail = userProfile.email || currentUserEmail || '';
+        let userTel = userProfile.tel || '';
 
-            // En-tête
-            doc.setFillColor(10, 35, 66); doc.rect(0, 0, 210, 40, 'F');
-            const LOGO_URL = "https://raw.githubusercontent.com/GE29ISN/argentique-app/main/logo%20argentique%20events-modified%20PNG%20BLANC.png";
-try { doc.addImage(LOGO_URL, 'PNG', 10, 5, 30, 30); } catch(e){}            doc.setTextColor(255, 255, 255); doc.setFontSize(18); doc.text(settings.nom || "L'Argentique Events", 45, 20);
-            let labelDoc = type === 'prep' ? 'BON DE PRÉPARATION' : (type === 'devis' ? 'DEVIS' : 'FACTURE');
-            doc.setFontSize(10); doc.text(labelDoc, 195, 20, { align: 'right' });
-doc.setFontSize(8); doc.text(`N° : ${activeDossierId} | Date : ${new Date().toLocaleDateString('fr-FR')}`, 195, 28, { align: 'right' });
+        // ── PALETTE ──────────────────────────────────────────
+        const C_DARK   = [15, 52, 96];      // bleu marine
+        const C_MID    = [70, 130, 180];    // bleu acier
+        const C_LIGHT  = [224, 236, 248];   // bleu pâle
+        const C_STRIPE = [245, 249, 253];   // quasi blanc
+        const C_GREY   = [110, 110, 110];
+        const C_WHITE  = [255, 255, 255];
 
-            doc.setTextColor(0, 0, 0); doc.setFontSize(9);
-            doc.text(`Émetteur :\n${settings.nom||''}\n${settings.adr||''}\n${settings.mail||''}\n${settings.tel||''}`, 15, 48);
-            doc.text(`Destinataire :\n${client.ent||client.nom||d.cli}\n${client.mail||''}\n${client.tel||''}`, 130, 48);
+        // ── EN-TÊTE ───────────────────────────────────────────
+        doc.setFillColor(...C_DARK);
+        doc.roundedRect(0, 0, 210, 36, 0, 0, 'F');   // bloc plein, coins bas droits arrondis virtuellement = aucun
 
-            let currentY = 75;
-            doc.setFont(undefined, 'bold'); doc.text(`PROJET : ${d.nom} (${d.type || ''})`, 15, currentY); doc.setFont(undefined, 'normal');
+        const LOGO_URL = "https://raw.githubusercontent.com/GE29ISN/argentique-app/main/logo%20argentique%20events-modified%20PNG%20BLANC.png";
+        try { doc.addImage(LOGO_URL, 'PNG', 10, 4, 26, 26); } catch(e){}
 
-            const fmtFR = (iso) => iso ? iso.split('-').reverse().join('/') : null;
-            let datesText = [];
-            [['Livraison','livr'],['Montage','mont'],['SHOW','show'],['Démontage','demo'],['Récupération','recu']].forEach(k => {
-                if(d[k[1]+'D']) {
-                    let s = fmtFR(d[k[1]+'D']), e = fmtFR(d[k[1]+'F']);
-                    datesText.push(`${k[0]} : ${s === e || !e ? s : 'du '+s+' au '+e}`);
-                }
+        doc.setTextColor(...C_WHITE);
+        doc.setFontSize(15); doc.setFont(undefined, 'bold');
+        doc.text(settings.nom || "L'Argentique Events", 40, 16);
+
+        doc.setFontSize(7.5); doc.setFont(undefined, 'normal');
+        doc.setTextColor(180, 210, 240);
+        doc.text(settings.adr || '', 40, 22);
+
+        // Badge type document (droite)
+        let labelDoc = type === 'prep' ? 'BON DE PRÉPARATION' : (type === 'devis' ? 'DEVIS' : 'FACTURE');
+        const badgeW = 44, badgeH = 8, badgeX = 152, badgeY = 8;
+        doc.setFillColor(...C_MID);
+        doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 2, 2, 'F');
+        doc.setTextColor(...C_WHITE);
+        doc.setFontSize(8); doc.setFont(undefined, 'bold');
+        doc.text(labelDoc, badgeX + badgeW / 2, badgeY + 5.5, { align: 'center' });
+
+        doc.setFontSize(7); doc.setFont(undefined, 'normal');
+        doc.setTextColor(180, 210, 240);
+        doc.text(`N° ${activeDossierId}`, 196, 20, { align: 'right' });
+        doc.text(new Date().toLocaleDateString('fr-FR'), 196, 26, { align: 'right' });
+
+        // ── ÉMETTEUR / DESTINATAIRE ───────────────────────────
+        let infoY = 42;
+
+        // Bloc émetteur
+        doc.setFillColor(...C_LIGHT);
+        doc.roundedRect(10, infoY, 85, 28, 2, 2, 'F');
+        doc.setFontSize(6.5); doc.setFont(undefined, 'bold');
+        doc.setTextColor(...C_MID);
+        doc.text('ÉMETTEUR', 14, infoY + 5);
+        doc.setFont(undefined, 'normal'); doc.setTextColor(30, 30, 30);
+        doc.setFontSize(7.5);
+        doc.text(settings.nom || '', 14, infoY + 10);
+        doc.setFontSize(7); doc.setTextColor(...C_GREY);
+        doc.text(settings.adr || '', 14, infoY + 15);
+        doc.text(settings.mail || '', 14, infoY + 19.5);
+        doc.text(settings.tel || '', 14, infoY + 24);
+
+        // Bloc destinataire
+        doc.setFillColor(...C_LIGHT);
+        doc.roundedRect(115, infoY, 85, 28, 2, 2, 'F');
+        doc.setFontSize(6.5); doc.setFont(undefined, 'bold');
+        doc.setTextColor(...C_MID);
+        doc.text('DESTINATAIRE', 119, infoY + 5);
+        doc.setFont(undefined, 'normal'); doc.setTextColor(30, 30, 30);
+        doc.setFontSize(7.5);
+        doc.text(client.ent || client.nom || d.cli, 119, infoY + 10);
+        doc.setFontSize(7); doc.setTextColor(...C_GREY);
+        doc.text(client.mail || '', 119, infoY + 15);
+        doc.text(client.tel || '', 119, infoY + 19.5);
+
+        // ── PROJET & DATES ────────────────────────────────────
+        let currentY = infoY + 34;
+
+        doc.setFontSize(9); doc.setFont(undefined, 'bold');
+        doc.setTextColor(...C_DARK);
+        doc.text(`${d.nom}${d.type ? '  ·  ' + d.type : ''}`, 15, currentY);
+
+        // Fine ligne décorative sous le titre
+        doc.setDrawColor(...C_MID); doc.setLineWidth(0.4);
+        doc.line(15, currentY + 1.5, 195, currentY + 1.5);
+        currentY += 6;
+
+        const fmtFR = (iso) => iso ? iso.split('-').reverse().join('/') : null;
+        let datesText = [];
+        [['Livraison','livr'],['Montage','mont'],['SHOW','show'],['Démontage','demo'],['Récupération','recu']].forEach(k => {
+            if(d[k[1]+'D']) {
+                let s = fmtFR(d[k[1]+'D']), e = fmtFR(d[k[1]+'F']);
+                datesText.push(`${k[0]} : ${s === e || !e ? s : 'du '+s+' au '+e}`);
+            }
+        });
+        doc.setFontSize(7.5); doc.setFont(undefined, 'normal');
+        doc.setTextColor(...C_GREY);
+        let dateLine = datesText.join('   |   ');
+        let splitDate = doc.splitTextToSize(dateLine, 180);
+        doc.text(splitDate, 15, currentY);
+        currentY += (splitDate.length * 4.5) + 4;
+
+        if(d.notes) {
+            doc.setFont(undefined, 'italic'); doc.setFontSize(7.5);
+            doc.setTextColor(90, 90, 90);
+            let sn = doc.splitTextToSize(d.notes, 180);
+            doc.text(sn, 15, currentY);
+            currentY += (sn.length * 4.5) + 4;
+            doc.setFont(undefined, 'normal');
+        }
+
+        // ── TABLEAU ───────────────────────────────────────────
+        let columns = type === 'prep'
+            ? [{ header: 'Réf', dataKey: 'ref' },{ header: 'Désignation', dataKey: 'nom' },{ header: 'Qté', dataKey: 'qte' }]
+            : [{ header: 'Réf', dataKey: 'ref' },{ header: 'Désignation', dataKey: 'nom' },{ header: 'Qté', dataKey: 'qte' },{ header: 'PU/J', dataKey: 'pu' },{ header: 'Remise', dataKey: 'rem' },{ header: 'Total HT', dataKey: 'total' }];
+
+        let tableData = [], totalBrut = 0;
+        d.cats.forEach(cat => {
+            tableData.push({ ref: '', nom: cat.nom.toUpperCase(), qte: '', pu: '', rem: '', total: '', isCat: true });
+            let catBrut = 0;
+            cat.items.forEach(it => {
+                let nom, pUnit;
+                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
+                else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
+                let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
+                let ligneHT = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
+                catBrut += ligneHT;
+                tableData.push({
+                    ref: it.isCustom ? 'MANU' : it.ref,
+                    nom: nom, qte: it.qte,
+                    pu: type!=='prep' ? pUnit.toFixed(2)+'€' : '',
+                    rem: type!=='prep' ? (it.remise ? it.remise+'%' : '') : '',
+                    total: type!=='prep' ? ligneHT.toFixed(2)+'€' : ''
+                });
             });
-            doc.setFontSize(8); let dateLine = datesText.join(' | ');
-            let splitDate = doc.splitTextToSize(dateLine, 180); doc.text(splitDate, 15, currentY + 5);
-            currentY += (splitDate.length * 5) + 7;
+            if(type !== 'prep' && cat.remise > 0) {
+                let remCat = catBrut * (cat.remise / 100);
+                tableData.push({ ref: '', nom: `Remise catégorie (${cat.remise}%)`, qte: '', pu: '', rem: '', total: `-${remCat.toFixed(2)}€`, isRemise: true });
+            }
+            totalBrut += catBrut * (1 - cat.remise/100);
+        });
 
-            if(d.notes) {
-                doc.setFont(undefined, 'italic'); let sn = doc.splitTextToSize(d.notes, 180);
-                doc.text(sn, 15, currentY); currentY += (sn.length * 5) + 5; doc.setFont(undefined, 'normal');
+        doc.autoTable({
+            startY: currentY, columns, body: tableData,
+            theme: 'plain',
+            styles: {
+                fontSize: 7.5,
+                cellPadding: 2.5,
+                lineColor: [210, 225, 240],
+                lineWidth: 0.2,
+                textColor: [30, 30, 30]
+            },
+            headStyles: {
+                fillColor: C_DARK,
+                textColor: C_WHITE,
+                fontSize: 7.5,
+                fontStyle: 'bold',
+                cellPadding: 3
+            },
+            alternateRowStyles: { fillColor: C_STRIPE },
+            didParseCell: (data) => {
+                if(data.row.raw?.isCat) {
+                    data.cell.styles.fillColor = C_LIGHT;
+                    data.cell.styles.fontStyle = 'bold';
+                    data.cell.styles.textColor = C_DARK;
+                    data.cell.styles.fontSize = 7.5;
+                }
+                if(data.row.raw?.isRemise) {
+                    data.cell.styles.textColor = [180, 0, 0];
+                    data.cell.styles.fontStyle = 'italic';
+                }
+            }
+        });
+
+        let finalY = doc.lastAutoTable.finalY + 8;
+
+        // ── TOTAUX ────────────────────────────────────────────
+        if(type !== 'prep') {
+            let finalTotal = totalBrut * (1 - d.remiseG/100);
+
+            if(d.remiseG > 0) {
+                doc.setFontSize(8); doc.setFont(undefined, 'normal');
+                doc.setTextColor(...C_GREY);
+                doc.text(`Sous-total HT : ${totalBrut.toFixed(2)} €`, 195, finalY, { align: 'right' });
+                finalY += 5;
+                doc.setTextColor(180, 0, 0);
+                doc.text(`Remise globale (${d.remiseG}%) : -${(totalBrut * d.remiseG/100).toFixed(2)} €`, 195, finalY, { align: 'right' });
+                finalY += 5;
             }
 
-            let columns = type === 'prep'
-                ? [{ header: 'Réf', dataKey: 'ref' },{ header: 'Désignation', dataKey: 'nom' },{ header: 'Qté', dataKey: 'qte' }]
-                : [{ header: 'Réf', dataKey: 'ref' },{ header: 'Désignation', dataKey: 'nom' },{ header: 'Qté', dataKey: 'qte' },{ header: 'PU/J', dataKey: 'pu' },{ header: 'Remise', dataKey: 'rem' },{ header: 'Total HT', dataKey: 'total' }];
+            // Bloc total net
+            doc.setFillColor(...C_DARK);
+            doc.roundedRect(130, finalY, 65, 11, 2, 2, 'F');
+            doc.setFontSize(9); doc.setFont(undefined, 'bold');
+            doc.setTextColor(...C_WHITE);
+            doc.text(`TOTAL NET : ${finalTotal.toFixed(2)} €`, 162, finalY + 7.5, { align: 'center' });
+            finalY += 17;
 
-            let tableData = [], totalBrut = 0;
-            d.cats.forEach(cat => {
-                tableData.push({ ref: '', nom: cat.nom.toUpperCase(), qte: '', pu: '', rem: '', total: '', isCat: true });
-                let catBrut = 0;
-                cat.items.forEach(it => {
-                    let nom, pUnit;
-                    if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
-                    else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
-                    let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
-                    let ligneHT = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
-                    catBrut += ligneHT;
-                    tableData.push({
-                        ref: it.isCustom ? 'MANU' : it.ref,
-                        nom: nom,
-                        qte: it.qte,
-                        pu: type!=='prep' ? pUnit.toFixed(2)+'€' : '',
-                        rem: type!=='prep' ? (it.remise ? it.remise+'%' : '') : '',
-                        total: type!=='prep' ? ligneHT.toFixed(2)+'€' : ''
+            doc.setFontSize(7); doc.setFont(undefined, 'normal');
+            doc.setTextColor(...C_GREY);
+            doc.text(`Chargé d'affaire : ${userFullName}${userMail ? ' · '+userMail : ''}${userTel ? ' · '+userTel : ''}`, 15, finalY);
+            finalY += 5;
+            doc.text('TVA non applicable — art. 293 B du CGI', 15, finalY);
+            finalY += 4;
+
+            // ── BON POUR ACCORD (devis) ───────────────────────
+            if(type === 'devis') {
+                let accordY = finalY + 10;
+                doc.setFontSize(7.5); doc.setFont(undefined, 'italic');
+                doc.setTextColor(...C_GREY);
+                doc.text(`Devis valable 30 jours à compter du ${new Date().toLocaleDateString('fr-FR')}.`, 15, accordY);
+                accordY += 7;
+
+                doc.setFillColor(...C_LIGHT);
+                doc.setDrawColor(...C_MID); doc.setLineWidth(0.3);
+                doc.roundedRect(15, accordY, 180, 42, 3, 3, 'FD');
+
+                doc.setFontSize(9); doc.setFont(undefined, 'bold');
+                doc.setTextColor(...C_DARK);
+                doc.text('BON POUR ACCORD', 105, accordY + 7, { align: 'center' });
+
+                doc.setFontSize(7); doc.setFont(undefined, 'italic');
+                doc.setTextColor(...C_GREY);
+                doc.text('À retourner daté et signé avec la mention manuscrite "Bon pour accord"', 105, accordY + 12, { align: 'center' });
+
+                doc.setDrawColor(200, 210, 220); doc.setLineWidth(0.2);
+                doc.line(105, accordY + 16, 105, accordY + 41);
+
+                doc.setFontSize(8); doc.setFont(undefined, 'bold'); doc.setTextColor(30,30,30);
+                doc.text('Date :', 20, accordY + 22);
+                doc.setDrawColor(180,180,180); doc.line(33, accordY + 22, 100, accordY + 22);
+                doc.text('Nom & Prénom :', 20, accordY + 30);
+                doc.line(52, accordY + 30, 100, accordY + 30);
+                doc.setFont(undefined, 'italic'); doc.setFontSize(6.5); doc.setTextColor(...C_GREY);
+                doc.text("Cachet entreprise si applicable", 20, accordY + 38);
+
+                doc.setFontSize(8); doc.setFont(undefined, 'bold'); doc.setTextColor(30,30,30);
+                doc.text('Signature :', 110, accordY + 22);
+                doc.setFont(undefined, 'italic'); doc.setFontSize(6.5); doc.setTextColor(...C_GREY);
+                doc.text('(précédée de "Bon pour accord")', 110, accordY + 27);
+
+                finalY = accordY + 42;
+            }
+
+            // ── COORDONNÉES BANCAIRES (facture) ──────────────
+            if(type === 'facture' && (settings.iban || settings.banque)) {
+                let bankY = finalY + 10;
+                doc.setFillColor(...C_LIGHT);
+                doc.setDrawColor(...C_MID); doc.setLineWidth(0.3);
+                doc.roundedRect(15, bankY, 180, 22, 3, 3, 'FD');
+
+                doc.setFontSize(7); doc.setFont(undefined, 'bold');
+                doc.setTextColor(...C_MID);
+                doc.text('COORDONNÉES BANCAIRES', 20, bankY + 5.5);
+
+                doc.setTextColor(30,30,30); doc.setFont(undefined, 'normal');
+                let by = bankY + 11;
+                if(settings.banque) { doc.setFontSize(7.5); doc.text(`Banque : ${settings.banque}`, 20, by); by += 4.5; }
+                if(settings.iban)   { doc.setFontSize(8); doc.setFont(undefined,'bold'); doc.text(`IBAN : ${settings.iban}`, 20, by); by += 4.5; }
+                if(settings.bic)    { doc.setFontSize(7.5); doc.setFont(undefined,'normal'); doc.text(`BIC / SWIFT : ${settings.bic}`, 20, by); }
+            }
+        }
+
+        // ── PIED DE PAGE ──────────────────────────────────────
+        const pageCount = doc.internal.getNumberOfPages();
+        for(let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFillColor(...C_LIGHT);
+            doc.rect(0, 282, 210, 15, 'F');
+            doc.setDrawColor(...C_MID); doc.setLineWidth(0.3);
+            doc.line(0, 282, 210, 282);
+
+            doc.setFontSize(7); doc.setFont(undefined, 'normal');
+            doc.setTextColor(...C_GREY);
+            doc.text(settings.nom || "L'Argentique Events", 15, 289);
+
+            let contactInfo = [userFullName, userTel, userMail].filter(Boolean);
+            doc.text(contactInfo.join(' · '), 105, 289, { align: 'center' });
+
+            doc.setFont(undefined, 'bold'); doc.setTextColor(...C_MID);
+            doc.text(`${i} / ${pageCount}`, 195, 289, { align: 'right' });
+        }
+
+        // ── CGV (devis uniquement) ────────────────────────────
+        if(type === 'devis') {
+            doc.addPage();
+            let y = 20;
+
+            doc.setFillColor(...C_DARK);
+            doc.rect(0, 0, 210, 14, 'F');
+            doc.setFontSize(9); doc.setFont(undefined, 'bold');
+            doc.setTextColor(...C_WHITE);
+            doc.text('CONDITIONS GÉNÉRALES DE LOCATION ET DE PRESTATION', 105, 9, { align: 'center' });
+            y = 22;
+
+            const articles = [
+                { titre: 'ARTICLE 1 : OBJET ET ACCEPTATION', texte: "Les présentes conditions générales s'appliquent à toutes les locations de matériel et prestations de services effectuées par l'association L'argentique Events. La signature du devis implique l'acceptation sans réserve de ces conditions par le client." },
+                { titre: 'ARTICLE 2 : RÉSERVATION ET PAIEMENT', texte: "• Validation : La réservation est ferme dès la réception du devis signé avec la mention « Bon pour accord ».\n• Règlement : Le paiement intégral de la prestation s'effectue impérativement le jour de la récupération du matériel (ou au début de la prestation).\n• Modes de paiement : Les règlements acceptés sont : Espèces / Chèque / Virement.\n• TVA : Conformément à l'article 293 B du CGI, la TVA est non applicable." },
+                { titre: 'ARTICLE 3 : RESPONSABILITÉ ET GARDIENNAGE', texte: "• Responsabilité : Le client est responsable du matériel dès qu'il en prend possession (enlèvement ou livraison) et jusqu'à sa restitution. En cas de casse, perte ou vol, le client s'engage à rembourser le matériel à sa valeur de remplacement à neuf.\n• Gardiennage : Le matériel doit être impérativement gardienné et sécurisé par le client dès lors que le site de l'événement est inoccupé ou que le personnel de l'association n'est plus présent sur les lieux." },
+                { titre: 'ARTICLE 4 : ACCUEIL DES TECHNICIENS', texte: "Dans le cadre d'une prestation incluant la présence de personnel :\n• Restauration : Le client s'engage à fournir de l'eau à volonté ainsi qu'un repas par personne et par vacation.\n• Forfait : Si la restauration n'est pas prise en charge, chaque repas sera facturé forfaitairement à 20 € par technicien." },
+                { titre: 'ARTICLE 5 : ÉTAT ET UTILISATION DU MATÉRIEL', texte: "Le matériel est remis en bon état de fonctionnement. Le client doit vérifier l'état du matériel lors de la remise. Aucune réclamation ne sera admise après le départ du matériel.\nLe client s'engage à utiliser le matériel selon les règles de sécurité et à ne pas le sous-louer." },
+                { titre: 'ARTICLE 6 : RESTITUTION ET PROPRETÉ', texte: "• Retard : Tout retard de restitution entraînera une facturation supplémentaire d'une journée par tranche de 24h.\n• Propreté : Le matériel doit être rendu propre et rangé. À défaut, des frais de nettoyage forfaitaires de 50 € seront facturés." },
+                { titre: 'ARTICLE 7 : ANNULATION', texte: "En cas d'annulation par le client moins de 7 jours avant la date prévue, l'association se réserve le droit de facturer une indemnité de dédit égale à 30 % du montant total du devis." },
+                { titre: 'ARTICLE 8 : SÉCURITÉ ET ACCÈS', texte: "Le client doit garantir un accès sécurisé au site et une alimentation électrique conforme. L'association se réserve le droit d'interrompre la prestation si les conditions de sécurité ne sont plus assurées." },
+                { titre: 'ARTICLE 9 : ASSURANCE ET FORCE MAJEURE', texte: "Le client doit posséder une assurance Responsabilité Civile couvrant son événement. L'association ne pourra être tenue responsable des retards ou impossibilités d'exécuter la prestation en cas de force majeure." }
+            ];
+
+            articles.forEach(art => {
+                if(y > 255) { doc.addPage(); y = 20; }
+
+                // Pastille titre
+                doc.setFillColor(...C_LIGHT);
+                doc.roundedRect(12, y - 1, 186, 6, 1, 1, 'F');
+                doc.setFontSize(7.5); doc.setFont(undefined, 'bold');
+                doc.setTextColor(...C_DARK);
+                doc.text(art.titre, 15, y + 3.5);
+                y += 8;
+
+                doc.setFontSize(7); doc.setFont(undefined, 'normal');
+                doc.setTextColor(50, 50, 50);
+                art.texte.split('\n').forEach(line => {
+                    let split = doc.splitTextToSize(line, 180);
+                    split.forEach(l => {
+                        if(y > 275) { doc.addPage(); y = 20; }
+                        doc.text(l, 15, y); y += 4;
                     });
                 });
-                if(type !== 'prep' && cat.remise > 0) {
-                    let remCat = catBrut * (cat.remise / 100);
-                    tableData.push({ ref: '', nom: `Remise catégorie (${cat.remise}%)`, qte: '', pu: '', rem: '', total: `-${remCat.toFixed(2)}€`, isRemise: true });
-                }
-                let catNet = catBrut * (1 - cat.remise/100);
-                totalBrut += catNet;
+                y += 4;
             });
 
-            doc.autoTable({
-                startY: currentY, columns: columns, body: tableData, theme: 'striped',
-                headStyles: { fillColor: [10, 35, 66] },
-                didParseCell: (data) => {
-                    if (data.row.raw && data.row.raw.isCat) {
-                        data.cell.styles.fillColor = [200, 215, 235];
-                        data.cell.styles.fontStyle = 'bold';
+            // Bloc signature CGV
+            if(y > 230) { doc.addPage(); y = 20; }
+            y += 4;
+            doc.setFillColor(...C_LIGHT);
+            doc.setDrawColor(...C_MID); doc.setLineWidth(0.3);
+            doc.roundedRect(15, y, 180, 38, 3, 3, 'FD');
 
-                    }
-                    if (data.row.raw && data.row.raw.isRemise) {
-                        data.cell.styles.textColor = [180, 0, 0];
-                        data.cell.styles.fontStyle = 'italic';
-                    }
-                }
-            });
+            doc.setFontSize(8.5); doc.setFont(undefined, 'bold');
+            doc.setTextColor(...C_DARK);
+            doc.text('BON POUR ACCORD — LU ET APPROUVÉ, CONDITIONS GÉNÉRALES ACCEPTÉES', 105, y + 7, { align: 'center' });
 
-            let finalY = doc.lastAutoTable.finalY + 10;
-            if(type !== 'prep') {
-                doc.setFontSize(10); doc.setFont(undefined, 'normal');
-                let finalTotal = totalBrut * (1 - d.remiseG/100);
-                if(d.remiseG > 0) {
-                    doc.text(`Sous-total HT : ${totalBrut.toFixed(2)} €`, 195, finalY, { align: 'right' });
-                    finalY += 6;
-                    doc.setTextColor(180, 0, 0);
-                    doc.text(`Remise globale (${d.remiseG}%) : -${(totalBrut * d.remiseG/100).toFixed(2)} €`, 195, finalY, { align: 'right' });
-                    finalY += 6;
-                    doc.setTextColor(0, 0, 0);
-                }
-                doc.setFontSize(12); doc.setFont(undefined, 'bold');
-                doc.text(`TOTAL NET À PAYER : ${finalTotal.toFixed(2)} €`, 195, finalY, { align: 'right' });
-                doc.setFontSize(8); doc.setFont(undefined, 'normal');
-                finalY += 10;
-                doc.text(`Chargé d'affaire : ${userFullName}${userMail ? ' | ' + userMail : ''}${userTel ? ' | ' + userTel : ''}`, 15, finalY);
-                finalY += 6;
-                doc.text(`TVA non applicable (art. 293 B).`, 15, finalY);
-// ===== BLOC BON POUR ACCORD (DEVIS uniquement) =====
-if(type === 'devis') {
-    let accordY = finalY + 12;
-    
-    // Validité du devis
-    doc.setFontSize(9); doc.setFont(undefined, 'italic');
-    doc.setTextColor(80, 80, 80);
-    doc.text(`Devis valable 30 jours à compter du ${new Date().toLocaleDateString('fr-FR')}.`, 15, accordY);
-    accordY += 8;
-    
-    // Cadre principal
-    doc.setFillColor(240, 245, 250);
-    doc.setDrawColor(10, 35, 66);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(15, accordY, 180, 45, 2, 2, 'FD');
-    
-    // Titre
-    doc.setFontSize(11); doc.setFont(undefined, 'bold');
-    doc.setTextColor(10, 35, 66);
-    doc.text('BON POUR ACCORD', 105, accordY + 7, { align: 'center' });
-    
-    // Mention
-    doc.setFontSize(8); doc.setFont(undefined, 'italic');
-    doc.setTextColor(60, 60, 60);
-    doc.text('À retourner daté et signé, avec la mention manuscrite "Bon pour accord"', 105, accordY + 13, { align: 'center' });
-    
-    // Ligne de séparation interne
-    doc.setDrawColor(180, 180, 180);
-    doc.setLineWidth(0.2);
-    doc.line(105, accordY + 17, 105, accordY + 44);
-    
-    // Colonne GAUCHE - Date
-    doc.setFontSize(9); doc.setFont(undefined, 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('Date :', 20, accordY + 23);
-    doc.setDrawColor(150, 150, 150);
-    doc.line(35, accordY + 23, 100, accordY + 23);
-    
-    doc.text('Nom & Prénom :', 20, accordY + 32);
-    doc.line(50, accordY + 32, 100, accordY + 32);
-    
-    doc.setFont(undefined, 'italic');
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 120);
-    doc.text('Cachet de l\'entreprise (si applicable)', 20, accordY + 41);
-    
-    // Colonne DROITE - Signature
-    doc.setFontSize(9); doc.setFont(undefined, 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('Signature du client :', 110, accordY + 23);
-    
-    doc.setFont(undefined, 'italic');
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 120);
-    doc.text('(précédée de "Bon pour accord")', 110, accordY + 28);
-    
-    // Mise à jour finalY au cas où d'autres éléments suivent
-    finalY = accordY + 45;
-}
+            doc.setFontSize(6.5); doc.setFont(undefined, 'italic');
+            doc.setTextColor(...C_GREY);
+            doc.text('À retourner daté et signé avec la mention manuscrite "Bon pour accord, lu et approuvé"', 105, y + 12, { align: 'center' });
 
-                if(type === 'facture' && (settings.iban || settings.banque)) {
-    let bankY = finalY + 12;
-    
-    // Cadre avec fond bleu pâle
-    doc.setFillColor(240, 245, 250);
-    doc.setDrawColor(10, 35, 66);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(15, bankY, 180, 24, 2, 2, 'FD');
-    
-    // Titre
-    doc.setFontSize(10); doc.setFont(undefined, 'bold');
-    doc.setTextColor(10, 35, 66);
-    doc.text('COORDONNÉES BANCAIRES', 20, bankY + 6);
-    
-    // Contenu
-    doc.setTextColor(0, 0, 0);
-    let by = bankY + 13;
-    
-    if(settings.banque) {
-        doc.setFontSize(9); doc.setFont(undefined, 'normal');
-        doc.text(`Banque : ${settings.banque}`, 20, by);
-        by += 5;
-    }
-    if(settings.iban) {
-        doc.setFontSize(10); doc.setFont(undefined, 'bold');
-        doc.text(`IBAN : ${settings.iban}`, 20, by);
-        by += 5;
-    }
-    if(settings.bic) {
-        doc.setFontSize(9); doc.setFont(undefined, 'normal');
-        doc.text(`BIC / SWIFT : ${settings.bic}`, 20, by);
-    }
-}
-// ===== PIED DE PAGE sur toutes les pages =====
-const pageCount = doc.internal.getNumberOfPages();
-for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    
-    // Ligne de séparation
-    doc.setDrawColor(10, 35, 66);
-    doc.setLineWidth(0.3);
-    doc.line(15, 285, 195, 285);
-    
-    // Infos asso (gauche)
-    doc.setFontSize(8); doc.setFont(undefined, 'normal');
-    doc.setTextColor(80, 80, 80);
-    doc.text(settings.nom || "L'Argentique Events", 15, 290);
-    
-    // Chargé d'affaire (centre)
-    let contactInfo = [];
-    if(userFullName) contactInfo.push(userFullName);
-    if(userTel) contactInfo.push(userTel);
-    if(userMail) contactInfo.push(userMail);
-    doc.text(contactInfo.join(' | '), 105, 290, { align: 'center' });
-    
-    // Numéro de page (droite)
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(10, 35, 66);
-    doc.text(`Page ${i} / ${pageCount}`, 195, 290, { align: 'right' });
-}
-// ==========================================
-// CGV - uniquement pour les devis
-// ==========================================
-if(type === 'devis') {
-    doc.addPage();
-    let y = 20;
-    
-    // Titre
-    doc.setFillColor(10, 35, 66);
-    doc.rect(0, 0, 210, 14, 'F');
-    doc.setFontSize(11); doc.setFont(undefined, 'bold');
-    doc.setTextColor(255, 255, 255);
-    doc.text('CONDITIONS GÉNÉRALES DE LOCATION ET DE PRESTATION', 105, 9, { align: 'center' });
-    y = 22;
+            doc.setDrawColor(200,210,220); doc.setLineWidth(0.2);
+            doc.line(105, y + 16, 105, y + 37);
 
-    const articles = [
-        {
-            titre: 'ARTICLE 1 : OBJET ET ACCEPTATION',
-            texte: "Les présentes conditions générales s'appliquent à toutes les locations de matériel et prestations de services effectuées par l'association L'argentique Events. La signature du devis implique l'acceptation sans réserve de ces conditions par le client."
-        },
-        {
-            titre: 'ARTICLE 2 : RÉSERVATION ET PAIEMENT',
-            texte: "• Validation : La réservation est ferme dès la réception du devis signé avec la mention « Bon pour accord ».\n• Règlement : Le paiement intégral de la prestation s'effectue impérativement le jour de la récupération du matériel (ou au début de la prestation).\n• Modes de paiement : Les règlements acceptés sont : Espèces / Chèque / Virement.\n• TVA : Conformément à l'article 293 B du CGI, la TVA est non applicable."
-        },
-        {
-            titre: 'ARTICLE 3 : RESPONSABILITÉ ET GARDIENNAGE',
-            texte: "• Responsabilité : Le client est responsable du matériel dès qu'il en prend possession (enlèvement ou livraison) et jusqu'à sa restitution. En cas de casse, perte ou vol, le client s'engage à rembourser le matériel à sa valeur de remplacement à neuf.\n• Gardiennage : Le matériel doit être impérativement gardienné et sécurisé par le client dès lors que le site de l'événement est inoccupé ou que le personnel de l'association n'est plus présent sur les lieux. Le matériel ne doit jamais rester sans surveillance dans un lieu ouvert au public ou non sécurisé."
-        },
-        {
-            titre: 'ARTICLE 4 : ACCUEIL DES TECHNICIENS (RESTAURATION)',
-            texte: "Dans le cadre d'une prestation incluant la présence de personnel (roads, techniciens, régisseurs, chef de chantier) :\n• Restauration : Le client s'engage à fournir de l'eau à volonté ainsi qu'un repas par personne et par vacation.\n• Forfait : Si la restauration n'est pas prise en charge par le client, chaque repas sera facturé forfaitairement à hauteur de 20 € par technicien."
-        },
-        {
-            titre: 'ARTICLE 5 : ÉTAT ET UTILISATION DU MATÉRIEL',
-            texte: "Le matériel est remis en bon état de fonctionnement. Le client doit vérifier l'état du matériel lors de la remise. Aucune réclamation ne sera admise après le départ du matériel.\nLe client s'engage à utiliser le matériel selon les règles de sécurité et à ne pas le sous-louer."
-        },
-        {
-            titre: 'ARTICLE 6 : RESTITUTION ET PROPRETÉ',
-            texte: "• Retard : Tout retard de restitution entraînera une facturation supplémentaire d'une journée par tranche de 24h.\n• Propreté : Le matériel doit être rendu propre et rangé. À défaut, des frais de nettoyage forfaitaires de 50 € seront facturés."
-        },
-        {
-            titre: 'ARTICLE 7 : ANNULATION',
-            texte: "En cas d'annulation par le client moins de 7 jours avant la date prévue, l'association se réserve le droit de facturer une indemnité de dédit égale à 30 % du montant total du devis."
-        },
-        {
-            titre: 'ARTICLE 8 : SÉCURITÉ ET ACCÈS (PRESTATION)',
-            texte: "Le client doit garantir un accès sécurisé au site et une alimentation électrique conforme. L'association se réserve le droit d'interrompre la prestation si les conditions de sécurité ne sont plus assurées (intempéries, installations électriques non conformes, etc.)."
-        },
-        {
-            titre: 'ARTICLE 9 : ASSURANCE ET FORCE MAJEURE',
-            texte: "Le client doit posséder une assurance Responsabilité Civile couvrant son événement. L'association ne pourra être tenue responsable des retards ou impossibilités d'exécuter la prestation en cas de force majeure (tempête, accident, panne majeure, etc.)."
+            doc.setFontSize(8); doc.setFont(undefined, 'bold'); doc.setTextColor(30,30,30);
+            doc.text('Date :', 20, y + 22);
+            doc.setDrawColor(180,180,180); doc.line(33, y + 22, 100, y + 22);
+            doc.text('Nom & Prénom :', 20, y + 30);
+            doc.line(52, y + 30, 100, y + 30);
+            doc.setFont(undefined, 'italic'); doc.setFontSize(6.5); doc.setTextColor(...C_GREY);
+            doc.text("Cachet entreprise si applicable", 20, y + 36);
+
+            doc.setFontSize(8); doc.setFont(undefined, 'bold'); doc.setTextColor(30,30,30);
+            doc.text('Signature :', 110, y + 22);
+            doc.setFont(undefined, 'italic'); doc.setFontSize(6.5); doc.setTextColor(...C_GREY);
+            doc.text('(précédée de "Bon pour accord")', 110, y + 27);
         }
-    ];
 
-    articles.forEach(art => {
-        // Vérif saut de page
-        if(y > 260) { doc.addPage(); y = 20; }
-
-        // Titre article
-        doc.setFontSize(8.5); doc.setFont(undefined, 'bold');
-        doc.setTextColor(10, 35, 66);
-        doc.text(art.titre, 15, y);
-        y += 5;
-
-        // Texte article
-        doc.setFontSize(7.5); doc.setFont(undefined, 'normal');
-        doc.setTextColor(50, 50, 50);
-        let lines = art.texte.split('\n');
-        lines.forEach(line => {
-            let split = doc.splitTextToSize(line, 180);
-            split.forEach(l => {
-                if(y > 275) { doc.addPage(); y = 20; }
-                doc.text(l, 15, y);
-                y += 4.5;
-            });
-        });
-        y += 4; // espace entre articles
+        doc.save(`${type.toUpperCase()}_${d.nom}.pdf`);
     });
-
-    // ---- Bloc signature CGV ----
-    if(y > 230) { doc.addPage(); y = 20; }
-    y += 5;
-    doc.setFillColor(240, 245, 250);
-    doc.setDrawColor(10, 35, 66);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(15, y, 180, 40, 2, 2, 'FD');
-
-    doc.setFontSize(10); doc.setFont(undefined, 'bold');
-    doc.setTextColor(10, 35, 66);
-    doc.text('BON POUR ACCORD — LU ET APPROUVÉ, CONDITIONS GÉNÉRALES ACCEPTÉES', 105, y + 7, { align: 'center' });
-
-    doc.setFontSize(7.5); doc.setFont(undefined, 'italic');
-    doc.setTextColor(60, 60, 60);
-    doc.text('À retourner daté et signé, avec la mention manuscrite "Bon pour accord, lu et approuvé"', 105, y + 13, { align: 'center' });
-
-    // Séparateur vertical
-    doc.setDrawColor(180, 180, 180); doc.setLineWidth(0.2);
-    doc.line(105, y + 17, 105, y + 39);
-
-    // Gauche
-    doc.setFontSize(8.5); doc.setFont(undefined, 'bold'); doc.setTextColor(0,0,0);
-    doc.text('Date :', 20, y + 23);
-    doc.setDrawColor(150,150,150);
-    doc.line(35, y + 23, 100, y + 23);
-    doc.text('Nom & Prénom :', 20, y + 31);
-    doc.line(50, y + 31, 100, y + 31);
-    doc.setFont(undefined, 'italic'); doc.setFontSize(7.5); doc.setTextColor(120,120,120);
-    doc.text("Cachet de l'entreprise (si applicable)", 20, y + 38);
-
-    // Droite
-    doc.setFontSize(8.5); doc.setFont(undefined, 'bold'); doc.setTextColor(0,0,0);https://gist.github.com/GE29ISN/53434bdd6dacabb11557186c1acbf37e/raw/edc6831815f03f098070ddfe85e986b16073d3f9/gistfile1.txt
-    doc.text('Signature :', 110, y + 23);
 }
-// ==========================================
-// FIN CGV
-// ==========================================
 
-            }
-            doc.save(`${type.toUpperCase()}_${d.nom}.pdf`);
-        });
-    }
-
-    function updateDatalists() {
-        document.getElementById('dl-stock').innerHTML = stock.map(s => `<option value="${s.ref}">${s.nom}</option>`).join('');
-        document.getElementById('dl-clients').innerHTML = clients.map(c => `<option value="${c.ent || c.nom}">${c.ent || c.nom}</option>`).join('');
-    }
 // ========== PIÈCES JOINTES ==========
 
 const CLOUDINARY_CLOUD = 'dyduhm5w6';
