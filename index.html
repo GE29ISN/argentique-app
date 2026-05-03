@@ -1,7 +1,3 @@
-
-
-
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -2611,303 +2607,116 @@ function genPDFDespenses() {
 }
 
 // ==========================================
-// SAUVEGARDES & RESTAURATION
+// SAUVEGARDE AUTOMATIQUE PAR EMAIL (HEBDOMADAIRE)
 // ==========================================
 
-async function exportBackupComplet() {
-    const btnStatus = document.getElementById('backup-status');
-    btnStatus.style.display = 'block';
-    btnStatus.style.background = '#e3f2fd';
-    btnStatus.style.color = '#1976d2';
-    btnStatus.innerHTML = '⏳ Préparation du backup en cours...';
+async function checkAndAutoBackup() {
+    const lastBackup = localStorage.getItem('lastAutoBackupMail');
+    const now = new Date().getTime();
+    const septJours = 7 * 24 * 60 * 60 * 1000; // 7 jours en millisecondes
 
-    try {
-        // Fonction pour convertir les Timestamps en ISO string
-        function convertTimestamps(obj) {
-            if (obj === null || obj === undefined) return obj;
-            
-            if (obj.toDate && typeof obj.toDate === 'function') {
-                return obj.toDate().toISOString();
-            }
-            
-            if (typeof obj === 'object') {
-                if (Array.isArray(obj)) {
-                    return obj.map(item => convertTimestamps(item));
-                }
-                const converted = {};
-                for (const key in obj) {
-                    if (obj.hasOwnProperty(key)) {
-                        converted[key] = convertTimestamps(obj[key]);
+    // Si pas de backup enregistré ou s'il date de plus de 7 jours
+    if (!lastBackup || (now - parseInt(lastBackup)) > septJours) {
+        console.log('⏳ Démarrage du backup automatique hebdomadaire par mail...');
+        
+        try {
+            // 1. Fonction pour convertir les dates Firebase (identique à ton export manuel)
+            function convertTimestamps(obj) {
+                if (obj === null || obj === undefined) return obj;
+                if (obj.toDate && typeof obj.toDate === 'function') return obj.toDate().toISOString();
+                if (typeof obj === 'object') {
+                    if (Array.isArray(obj)) return obj.map(item => convertTimestamps(item));
+                    const converted = {};
+                    for (const key in obj) {
+                        if (obj.hasOwnProperty(key)) converted[key] = convertTimestamps(obj[key]);
                     }
+                    return converted;
                 }
-                return converted;
+                return obj;
             }
-            
-            return obj;
-        }
 
-        // Récupérer TOUTES les collections
-        const collections = {
-            stock: [],
-            clients: [],
-            dossiers: [],
-            settings: [],
-            users: []
-        };
+            // 2. Initialisation des collections
+            const collections = { stock: [], clients: [], dossiers: [], settings: [], users: [] };
+            const dossiersDepenses = {};
 
-        btnStatus.innerHTML = '⏳ Lecture des données...';
-
-        // 1️⃣ COLLECTIONS PRINCIPALES
-        for (const collName of ['stock', 'clients', 'dossiers', 'settings', 'users']) {
-            try {
-                const snapshot = await db.collection(collName).get();
-                collections[collName] = snapshot.docs.map(doc => {
-                    return {
+            // 3. Récupération des données principales
+            for (const collName of ['stock', 'clients', 'dossiers', 'settings', 'users']) {
+                try {
+                    const snapshot = await db.collection(collName).get();
+                    collections[collName] = snapshot.docs.map(doc => ({
                         id: doc.id,
                         ...convertTimestamps(doc.data())
-                    };
-                });
-                console.log(`✅ ${collName}: ${collections[collName].length} docs`);
-            } catch (err) {
-                console.warn(`⚠️ Collection ${collName}:`, err.message);
-                collections[collName] = [];
+                    }));
+                } catch (err) {
+                    console.warn(`⚠️ Erreur lecture ${collName} (Auto-Backup):`, err.message);
+                }
             }
-        }
 
-        btnStatus.innerHTML = '⏳ Lecture des dépenses...';
-
-        // 2️⃣ SOUS-COLLECTIONS (Dépenses)
-        const dossiersDepenses = {};
-        for (const dossier of collections.dossiers) {
-            try {
-                const depSnapshot = await db.collection('dossiers')
-                    .doc(dossier.id)
-                    .collection('depenses')
-                    .get();
-
-                if (!depSnapshot.empty) {
-                    dossiersDepenses[dossier.id] = depSnapshot.docs.map(doc => {
-                        return {
+            // 4. Récupération des sous-collections (Dépenses)
+            for (const dossier of collections.dossiers) {
+                try {
+                    const depSnapshot = await db.collection('dossiers').doc(dossier.id).collection('depenses').get();
+                    if (!depSnapshot.empty) {
+                        dossiersDepenses[dossier.id] = depSnapshot.docs.map(doc => ({
                             id: doc.id,
                             ...convertTimestamps(doc.data())
-                        };
-                    });
-                }
-            } catch (err) {
-                console.warn(`⚠️ Dépenses ${dossier.id}:`, err.message);
-            }
-        }
-
-        btnStatus.innerHTML = '⏳ Assemblage du fichier...';
-
-        // 3️⃣ ASSEMBLER LE BACKUP
-        const backup = {
-            version: '1.0',
-            date: new Date().toISOString(),
-            appName: 'L\'Argentique Cloud',
-            collections: collections,
-            subCollections: {
-                dossiersDepenses: dossiersDepenses
-            },
-            stats: {
-                totalStock: collections.stock.length,
-                totalClients: collections.clients.length,
-                totalDossiers: collections.dossiers.length,
-                totalUsers: collections.users.length,
-                totalDepenses: Object.values(dossiersDepenses).reduce((acc, arr) => acc + arr.length, 0)
-            }
-        };
-
-        console.log('✅ Backup préparé:', backup);
-
-        // 4️⃣ TÉLÉCHARGER
-        const blob = new Blob([JSON.stringify(backup, null, 2)], {
-            type: 'application/json;charset=utf-8'
-        });
-        
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        const today = new Date().toISOString().split('T')[0];
-        
-        link.setAttribute('href', url);
-        link.setAttribute('download', `argentique-backup-${today}.json`);
-        link.style.visibility = 'hidden';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        // 5️⃣ SUCCÈS
-        btnStatus.style.background = '#d4edda';
-        btnStatus.style.color = '#155724';
-        btnStatus.innerHTML = `✅ Backup téléchargé ! 
-            <br><small>📦 ${collections.stock.length} articles | 👥 ${collections.clients.length} clients | 📁 ${collections.dossiers.length} dossiers</small>`;
-
-    } catch (error) {
-        console.error('❌ Erreur backup:', error);
-        btnStatus.style.background = '#f8d7da';
-        btnStatus.style.color = '#721c24';
-        btnStatus.innerHTML = `❌ Erreur : ${error.message}`;
-    }
-}
-
-async function restoreFromBackup(inputElement) {
-    const file = inputElement.files[0];
-    if (!file) return;
-
-    const btnStatus = document.getElementById('backup-status');
-    btnStatus.style.display = 'block';
-    btnStatus.style.background = '#fff3cd';
-    btnStatus.style.color = '#856404';
-    btnStatus.innerHTML = '⏳ Lecture du fichier...';
-
-    try {
-        const fileContent = await file.text();
-        const backup = JSON.parse(fileContent);
-
-        // Vérification basique
-        if (!backup.collections) {
-            throw new Error('Format de backup invalide');
-        }
-
-        if (!confirm(`⚠️ ATTENTION : Cette action est IRRÉVERSIBLE !\n\n📦 ${backup.stats?.totalStock || 0} articles\n👥 ${backup.stats?.totalClients || 0} clients\n📁 ${backup.stats?.totalDossiers || 0} dossiers\n📅 ${new Date(backup.date).toLocaleDateString('fr-FR')}\n\nVos données actuelles seront REMPLACÉES !\n\nContinuer ?`)) {
-            btnStatus.style.background = '#e2e3e5';
-            btnStatus.innerHTML = '❌ Restauration annulée';
-            inputElement.value = '';
-            return;
-        }
-
-        btnStatus.innerHTML = '⏳ Restauration en cours... (cela peut prendre du temps)';
-
-        let totalRestored = 0;
-
-        // ✅ RESTAURER LES COLLECTIONS PRINCIPALES
-        for (const [collName, docs] of Object.entries(backup.collections)) {
-            if (!Array.isArray(docs) || docs.length === 0) continue;
-
-            for (const docData of docs) {
-                if (!docData || typeof docData !== 'object') continue;
-
-                // 🔑 NETTOYER L'ID (c'est CRITIQUE !)
-                let id = docData.id;
-                
-                // Si pas d'ID, on la saute
-                if (!id || typeof id !== 'string') {
-                    console.warn(`⚠️ Document sans ID valide dans ${collName}:`, docData);
-                    continue;
-                }
-
-                // Copier les données SANS l'ID
-                const { id: _, ...data } = docData;
-
-                try {
-                    // 🧹 Nettoyer les données (supprimer les métadonnées bizarres)
-                    const cleanedData = {};
-                    for (const [key, value] of Object.entries(data)) {
-                        // Ignorer les propriétés suspectes
-                        if (key.startsWith('_') || key === '_metadata') continue;
-                        
-                        // Convertir les dates ISO string en Date
-                        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
-                            cleanedData[key] = new Date(value);
-                        } else {
-                            cleanedData[key] = value;
-                        }
+                        }));
                     }
-
-                    // ✅ Sauvegarder
-                    await db.collection(collName).doc(id).set(cleanedData, { merge: true });
-                    totalRestored++;
-                    console.log(`✅ ${collName}/${id} restauré`);
-
                 } catch (err) {
-                    console.error(`⚠️ Erreur restauration ${collName}/${id}:`, err);
+                    // Ignorer silencieusement s'il n'y a pas de dépenses
                 }
             }
-        }
 
-        // ✅ RESTAURER LES SUB-COLLECTIONS (Dépenses)
-        if (backup.subCollections?.dossiersDepenses) {
-            for (const [dosId, despenses] of Object.entries(backup.subCollections.dossiersDepenses)) {
-                if (!Array.isArray(despenses)) continue;
-
-                for (const dep of despenses) {
-                    if (!dep || typeof dep !== 'object') continue;
-
-                    let id = dep.id;
-                    if (!id || typeof id !== 'string') {
-                        console.warn(`⚠️ Dépense sans ID valide dans dossier ${dosId}`);
-                        continue;
-                    }
-
-                    const { id: _, ...data } = dep;
-
-                    try {
-                        const cleanedData = {};
-                        for (const [key, value] of Object.entries(data)) {
-                            if (key.startsWith('_') || key === '_metadata') continue;
-                            
-                            if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
-                                cleanedData[key] = new Date(value);
-                            } else {
-                                cleanedData[key] = value;
-                            }
-                        }
-
-                        await db.collection('dossiers')
-                            .doc(dosId)
-                            .collection('depenses')
-                            .doc(id)
-                            .set(cleanedData, { merge: true });
-                        totalRestored++;
-                        console.log(`✅ dossiers/${dosId}/depenses/${id} restaurée`);
-
-                    } catch (err) {
-                        console.error(`⚠️ Erreur dépense:`, err);
-                    }
+            // 5. Création de l'objet de backup exact (comme ton export manuel)
+            const backup = {
+                version: '1.0',
+                date: new Date().toISOString(),
+                appName: 'L\'Argentique Cloud - AutoBackup',
+                collections: collections,
+                subCollections: { dossiersDepenses: dossiersDepenses },
+                stats: {
+                    totalStock: collections.stock.length,
+                    totalClients: collections.clients.length,
+                    totalDossiers: collections.dossiers.length,
+                    totalUsers: collections.users.length,
+                    totalDepenses: Object.values(dossiersDepenses).reduce((acc, arr) => acc + arr.length, 0)
                 }
-            }
+            };
+
+            // 6. Conversion en Fichier JSON
+            const jsonString = JSON.stringify(backup, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+
+            // 7. Préparation de l'email avec FormSubmit
+            const formData = new FormData();
+            formData.append("_subject", "📦 Sauvegarde Hebdomadaire - L'Argentique Cloud");
+            formData.append("Message", "Bonjour, voici la sauvegarde automatique de cette semaine générée avec succès.");
+            formData.append("_captcha", "false"); // Empêche l'apparition d'un test anti-robot
+            
+            const dateStr = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
+            formData.append("backup.json", blob, `argentique-backup-auto-${dateStr}.json`);
+
+            // ⚠️ REMPLACE PAR TON ADRESSE EMAIL ICI :
+            const tonEmail = "djgabin@hotmail.fr"; 
+
+            // 8. Envoi invisible en arrière-plan
+            await fetch(`https://formsubmit.co/ajax/${tonEmail}`, {
+                method: "POST",
+                body: formData
+            });
+
+            console.log("✅ Backup auto hebdomadaire envoyé par mail !");
+            
+            // 9. On enregistre la date du jour pour bloquer les envois pendant les 7 prochains jours
+            localStorage.setItem('lastAutoBackupMail', now.toString());
+
+        } catch (error) {
+            console.error("❌ Erreur lors de l'envoi du backup auto :", error);
         }
-
-        btnStatus.style.background = '#d4edda';
-        btnStatus.style.color = '#155724';
-        btnStatus.innerHTML = `✅ Restauration réussie ! 
-            <br><small>✨ ${totalRestored} documents restaurés</small>
-            <br><small>🔄 Rechargement dans 2 secondes...</small>`;
-
-        setTimeout(() => {
-            location.reload();
-        }, 2000);
-
-    } catch (error) {
-        console.error('❌ Erreur restauration complète:', error);
-        btnStatus.style.background = '#f8d7da';
-        btnStatus.style.color = '#721c24';
-        btnStatus.innerHTML = `❌ Erreur de restauration : <br><small>${error.message}</small>`;
-    }
-
-    inputElement.value = '';
-}
-
-function checkAndAutoBackup() {
-    const lastBackup = localStorage.getItem('lastBackupDate');
-    const today = new Date().toISOString().split('T')[0];
-
-    if (lastBackup !== today) {
-        console.log('💾 Auto-backup quotidien...');
-        localStorage.setItem('lastBackupDate', today);
-        // Tu peux faire un backup silencieux ici si tu veux
-        // (sans télécharger, juste stocker en local comme sauvegarde de secours)
+    } else {
+        console.log("✅ Backup hebdomadaire à jour (pas besoin d'en renvoyer un aujourd'hui).");
     }
 }
-
-// Appeler au démarrage
-firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-        checkAndAutoBackup();
-    }
-});
 
 //--------------ANALYTICS----------------//
 
@@ -3370,7 +3179,102 @@ function filterStockCat(cat, btn) {
     // Relancer le rendu de la liste
     renderStock();
 }
+// ==========================================
+// TÉLÉCHARGEMENT AUTOMATIQUE HEBDOMADAIRE (FIXED)
+// ==========================================
+async function checkAndAutoDownload() {
+    const lastBackup = localStorage.getItem('lastAutoDownloadDate');
+    const now = new Date().getTime();
+    const septJours = 7 * 24 * 60 * 60 * 1000; 
 
+    if (!lastBackup || (now - parseInt(lastBackup)) > septJours) {
+        console.log('📦 Préparation de la sauvegarde automatique...');
+        
+        try {
+            function convertTimestamps(obj) {
+                if (obj === null || obj === undefined) return obj;
+                if (obj.toDate && typeof obj.toDate === 'function') return obj.toDate().toISOString();
+                if (typeof obj === 'object') {
+                    if (Array.isArray(obj)) return obj.map(item => convertTimestamps(item));
+                    const converted = {};
+                    for (const key in obj) { if (obj.hasOwnProperty(key)) converted[key] = convertTimestamps(obj[key]); }
+                    return converted;
+                }
+                return obj;
+            }
+
+            const collections = { stock: [], clients: [], dossiers: [], settings: [], users: [] };
+
+            // 1. Récupération des collections principales
+            for (const collName of ['stock', 'clients', 'dossiers', 'settings', 'users']) {
+                try {
+                    const snapshot = await db.collection(collName).get();
+                    collections[collName] = snapshot.docs.map(doc => {
+                        const data = convertTimestamps(doc.data());
+                        // On force l'ID de Firebase pour éviter les conflits
+                        return { ...data, firestore_id: doc.id, id: doc.id };
+                    });
+                } catch (e) { console.warn(`Erreur sur ${collName}:`, e); }
+            }
+
+            // 2. Récupération des dépenses (Sous-collections)
+            // On utilise "firestore_id" pour être sûr d'avoir un string
+            for (const dossier of collections.dossiers) {
+                const docId = dossier.firestore_id || dossier.id;
+                
+                if (docId && typeof docId === 'string') {
+                    try {
+                        const depSnapshot = await db.collection('dossiers').doc(docId).collection('depenses').get();
+                        if (!depSnapshot.empty) {
+                            dossier.sub_depenses = depSnapshot.docs.map(doc => ({ 
+                                id: doc.id, 
+                                ...convertTimestamps(doc.data()) 
+                            }));
+                        }
+                    } catch (err) {
+                        console.warn(`Impossible de lire les dépenses du dossier ${docId}`);
+                    }
+                }
+            }
+
+            // 3. Création du fichier final
+            const backupData = {
+                date: new Date().toISOString(),
+                version: "2.0",
+                data: collections
+            };
+
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            // 4. Téléchargement
+            const dateStr = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `argentique-AUTO-${dateStr}.json`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            console.log("✅ Sauvegarde auto téléchargée !");
+            localStorage.setItem('lastAutoDownloadDate', now.toString());
+
+        } catch (error) {
+            console.error("❌ Erreur critique backup auto :", error);
+        }
+    } else {
+        console.log("📅 Sauvegarde auto : OK (Moins de 7 jours).");
+    }
+}
+
+// Lancement au démarrage
+window.addEventListener('load', () => {
+    // On attend 8 secondes pour ne pas ralentir le chargement initial
+    setTimeout(checkAndAutoDownload, 8000);
+});
 </script>
 
 <!-- MODAL PIÈCES JOINTES -->
