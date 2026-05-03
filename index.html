@@ -1,3 +1,7 @@
+
+
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -380,6 +384,55 @@
     filter: brightness(1.1);
 }
 
+/* Fixer le formulaire de stock en haut */
+.sticky-header-stock {
+    position: sticky;
+    top: 55px; /* Ajuste selon la hauteur réelle de ta barre nav (environ 60px) */
+    background: var(--blanc); /* Fond blanc opaque pour ne pas voir le texte dessous */
+    z-index: 99; /* Pour passer au-dessus de la liste */
+    padding-top: 10px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid var(--bleu-marine); /* Une bordure pour séparer proprement */
+}
+
+/* Optionnel : Rendre aussi l'entête du tableau sticky pour toujours voir les titres des colonnes */
+#tab-stock table thead th {
+    position: sticky;
+    top: 310px; /* Position ajustée pour se coller juste sous le formulaire fixe */
+    background: #f1f5fb;
+    z-index: 98;
+}
+/* Style pour les boutons de filtres par catégorie */
+.filter-container {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.filter-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--gris-bordure);
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--bleu-marine);
+    transition: all 0.2s;
+}
+
+.filter-chip:hover {
+    border-color: var(--bleu-marine);
+    background: #f0f4f8;
+}
+
+.filter-chip.actif {
+    background: var(--bleu-marine);
+    color: white;
+    border-color: var(--bleu-marine);
+}
+
     </style>
 </head>
 <body>
@@ -400,11 +453,12 @@
 
 <nav id="main-nav">
     <button id="nav-dossiers" class="actif" onclick="showTab('dossiers')">📁 Dossiers</button>
+<button id="nav-clients" onclick="showTab('clients')">👥 Clients</button>
     <button id="nav-stock" onclick="showTab('stock')">📦 Stock & Tarifs</button>
-    <button id="nav-clients" onclick="showTab('clients')">👥 Clients</button>
     <button id="nav-dispo" onclick="showTab('dispo')">📅 Disponibilités</button>
-<button id="nav-analytics" onclick="showTab('analytics')">📊 Analytics</button>
 <button id="nav-calendar" onclick="showTab('calendar')">📅 Agenda</button>
+<button id="nav-analytics" onclick="showTab('analytics')">📊 Analytics</button>
+
 
     <div class="nav-right">
         <span id="user-display"></span>
@@ -486,26 +540,78 @@
     </div>
 </div>
 
+
 <!-- STOCK -->
 <div id="tab-stock" class="container">
-    <h1>📦 Gestion Stock</h1>
-    <div class="form-grid">
-        <div><label>Référence</label><input type="text" id="s-ref"></div>
-        <div><label>Nom</label><input type="text" id="s-nom"></div>
-        <div><label>Quantité</label><input type="number" id="s-qte"></div>
-        <div><label>Prix Achat (€)</label><input type="number" step="0.01" id="s-pachat"></div>
-        <div><label>Prix Loc/J (€)</label><input type="number" step="0.01" id="s-ploc"></div>
+    
+    <!-- Tout ce qui est ici reste fixe en haut -->
+    <div class="sticky-header-stock">
+        <h1>📦 Gestion Stock</h1>
+        
+        <!-- 1. Le Formulaire -->
+        <div class="form-grid">
+            <div><label>Référence</label><input type="text" id="s-ref"></div>
+            <div><label>Nom</label><input type="text" id="s-nom"></div>
+            <div>
+                <label>Catégorie</label>
+                <select id="s-cat">
+                    <option value="">-- Choisir --</option>
+                    <option value="Son">Son</option>
+                    <option value="Lumière">Lumière</option>
+                    <option value="Vidéo">Vidéo</option>
+                    <option value="Structure">Structure</option>
+                    <option value="Distribution Electrique">Distribution Electrique</option>
+                    <option value="Interphonie">Interphonie</option>
+                    <option value="Câblage">Câblage</option>
+                </select>
+            </div>
+            <div><label>Quantité</label><input type="number" id="s-qte"></div>
+            <div><label>Prix Achat (€)</label><input type="number" step="0.01" id="s-pachat"></div>
+            <div><label>Prix Loc/J (€)</label><input type="number" step="0.01" id="s-ploc"></div>
+        </div>
+
+        <!-- 2. Les boutons d'action -->
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <button id="btn-save-stock" onclick="saveStock()">Enregistrer Article</button>
+            <button class="btn-delete" style="display:none;" id="btn-cancel-stock" onclick="cancelStock()">Annuler Modification</button>
+        </div>
+
+        <!-- 3. Les Filtres par catégorie (doivent être AVANT le tableau pour être sticky) -->
+        <div id="stock-filter-container" class="filter-container" style="margin-bottom: 10px;">
+            <button class="filter-chip actif" onclick="filterStockCat('all', this)">Tous</button>
+            <button class="filter-chip" onclick="filterStockCat('Son', this)">Son</button>
+            <button class="filter-chip" onclick="filterStockCat('Lumière', this)">Lumière</button>
+            <button class="filter-chip" onclick="filterStockCat('Vidéo', this)">Vidéo</button>
+            <button class="filter-chip" onclick="filterStockCat('Structure', this)">Structure</button>
+            <button class="filter-chip" onclick="filterStockCat('Distribution Electrique', this)">Distri. Élec</button>
+            <button class="filter-chip" onclick="filterStockCat('Interphonie', this)">Interphonie</button>
+            <button class="filter-chip" onclick="filterStockCat('Câblage', this)">Câblage</button>
+        </div>
+
+        <!-- 4. La barre de recherche -->
+        <input type="text" id="search-stock" 
+               style="padding:10px; border:2px solid var(--bleu-marine); border-radius:10px; width:100%; box-sizing:border-box;" 
+               placeholder="🔍 Rechercher un article..." 
+               oninput="renderStock()">
     </div>
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button id="btn-save-stock" onclick="saveStock()">Enregistrer Article</button>
-        <button class="btn-delete" style="display:none;" id="btn-cancel-stock" onclick="cancelStock()">Annuler</button>
-    </div>
-    <input type="text" id="search-stock" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine); border-radius:10px;" placeholder="🔍 Rechercher un article..." oninput="renderStock()">
-    <table>
-        <thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>P. Achat</th><th>P. Loc/J</th><th>Actions</th></tr></thead>
+
+    <!-- 5. Le tableau (qui va défiler dessous) -->
+    <table style="margin-top: 20px;">
+        <thead>
+            <tr>
+                <th>Réf</th>
+                <th>Nom</th>
+                <th>Catégorie</th>
+                <th>Qté</th>
+                <th>P. Achat</th>
+                <th>P. Loc/J</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
         <tbody id="table-stock-body"></tbody>
     </table>
 </div>
+
 
 <!-- CLIENTS -->
 <div id="tab-clients" class="container">
@@ -776,27 +882,46 @@
 
     <!-- Grille Matos, Clients, KPIs -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        
+        <!-- Bloc Top Matériel (avec le filtre) -->
         <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--gris-bordure);">
-            <h3>🏆 Top Matériel (Sorties)</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0;">🏆 Top Matériel</h3>
+                <select id="ana-matos-cat-filter" onchange="changeAnaMatosCat(this.value)" style="padding: 5px; border-radius: 8px; font-size: 11px;">
+                    <option value="all">Toutes catégories</option>
+                    <option value="Son">Son</option>
+                    <option value="Lumière">Lumière</option>
+                    <option value="Vidéo">Vidéo</option>
+                    <option value="Structure">Structure</option>
+                    <option value="Distribution Electrique">Distri. Élec</option>
+                    <option value="Interphonie">Interphonie</option>
+                    <option value="Câblage">Câblage</option>
+                </select>
+            </div>
             <div id="ana-top-matos"></div>
         </div>
+
+        <!-- Bloc Top Clients -->
         <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--gris-bordure);">
             <h3>⭐ Top 5 Clients</h3>
             <div id="ana-top-clients"></div>
         </div>
+
+        <!-- Bloc Indicateurs (KPIs) -->
         <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--gris-bordure);">
             <h3>Indicateurs de Performance</h3>
             <div id="ana-kpis"></div>
         </div>
-    </div>
+        
+    </div> <!-- FIN DE LA GRILLE -->
 
     <!-- Alertes -->
     <div style="background: #fff5f5; padding: 20px; border-radius: 12px; border: 1px solid #e74c3c; margin-bottom: 20px;">
         <h3 style="color: #c0392b; margin-top: 0;">🚨 Alertes - Factures en attente de paiement</h3>
         <div id="ana-impayes"></div>
     </div>
-</div>
 
+</div> <!-- CETTE DIV FERME L'ONGLET "TAB-ANALYTICS" -->
 
 
 <script>
@@ -819,6 +944,14 @@
     let editStockRef = null, editClientId = null;
     let draggedItemIdx = null, draggedFromCatId = null;
     let currentUserEmail = '';
+let currentStockCat = 'all'; // Par défaut on affiche tout
+let anaMatosCatFilter = 'all'; 
+const STOCK_CATEGORIES = ["Son", "Lumière", "Vidéo", "Structure", "Distribution Electrique", "Interphonie", "Câblage"];
+
+function changeAnaMatosCat(cat) {
+    anaMatosCatFilter = cat;
+    renderAnalytics(); // On relance le calcul global avec le nouveau filtre
+}
 
     // ==========================================
     // ADMIN TABS
@@ -1052,38 +1185,74 @@ console.log("Succès !");  // 👈 ET CA
     // STOCK
     // ==========================================
     function renderStock() {
-        let search = (document.getElementById('search-stock') ? document.getElementById('search-stock').value || '' : '').toLowerCase();
-        let body = document.getElementById('table-stock-body'); if(!body) return; body.innerHTML = '';
-        stock.filter(s => (s.ref||'').toLowerCase().includes(search) || (s.nom||'').toLowerCase().includes(search)).forEach(s => {
-            let tr = document.createElement('tr');
-            tr.innerHTML = `<td>${s.ref}</td><td>${s.nom}</td><td>${s.qte}</td><td>${s.pachat||0}€</td><td>${s.ploc||0}€</td>
-                <td><button class="btn-mini btn-edit" onclick="editStock('${s.ref}')">✏️</button> <button class="btn-mini btn-delete" onclick="deleteStock('${s.ref}')">🗑️</button></td>`;
-            body.appendChild(tr);
-        });
-    }
+    let search = document.getElementById('search-stock').value.toLowerCase();
+    let body = document.getElementById('table-stock-body');
+    if(!body) return;
+    body.innerHTML = '';
+
+    // On filtre d'abord par recherche textuelle ET par catégorie sélectionnée
+    let filtered = stock.filter(s => {
+        const matchSearch = s.ref.toLowerCase().includes(search) || s.nom.toLowerCase().includes(search);
+        const matchCat = (currentStockCat === 'all' || s.cat === currentStockCat);
+        return matchSearch && matchCat;
+    });
+
+    // On trie par nom
+    filtered.sort((a,b) => a.nom.localeCompare(b.nom)).forEach(s => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${s.ref}</td>
+            <td>${s.nom}</td>
+            <td><span style="font-size:10px; background:#eee; padding:2px 5px; border-radius:4px;">${s.cat || '-'}</span></td>
+            <td>${s.qte}</td>
+            <td>${(s.pachat||0).toFixed(2)}€</td>
+            <td>${(s.ploc||0).toFixed(2)}€</td>
+            <td>
+                <button class="btn-mini btn-edit" onclick="editStock('${s.ref}')">✏️</button> 
+                <button class="btn-mini btn-delete" onclick="deleteStock('${s.ref}')">🗑️</button>
+            </td>`;
+        body.appendChild(tr);
+    });
+}
+
 
     function saveStock() {
-        let ref = document.getElementById('s-ref').value.toUpperCase();
-        let nom = document.getElementById('s-nom').value;
-        let qte = parseInt(document.getElementById('s-qte').value) || 0;
-        let pachat = parseFloat(document.getElementById('s-pachat').value) || 0;
-        let ploc = parseFloat(document.getElementById('s-ploc').value) || 0;
-        if(!ref || !nom) return alert("Réf et Nom obligatoires");
-        db.collection("stock").doc(ref).set({ref, nom, qte, pachat, ploc}).then(() => {
-            document.getElementById('s-ref').value=''; document.getElementById('s-nom').value='';
-            document.getElementById('s-qte').value=''; document.getElementById('s-pachat').value='';
-            document.getElementById('s-ploc').value='';
-            editStockRef = null; document.getElementById('btn-cancel-stock').style.display='none';
-        });
-    }
+    let ref = document.getElementById('s-ref').value.toUpperCase();
+    let nom = document.getElementById('s-nom').value;
+    let cat = document.getElementById('s-cat').value; // Récupère la catégorie
+    let qte = parseInt(document.getElementById('s-qte').value) || 0;
+    let pachat = parseFloat(document.getElementById('s-pachat').value) || 0;
+    let ploc = parseFloat(document.getElementById('s-ploc').value) || 0;
+    
+    if(!ref || !nom || !cat) return alert("Réf, Nom et Catégorie obligatoires");
 
-    function editStock(ref) {
-        let s = stock.find(x => x.ref === ref); if(!s) return;
-        document.getElementById('s-ref').value = s.ref; document.getElementById('s-nom').value = s.nom;
-        document.getElementById('s-qte').value = s.qte; document.getElementById('s-pachat').value = s.pachat||0;
-        document.getElementById('s-ploc').value = s.ploc||0;
-        editStockRef = ref; document.getElementById('btn-cancel-stock').style.display='inline-block';
-    }
+    db.collection("stock").doc(ref).set({
+        ref, nom, cat, qte, pachat, ploc
+    }).then(() => {
+        // Reset des champs
+        document.getElementById('s-ref').value=''; 
+        document.getElementById('s-nom').value='';
+        document.getElementById('s-cat').value='';
+        document.getElementById('s-qte').value=''; 
+        document.getElementById('s-pachat').value='';
+        document.getElementById('s-ploc').value='';
+        editStockRef = null; 
+        document.getElementById('btn-cancel-stock').style.display='none';
+    });
+}
+
+   function editStock(ref) {
+    let s = stock.find(x => x.ref === ref); 
+    if(!s) return;
+    document.getElementById('s-ref').value = s.ref; 
+    document.getElementById('s-nom').value = s.nom;
+    document.getElementById('s-cat').value = s.cat || ''; // Charge la catégorie
+    document.getElementById('s-qte').value = s.qte; 
+    document.getElementById('s-pachat').value = s.pachat||0;
+    document.getElementById('s-ploc').value = s.ploc||0;
+    editStockRef = ref; 
+    document.getElementById('btn-cancel-stock').style.display='inline-block';
+}
 
     function cancelStock() {
         document.getElementById('s-ref').value=''; document.getElementById('s-nom').value='';
@@ -2813,25 +2982,27 @@ let resteAEncaisser = 0;
 
 
 
-    for (const d of filteredDossiers) {
-        // 1. Calcul du CA du dossier
-        let dCA = 0;
-        let matosDossier = new Set(); // NOUVEAU : On prépare un "panier" unique pour ce dossier
+for (const d of filteredDossiers) {
+    let dCA = 0;
+    let matosDossier = new Set(); 
 
-        d.cats.forEach(cat => {
-            let catBrut = 0;
-            cat.items.forEach(it => {
-                let pUnit = it.isCustom ? it.pUnit : (stock.find(s => s.ref === it.ref)?.ploc || 0);
-                let coeff = (it.coeff !== null && it.coeff !== undefined) ? it.coeff : (d.coeff || 1);
-                catBrut += (it.qte * pUnit * coeff) * (1 - it.remise/100);
-                
-                // Stats Matériel : Au lieu d'additionner la quantité, on note juste que la réf est présente
-                if(!it.isCustom) {
+    d.cats.forEach(cat => {
+        let catBrut = 0;
+        cat.items.forEach(it => {
+            let sInfo = stock.find(s => s.ref === it.ref);
+            let pUnit = it.isCustom ? it.pUnit : (sInfo?.ploc || 0);
+            let coeff = (it.coeff !== null && it.coeff !== undefined) ? it.coeff : (d.coeff || 1);
+            catBrut += (it.qte * pUnit * coeff) * (1 - it.remise/100);
+            
+            // --- MODIFICATION ICI : FILTRE PAR CATÉGORIE ---
+            if(!it.isCustom && sInfo) {
+                if (anaMatosCatFilter === 'all' || sInfo.cat === anaMatosCatFilter) {
                     matosDossier.add(it.ref);
                 }
-            });
-            dCA += catBrut * (1 - cat.remise/100);
+            }
         });
+        dCA += catBrut * (1 - cat.remise/100);
+    });
 
         // NOUVEAU : On ajoute +1 apparition pour chaque article trouvé au moins une fois dans le dossier
         matosDossier.forEach(ref => {
@@ -3186,6 +3357,20 @@ function addDays(dateStr, days) {
     result.setDate(result.getDate() + days);
     return result.toISOString().split('T')[0];
 }
+
+function filterStockCat(cat, btn) {
+    currentStockCat = cat;
+    
+    // Mettre à jour l'apparence des boutons
+    document.querySelectorAll('#stock-filter-container .filter-chip').forEach(b => {
+        b.classList.remove('actif');
+    });
+    btn.classList.add('actif');
+    
+    // Relancer le rendu de la liste
+    renderStock();
+}
+
 </script>
 
 <!-- MODAL PIÈCES JOINTES -->
