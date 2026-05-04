@@ -2005,9 +2005,20 @@ if(!check.ok) {
             doc.text('TVA non applicable — art. 293 B du CGI', 15, finalY);
             finalY += 4;
 
-            // ── BON POUR ACCORD (devis) ───────────────────────
+             // ── BON POUR ACCORD (devis) ───────────────────────
             if(type === 'devis') {
                 let accordY = finalY + 10;
+                
+                // --- LOGIQUE ANTI-DÉBORDEMENT ---
+                const hauteurTotaleBloc = 65; // Texte validité (10) + Cadre (42) + Marges (13)
+                const limiteBasDePage = 275; // Le footer commence à 282, on s'arrête un peu avant
+
+                if (accordY + hauteurTotaleBloc > limiteBasDePage) {
+                    doc.addPage();
+                    accordY = 25; // On recommence en haut de la nouvelle page
+                }
+                // --------------------------------
+
                 doc.setFontSize(7.5); doc.setFont(undefined, 'italic');
                 doc.setTextColor(...C_GREY);
                 doc.text(`Devis valable 30 jours à compter du ${new Date().toLocaleDateString('fr-FR')}.`, 15, accordY);
@@ -2042,11 +2053,19 @@ if(!check.ok) {
                 doc.text('(précédée de "Bon pour accord")', 110, accordY + 27);
 
                 finalY = accordY + 42;
+            
             }
 
             // ── COORDONNÉES BANCAIRES (facture) ──────────────
             if(type === 'facture' && (settings.iban || settings.banque)) {
                 let bankY = finalY + 10;
+                
+                // --- LOGIQUE ANTI-DÉBORDEMENT ---
+                if (bankY + 35 > 275) { // 35 est la hauteur estimée du bloc bancaire + marges
+                    doc.addPage();
+                    bankY = 25;
+                }
+
                 doc.setFillColor(...C_LIGHT);
                 doc.setDrawColor(...C_MID); doc.setLineWidth(0.3);
                 doc.roundedRect(15, bankY, 180, 22, 3, 3, 'FD');
