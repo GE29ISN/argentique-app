@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1048,19 +1047,59 @@ auth.onAuthStateChanged(user => {
     }
 function updateDatalists() {
     let dlStock = document.getElementById('dl-stock');
-    if(dlStock) {
-        dlStock.innerHTML = stock.map(s => 
-            `<option value="${s.ref}">${s.nom} (${s.ref})</option>`
-        ).join('');
+    if (dlStock) {
+        // Si un dossier est ouvert et a des dates, on calcule la dispo en direct
+        let d = activeDossierId ? dossiers.find(x => x.idDoc === activeDossierId) : null;
+        let checkDates = d && d.immoD && d.immoF;
+
+        dlStock.innerHTML = stock.map(s => {
+            let texteDispo = "";
+
+            if (checkDates) {
+                let start = new Date(d.immoD), end = new Date(d.immoF);
+                let minDispo = s.qte; // On part du stock total max
+
+                for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
+                    let iso = day.toISOString().split('T')[0];
+                    let booked = 0;
+                    dossiers.forEach(dos => {
+                        // On compte ce qui est réservé ailleurs sur les dossiers confirmés/en cours
+                        if (dos.immoD && dos.immoF && iso >= dos.immoD && iso <= dos.immoF) {
+                            dos.cats.forEach(c => c.items.forEach(it => {
+                                // On ne compte pas les lignes du dossier actuel pour ne pas fausser la dispo
+                                if (it.ref === s.ref && !it.isCustom) {
+                                    booked += it.qte;
+                                }
+                            }));
+                        }
+                    });
+                    let dispoCeJour = s.qte - booked;
+                    if (dispoCeJour < minDispo) minDispo = dispoCeJour;
+                }
+                
+                // Formater le texte selon la dispo
+                if (minDispo <= 0) {
+                    texteDispo = ` ❌ (RUPTURE)`;
+                } else {
+                    texteDispo = ` ✅ (Dispo: ${minDispo}/${s.qte})`;
+                }
+            } else {
+                // Si on n'est pas dans un dossier ou qu'il n'y a pas de date
+                texteDispo = ` (Total: ${s.qte})`;
+            }
+
+            return `<option value="${s.ref}">${s.nom} ${texteDispo}</option>`;
+        }).join('');
     }
 
     let dlClients = document.getElementById('dl-clients');
-    if(dlClients) {
+    if (dlClients) {
         dlClients.innerHTML = clients.map(c => 
             `<option value="${c.ent || c.nom}">${c.ent || c.nom}</option>`
         ).join('');
     }
 }
+
 // ==========================================
 // NAVIGATION
 // ==========================================
@@ -1451,6 +1490,7 @@ if(selStatus) selStatus.value = d.status || 'devis';
         });
         renderCats();
 renderPiecesJointes();
+updateDatalists();
 
     }
 
@@ -1482,6 +1522,7 @@ document.getElementById('det-coeff').value = d.coeff;
             }
         }
         db.collection("dossiers").doc(activeDossierId).set(d);
+updateDatalists(); 
     }
 
     function onDragStart(e, catId, idx) { draggedItemIdx = idx; draggedFromCatId = catId; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.style.opacity = '0.5', 0); }
