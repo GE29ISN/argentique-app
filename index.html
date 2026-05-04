@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -2759,87 +2761,94 @@ async function renderAnalytics() {
     let categoryStats = {};
     let monthlyData = Array(12).fill(0).map(() => ({ ca: 0, dep: 0 }));
     let matosStats = {};
+    let resteAEncaisser = 0;
+    let depensesAPayer = 0;
+    let clientStats = {};
+    let nbDevisCrees = 0;
+    let nbDevisSignes = 0;
 
-    // Filtrage des dossiers
+    // 1. Filtrage des dossiers sur la période
     const filteredDossiers = dossiers.filter(d => {
         const dDate = d.immoD || d.showD;
         if (!dDate || dDate < start || dDate > end) return false;
         
-        if (statusFilter === 'valide') return ['confirme', 'facture_envoye', 'paye'].includes(d.status);
-        if (statusFilter === 'paye') return d.status === 'paye';
+        const s = d.status || d.statut;
+        if (statusFilter === 'valide') return ['confirme', 'en_cours', 'facture_envoye', 'paye'].includes(s);
+        if (statusFilter === 'paye') return s === 'paye';
         return true;
     });
-let clientStats = {};
-    let nbDevisCrees = 0;
-    let nbDevisSignes = 0;
-let resteAEncaisser = 0;
 
-    // NOUVEAU : On calcule le taux de conversion sur TOUS les dossiers de la période (avant le filtre de statut)
-    const allDossiersPeriod = dossiers.filter(d => {
-        const dDate = new Date(d.immoD || d.showD);
+    // 2. Calcul du taux de conversion (sur tous les dossiers de la période)
+    dossiers.filter(d => {
+        const dDate = d.immoD || d.showD;
         return dDate >= start && dDate <= end;
-    });
-    
-    allDossiersPeriod.forEach(d => {
-        // Si c'est un devis ou n'importe quel autre statut, il a d'abord été un devis créé
+    }).forEach(d => {
         nbDevisCrees++;
-        // S'il n'est plus en statut "devis", c'est qu'il a été validé/payé/etc.
-        if (d.statut !== 'devis') {
-            nbDevisSignes++;
+        if ((d.status || d.statut) !== 'devis') nbDevisSignes++;
+    });
+
+    // 3. Boucle principale sur les dossiers filtrés
+    for (const d of filteredDossiers) {
+        let dCA = 0;
+        let matosDossier = new Set();
+        let currentStatus = d.status || d.statut || 'devis';
+        
+        // On définit le mois pour les graphiques
+        const dateProjet = new Date(d.immoD || d.showD);
+        const monthIdx = dateProjet.getMonth(); 
+
+        // Calcul du CA du dossier
+        if (d.cats) {
+            d.cats.forEach(cat => {
+                let catBrut = 0;
+                cat.items.forEach(it => {
+                    let sInfo = stock.find(s => s.ref === it.ref);
+                    let pUnit = it.isCustom ? (it.pUnit || 0) : (sInfo?.ploc || 0);
+                    let coeff = (it.coeff !== null && it.coeff !== undefined && it.coeff !== "") ? it.coeff : (d.coeff || 1);
+                    catBrut += (it.qte * pUnit * coeff) * (1 - (it.remise || 0) / 100);
+                    
+                    if (!it.isCustom && sInfo) {
+                        if (anaMatosCatFilter === 'all' || sInfo.cat === anaMatosCatFilter) {
+                            matosDossier.add(it.ref);
+                        }
+                    }
+                });
+                dCA += catBrut * (1 - (cat.remise || 0) / 100);
+            });
         }
-    });
 
+        dCA = dCA * (1 - (d.remiseG || 0) / 100);
+        totalCA += dCA;
+        monthlyData[monthIdx].ca += dCA; // Ajout au graphique mensuel
 
-
-for (const d of filteredDossiers) {
-    let dCA = 0;
-    let matosDossier = new Set(); 
-
-    d.cats.forEach(cat => {
-        let catBrut = 0;
-        cat.items.forEach(it => {
-            let sInfo = stock.find(s => s.ref === it.ref);
-            let pUnit = it.isCustom ? it.pUnit : (sInfo?.ploc || 0);
-            let coeff = (it.coeff !== null && it.coeff !== undefined) ? it.coeff : (d.coeff || 1);
-            catBrut += (it.qte * pUnit * coeff) * (1 - it.remise/100);
-            
-            // --- MODIFICATION ICI : FILTRE PAR CATÉGORIE ---
-            if(!it.isCustom && sInfo) {
-                if (anaMatosCatFilter === 'all' || sInfo.cat === anaMatosCatFilter) {
-                    matosDossier.add(it.ref);
-                }
-            }
-        });
-        dCA += catBrut * (1 - cat.remise/100);
-    });
-
-        // NOUVEAU : On ajoute +1 apparition pour chaque article trouvé au moins une fois dans le dossier
+        // Top Matériel
         matosDossier.forEach(ref => {
             matosStats[ref] = (matosStats[ref] || 0) + 1;
         });
 
-        dCA = dCA * (1 - (d.remiseG || 0)/100);
-        totalCA += dCA;
-
-        // 👇 LE CALCUL DU RESTE A ENCAISSER EST ICI 👇
-        let currentStatus = d.status || d.statut;
+        // --- TRÉSORERIE : RESTE À ENCAISSER ---
         if (currentStatus === 'facture_envoye') {
             resteAEncaisser += dCA;
         }
 
-        // Mois pour le graphique d'évolution
-        const monthIdx = new Date(d.immoD || d.showD).getMonth();
-        monthlyData[monthIdx].ca += dCA;
-
-        // 2. Récupération des dépenses
+        // --- RÉCUPÉRATION DES DÉPENSES ---
         const depSnap = await db.collection('dossiers').doc(d.idDoc).collection('depenses').get();
+        
         depSnap.forEach(doc => {
             const dep = doc.data();
-            totalDep += dep.montant;
-            categoryStats[dep.categorie] = (categoryStats[dep.categorie] || 0) + dep.montant;
-            monthlyData[monthIdx].dep += dep.montant;
+            const montant = parseFloat(dep.montant) || 0;
+            
+            totalDep += montant;
+            categoryStats[dep.categorie] = (categoryStats[dep.categorie] || 0) + montant;
+            monthlyData[monthIdx].dep += montant;
+            
+            // On ne compte la dette que si le dossier est en "facture_envoye"
+            if (dep.statut === 'en attente' && currentStatus === 'facture_envoye') {
+                depensesAPayer += montant;
+            }
         });
 
+        // Top Clients
         if (d.cli) {
             if (!clientStats[d.cli]) clientStats[d.cli] = { ca: 0, dossiers: 0 };
             clientStats[d.cli].ca += dCA;
@@ -2849,43 +2858,51 @@ for (const d of filteredDossiers) {
 
     const benefice = totalCA - totalDep;
 
-    // Affichage des cartes de résumé
-     document.getElementById('ana-resume').innerHTML = `
+    // 4. AFFICHAGE DU HTML
+    document.getElementById('ana-resume').innerHTML = `
         <div class="despenses-card" style="border-color:var(--bleu-marine)">
             <h3>Chiffre d'Affaire</h3>
             <div class="montant">${totalCA.toFixed(2)}€</div>
         </div>
-        
         <div class="despenses-card" style="border-color:#e74c3c">
             <h3>Dépenses Totales</h3>
             <div class="montant">${totalDep.toFixed(2)}€</div>
         </div>
-        
         <div class="despenses-card benefice" style="border-color:#27ae60">
             <h3>Bénéfice Net</h3>
             <div class="montant">${benefice.toFixed(2)}€</div>
         </div>
-        
         <div class="despenses-card">
             <h3>Marge Moyenne</h3>
-            <div class="montant">${totalCA > 0 ? ((benefice/totalCA)*100).toFixed(1) : 0}%</div>
+            <div class="montant">${totalCA > 0 ? ((benefice / totalCA) * 100).toFixed(1) : 0}%</div>
         </div>
-        
-        <!-- NOUVEAU : Format carte, alignée avec les autres -->
-        <div class="despenses-card" style="border-color:#1abc9c; background-color:#e8f8f5;">
-            <h3 style="color:#16a085;">Reste à Encaisser</h3>
-            <div class="montant" style="color:#16a085;">${resteAEncaisser.toFixed(2)}€</div>
-            <div style="font-size: 10px; color: #16a085; margin-top: 5px; opacity: 0.8;">Factures envoyées</div>
+        <div class="despenses-card" style="border-color:#1abc9c; background-color:#e8f8f5; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <h3 style="color:#16a085; margin-bottom: 8px;">💰 Prévisionnel Net</h3>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #16a085;">
+                    <span>Factures à recevoir :</span>
+                    <span style="font-weight:bold;">+${resteAEncaisser.toFixed(2)}€</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #e74c3c; margin-top: 2px;">
+                    <span>Dépenses en attente :</span>
+                    <span style="font-weight:bold;">-${depensesAPayer.toFixed(2)}€</span>
+                </div>
+            </div>
+            <div style="border-top: 1px solid rgba(22, 160, 133, 0.2); margin-top: 10px; padding-top: 5px;">
+                <div class="montant" style="color:#16a085; font-size: 1.3em;">
+                    ${(resteAEncaisser - depensesAPayer).toFixed(2)}€
+                </div>
+                <div style="font-size: 9px; color: #16a085; opacity: 0.8; font-weight: bold; text-transform: uppercase;">Solde après mouvements</div>
+            </div>
         </div>
     `;
 
+    // Mise à jour des graphiques et autres blocs
     updateCharts(monthlyData, categoryStats);
     renderTopMatos(matosStats);
-    
     renderKPIs(totalCA, totalDep, filteredDossiers.length, nbDevisCrees, nbDevisSignes);
     renderTopClients(clientStats);
-
-renderImpayes(start, end);
+    renderImpayes();
 }
 
 function updateCharts(monthlyData, categoryStats) {
