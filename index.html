@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -2181,6 +2182,48 @@ if(!check.ok) {
             doc.text('(précédée de "Bon pour accord")', 110, y + 27);
         }
 
+        // ── ARCHIVAGE AUTOMATIQUE SUR CLOUDINARY ────────────────
+        const pdfBlob = doc.output('blob');
+        const maintenant = new Date();
+const dateStr = maintenant.toISOString().split('T')[0];
+const heureStr = maintenant.getHours() + "h" + maintenant.getMinutes().toString().padStart(2, '0');
+
+const fileName = `${type.toUpperCase()}_${d.nom}_${dateStr}_${heureStr}.pdf`;
+
+        const archiveFormData = new FormData();
+        archiveFormData.append('file', pdfBlob, fileName); // On ajoute le blob et le nom
+        archiveFormData.append('upload_preset', CLOUDINARY_PRESET);
+        archiveFormData.append('folder', `pj/${activeDossierId}`);
+
+        // On utilise l'API Cloudinary (comme dans ta fonction uploadPiecesJointes)
+        // Note : pour les PDF, Cloudinary accepte le resourceType 'image' ou 'raw'
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+            method: 'POST',
+            body: archiveFormData
+        })
+        .then(res => res.json())
+        .then(async (data) => {
+            if (data.secure_url) {
+                // On enregistre dans la sous-collection Firestore du dossier
+                await db.collection('dossiers').doc(activeDossierId)
+                    .collection('piecesJointes').add({
+                        nom: fileName,
+                        url: data.secure_url,
+                        publicId: data.public_id,
+                        resourceType: 'image',
+                        taille: pdfBlob.size,
+                        date: new Date().toISOString(),
+                        typeArchivage: 'auto' // Petit marqueur pour savoir que c'est un export auto
+                    });
+                
+                // Rafraîchir la liste si le modal est ouvert
+                if (typeof renderPiecesJointes === 'function') renderPiecesJointes();
+                console.log("Archive PDF sauvegardée sur Cloudinary");
+            }
+        })
+        .catch(err => console.error("Erreur archivage Cloudinary:", err));
+        
+        // On garde le téléchargement local pour l'utilisateur
         doc.save(`${type.toUpperCase()}_${d.nom}.pdf`);
     });
 }
