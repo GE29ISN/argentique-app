@@ -493,6 +493,35 @@
     .auth-box, #admin-login input { width: 90% !important; box-sizing: border-box; }
     #modal-pj > div { padding: 15px !important; width: 95% !important; }
 }
+/* Style pour les suggestions de recherche (Mobile Friendly) */
+.search-suggestions {
+    position: absolute;
+    top: 100%; /* S'affiche pile en dessous */
+    left: 0;
+    background: white;
+    border: 2px solid var(--bleu-marine);
+    border-top: none; /* Fusionne avec l'input au dessus */
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 9999;
+    max-height: 250px;
+    overflow-y: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.suggestion-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between; /* Nom à gauche, Stock à droite */
+    align-items: center;
+}
+
+.suggestion-item:hover { background-color: #f1f5fb; }
+.suggestion-stock-info { font-size: 11px; font-weight: bold; }
+.suggestion-item b { color: var(--bleu-marine); }
 
     </style>
 </head>
@@ -771,7 +800,10 @@
                     <option value="prestation complete">Prestation complete</option>
                 </select>
             </div>
-            <div><label>Client</label><input type="text" id="det-cli" list="dl-clients" onchange="syncDossier()"></div>
+            <div>
+    <label>Client</label>
+    <input type="text" id="det-cli" autocomplete="off" oninput="showSuggestions(this, 'client')" onchange="syncDossier()">
+</div>
             <div><label>Coeff. Durée (Global)</label><input type="number" step="0.1" id="det-coeff" onchange="syncDossier()"></div>
             <div><label>Remise Globale (%)</label><input type="number" id="det-rem-g" onchange="syncDossier()"></div>
 <div>
@@ -1702,7 +1734,7 @@ function onCatDrop(e, targetCatId) {
                 </div>
             </div>
             <div style="padding:12px; background:#f8f9fa; display:flex; gap:10px; flex-wrap:wrap;">
-                <input type="text" id="add-ref-${cat.id}" list="dl-stock" placeholder="Réf Stock" style="width:150px; border-radius:10px;">
+                <input type="text" id="add-ref-${cat.id}" autocomplete="off" oninput="showSuggestions(this, 'stock')" placeholder="Réf...">
                 <input type="number" id="add-qte-${cat.id}" placeholder="Qté" style="width:80px; border-radius:10px;">
                 <button class="btn-mini" onclick="addItem(${cat.id})">Ajouter</button>
                 <button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})">+ Ligne Manuelle</button>
@@ -3456,6 +3488,86 @@ window.addEventListener('load', () => {
     // On attend 8 secondes pour ne pas ralentir le chargement initial
     setTimeout(checkAndAutoDownload, 8000);
 });
+
+// Fonction universelle de recherche prédictive
+function showSuggestions(input, type) {
+    let existing = input.parentElement.querySelector('.search-suggestions');
+    if (existing) existing.remove();
+
+    let val = input.value.toLowerCase();
+    if (val.length < 1) return;
+
+    let list = document.createElement('div');
+    list.className = 'search-suggestions';
+
+    // Récupération des dates du dossier pour le calcul du stock
+    let d = activeDossierId ? dossiers.find(x => x.idDoc === activeDossierId) : null;
+    let checkDates = d && d.immoD && d.immoF;
+
+    let results = [];
+    if (type === 'stock') {
+        results = stock.filter(s => s.nom.toLowerCase().includes(val) || s.ref.toLowerCase().includes(val)).slice(0, 15);
+    } else {
+        results = clients.filter(c => (c.ent || "").toLowerCase().includes(val) || (c.nom || "").toLowerCase().includes(val)).slice(0, 10);
+    }
+
+    if (results.length === 0) return;
+
+    results.forEach(res => {
+        let div = document.createElement('div');
+        div.className = 'suggestion-item';
+        
+        if (type === 'stock') {
+            let texteDispo = "";
+            let couleurDispo = "#27ae60"; // Vert par défaut
+
+            if (checkDates) {
+                let start = new Date(d.immoD), end = new Date(d.immoF);
+                let minDispo = res.qte;
+                for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
+                    let iso = day.toISOString().split('T')[0], booked = 0;
+                    dossiers.forEach(dos => {
+                        if (dos.immoD && dos.immoF && iso >= dos.immoD && iso <= dos.immoF) {
+                            dos.cats.forEach(c => c.items.forEach(it => {
+                                if (it.ref === res.ref && !it.isCustom) booked += it.qte;
+                            }));
+                        }
+                    });
+                    let dispoCeJour = res.qte - booked;
+                    if (dispoCeJour < minDispo) minDispo = dispoCeJour;
+                }
+                if (minDispo <= 0) {
+                    texteDispo = "❌ RUPTURE";
+                    couleurDispo = "#e74c3c";
+                } else {
+                    texteDispo = `✅ (${minDispo}/${res.qte})`;
+                }
+            } else {
+                texteDispo = `(Total: ${res.qte})`;
+                couleurDispo = "#7f8c8d";
+            }
+
+            div.innerHTML = `
+                <span><b>${res.ref}</b> - ${res.nom}</span>
+                <span class="suggestion-stock-info" style="color:${couleurDispo}">${texteDispo}</span>
+            `;
+            div.onclick = () => { input.value = res.ref; list.remove(); };
+        } else {
+            // Pour les clients
+            let nomCli = res.ent || res.nom;
+            div.innerHTML = `<span>👤 ${nomCli}</span>`;
+            div.onclick = () => { input.value = nomCli; list.remove(); syncDossier(); };
+        }
+        list.appendChild(div);
+    });
+
+    input.parentElement.style.position = "relative";
+    input.parentElement.appendChild(list);
+
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !list.contains(e.target)) list.remove();
+    }, { once: true });
+}
 </script>
 
 <!-- MODAL PIÈCES JOINTES -->
