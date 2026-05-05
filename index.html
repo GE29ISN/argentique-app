@@ -712,6 +712,17 @@
             <div><label>Client</label><input type="text" id="det-cli" list="dl-clients" onchange="syncDossier()"></div>
             <div><label>Coeff. Durée (Global)</label><input type="number" step="0.1" id="det-coeff" onchange="syncDossier()"></div>
             <div><label>Remise Globale (%)</label><input type="number" id="det-rem-g" onchange="syncDossier()"></div>
+<div>
+    <label>Montant Acompte (€)</label>
+    <input type="number" step="0.01" id="det-acompte-val" onchange="syncDossier()">
+</div>
+<div>
+    <label>Statut Acompte</label>
+    <select id="det-acompte-statut" onchange="syncDossier()">
+        <option value="non">❌ Non payé</option>
+        <option value="oui">✅ Payé</option>
+    </select>
+</div>
             <div><label>Chargé d'affaire</label><input type="text" id="det-user" onchange="syncDossier()"></div>
 
            <div>
@@ -1479,6 +1490,8 @@ function createDossier() {
         document.getElementById('det-cli').value = d.cli || '';
         document.getElementById('det-coeff').value = d.coeff || 1;
         document.getElementById('det-rem-g').value = d.remiseG || 0;
+document.getElementById('det-acompte-val').value = d.acompteMontant || 0;
+document.getElementById('det-acompte-statut').value = d.acompteStatut || 'non';
         document.getElementById('det-notes').value = d.notes || '';
         document.getElementById('det-user').value = d.user || '';
 
@@ -1505,6 +1518,8 @@ updateDatalists();
         d.cli = document.getElementById('det-cli').value;
         d.coeff = parseFloat(document.getElementById('det-coeff').value) || 1;
         d.remiseG = parseFloat(document.getElementById('det-rem-g').value) || 0;
+d.acompteMontant = parseFloat(document.getElementById('det-acompte-val').value) || 0;
+d.acompteStatut = document.getElementById('det-acompte-statut').value;
         d.notes = document.getElementById('det-notes').value;
         d.user = document.getElementById('det-user').value;
 
@@ -1684,16 +1699,25 @@ function onCatDrop(e, targetCatId) {
         header.draggable = true;
 
         cont.appendChild(div);
-    });
+    }); // Fin de la boucle d.cats.forEach
 
-    let final = totalBrut * (1 - d.remiseG/100);
+    // --- CALCULS FINAUX ---
+    let totalRemise = totalBrut * (1 - (d.remiseG || 0) / 100);
+    let acompte = (d.acompteStatut === 'oui') ? (d.acompteMontant || 0) : 0;
+    let netAPayer = totalRemise - acompte;
+
     document.getElementById('dossier-recap').innerHTML = `
         <div>Total Brut : ${totalBrut.toFixed(2)}€</div>
         ${d.remiseG > 0 ? `<div>Remise Globale (${d.remiseG}%) : -${(totalBrut * d.remiseG/100).toFixed(2)}€</div>` : ''}
-        <div style="font-size:1.5em; font-weight:bold; margin-top:8px;">NET À PAYER : ${final.toFixed(2)}€</div>`;
-}
+        ${acompte > 0 ? `<div style="color: #2ecc71; font-weight:bold;">Acompte déjà versé : -${acompte.toFixed(2)}€</div>` : ''}
+        <div style="font-size:1.5em; font-weight:bold; margin-top:8px;">
+            ${acompte > 0 ? 'RESTE À PAYER' : 'NET À PAYER'} : ${netAPayer.toFixed(2)}€
+        </div>`;
+} // FIN DE LA FONCTION RENDERCATS
 
 
+// FONCTIONS UTILITAIRES STOCK ET LIGNES
+// ==========================================
 function checkAvailability(ref, addedQty, docId, isModIdx, catId) {
     let d = dossiers.find(x => x.idDoc === docId);
     if(!d.immoD || !d.immoF) return { ok: true };
@@ -1720,7 +1744,6 @@ function checkAvailability(ref, addedQty, docId, isModIdx, catId) {
     }
     return { ok: true };
 }
-
 
     function addItem(catId) {
         let r = document.getElementById('add-ref-'+catId).value.toUpperCase();
@@ -1975,15 +1998,29 @@ if(!check.ok) {
             }
         });
 
-        let finalY = doc.lastAutoTable.finalY + 8;
+             // ── TOTAUX ────────────────────────────────────────────
+        let finalY = doc.lastAutoTable.finalY + 10;
 
-        // ── TOTAUX ────────────────────────────────────────────
         if(type !== 'prep') {
-            let finalTotal = totalBrut * (1 - d.remiseG/100);
+            // --- CALCULS FINAUX PDF ---
+            let totalApresRemise = totalBrut * (1 - (d.remiseG || 0) / 100);
+            let acomptePaye = (d.acompteStatut === 'oui') ? (d.acompteMontant || 0) : 0;
+            let resteAPayer = totalApresRemise - acomptePaye;
 
+            // --- LOGIQUE ANTI-DÉBORDEMENT POUR LES TOTAUX ---
+            let hauteurTotaux = 35; // Hauteur de base (Rectangle bleu + textes du bas)
+            if (d.remiseG > 0) hauteurTotaux += 10;
+            if (acomptePaye > 0) hauteurTotaux += 5;
+
+            if (finalY + hauteurTotaux > 275) { // 275 est la limite avant le pied de page
+                doc.addPage();
+                finalY = 25; // On bascule le bloc proprement en haut de la page suivante
+            }
+            // ------------------------------------------------
+
+            // Affichage Sous-total si remise globale
             if(d.remiseG > 0) {
-                doc.setFontSize(8); doc.setFont(undefined, 'normal');
-                doc.setTextColor(...C_GREY);
+                doc.setFontSize(8); doc.setFont(undefined, 'normal'); doc.setTextColor(...C_GREY);
                 doc.text(`Sous-total HT : ${totalBrut.toFixed(2)} €`, 195, finalY, { align: 'right' });
                 finalY += 5;
                 doc.setTextColor(180, 0, 0);
@@ -1991,20 +2028,32 @@ if(!check.ok) {
                 finalY += 5;
             }
 
-            // Bloc total net
+            // Affichage ligne Acompte (si payé)
+            if (acomptePaye > 0) {
+                doc.setFontSize(8); doc.setFont(undefined, 'normal'); doc.setTextColor(40, 167, 69); // Vert
+                doc.text(`Acompte déjà versé : -${acomptePaye.toFixed(2)} €`, 195, finalY, { align: 'right' });
+                finalY += 5;
+            }
+
+            // Bloc total net (Bandeau bleu)
             doc.setFillColor(...C_DARK);
             doc.roundedRect(130, finalY, 65, 11, 2, 2, 'F');
             doc.setFontSize(9); doc.setFont(undefined, 'bold');
             doc.setTextColor(...C_WHITE);
-            doc.text(`TOTAL NET : ${finalTotal.toFixed(2)} €`, 162, finalY + 7.5, { align: 'center' });
+            
+            let labelTotal = (acomptePaye > 0) ? 'RESTE À PAYER' : 'TOTAL NET';
+            doc.text(`${labelTotal} : ${resteAPayer.toFixed(2)} €`, 162, finalY + 7.5, { align: 'center' });
+            
             finalY += 17;
 
+            // Infos bas de page
             doc.setFontSize(7); doc.setFont(undefined, 'normal');
             doc.setTextColor(...C_GREY);
             doc.text(`Chargé d'affaire : ${userFullName}${userMail ? ' · '+userMail : ''}${userTel ? ' · '+userTel : ''}`, 15, finalY);
             finalY += 5;
             doc.text('TVA non applicable — art. 293 B du CGI', 15, finalY);
             finalY += 4;
+        }
 
              // ── BON POUR ACCORD (devis) ───────────────────────
             if(type === 'devis') {
@@ -2081,7 +2130,7 @@ if(!check.ok) {
                 if(settings.iban)   { doc.setFontSize(8); doc.setFont(undefined,'bold'); doc.text(`IBAN : ${settings.iban}`, 20, by); by += 4.5; }
                 if(settings.bic)    { doc.setFontSize(7.5); doc.setFont(undefined,'normal'); doc.text(`BIC / SWIFT : ${settings.bic}`, 20, by); }
             }
-        }
+        
 
         // ── PIED DE PAGE ──────────────────────────────────────
         const pageCount = doc.internal.getNumberOfPages();
@@ -2412,7 +2461,7 @@ function renderDespenses() {
     // Afficher le résumé
     let resumeHtml = `
         <div class="despenses-card">
-            <h3>Devis HT</h3>
+            <h3>Devis TTC</h3>
             <div class="montant">${devisTotal.toFixed(2)}€</div>
         </div>
         <div class="despenses-card">
@@ -2869,7 +2918,8 @@ async function renderAnalytics() {
 
         // --- TRÉSORERIE : RESTE À ENCAISSER ---
         if (currentStatus === 'facture_envoye') {
-            resteAEncaisser += dCA;
+            let acompteDejaPaye = (d.acompteStatut === 'oui') ? (parseFloat(d.acompteMontant) || 0) : 0;
+            resteAEncaisser += (dCA - acompteDejaPaye);
         }
 
          // --- RÉCUPÉRATION DES DÉPENSES ---
