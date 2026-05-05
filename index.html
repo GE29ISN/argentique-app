@@ -4,6 +4,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Argentique Events - Cloud Pro</title>
@@ -430,6 +432,66 @@
     background: var(--bleu-marine);
     color: white;
     border-color: var(--bleu-marine);
+}
+
+/* ========================================== */
+/* 📱 RESPONSIVE DESIGN - MISE À JOUR MOBILE  */
+/* ========================================== */
+@media screen and (max-width: 768px) {
+    /* 1. Le menu de navigation (Scroll horizontal façon App iOS/Android) */
+    #main-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 10px;
+        -webkit-overflow-scrolling: touch; /* Scroll fluide sur mobile */
+        scrollbar-width: none; /* Cache la barre Firefox */
+    }
+    #main-nav::-webkit-scrollbar { display: none; } /* Cache la barre Chrome/Safari */
+    #main-nav button { 
+        white-space: nowrap; /* Empêche le texte de passer à la ligne */
+        font-size: 13px; 
+        padding: 8px 12px; 
+    }
+    .nav-right { margin-left: 0; } /* Garde les boutons de droite alignés */
+
+    /* 2. Optimisation de l'espace (moins de marges inutiles) */
+    .container { 
+        margin: 10px; 
+        padding: 15px; 
+        border-radius: 10px;
+    }
+
+    /* 3. Formulaires sur 1 seule colonne */
+    .form-grid { 
+        grid-template-columns: 1fr !important; 
+    }
+
+    /* 4. Tableaux scrollables (sans faire déborder toute la page) */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+
+    /* 5. Écrans complexes (Dates des dossiers et Analytics) empilés */
+    .dates-container, 
+    div[style*="grid-template-columns: 2fr 1fr"], 
+    div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+        display: flex !important;
+        flex-direction: column;
+        gap: 15px;
+        overflow-x: auto;
+    }
+
+    /* 6. Boutons plus accessibles pour les doigts */
+    button { padding: 12px 18px; }
+    .btn-mini { padding: 10px 14px; font-size: 12px; }
+    
+    /* 7. Pop-up Pièces jointes & Admin */
+    .auth-box, #admin-login input { width: 90% !important; box-sizing: border-box; }
+    #modal-pj > div { padding: 15px !important; width: 95% !important; }
 }
 
     </style>
