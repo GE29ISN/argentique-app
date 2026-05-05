@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -494,34 +495,67 @@
     #modal-pj > div { padding: 15px !important; width: 95% !important; }
 }
 /* Style pour les suggestions de recherche (Mobile Friendly) */
+/* Conteneur de la liste de suggestions */
 .search-suggestions {
     position: absolute;
-    top: 100%; /* S'affiche pile en dessous */
+    top: 100%;
     left: 0;
     background: white;
-    border: 2px solid var(--bleu-marine);
-    border-top: none; /* Fusionne avec l'input au dessus */
-    border-radius: 0 0 10px 10px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    z-index: 9999;
+    border: 1px solid var(--bleu-marine);
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    z-index: 10000;
     max-height: 250px;
     overflow-y: auto;
-    width: 100%;
     box-sizing: border-box;
+    /* Largeur automatique par défaut */
+    min-width: 100%; 
+}
+
+/* Style compact pour PC */
+@media screen and (min-width: 769px) {
+    .search-suggestions {
+        max-width: 500px; /* On limite la largeur sur PC */
+        font-size: 12px;
+    }
+    .suggestion-item {
+        padding: 6px 12px; /* Plus compact sur PC */
+    }
+}
+
+/* Style large pour Mobile */
+@media screen and (max-width: 768px) {
+    .suggestion-item {
+        padding: 12px 15px; /* Plus gros pour les doigts */
+    }
 }
 
 .suggestion-item {
-    padding: 10px 15px;
-    border-bottom: 1px solid #eee;
     cursor: pointer;
     display: flex;
-    justify-content: space-between; /* Nom à gauche, Stock à droite */
+    justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .suggestion-item:hover { background-color: #f1f5fb; }
+.suggestion-stock-info { font-size: 11px; font-weight: bold; margin-left: 15px; }
+.suggestion-item:hover { background-color: #f1f5fb; }
 .suggestion-stock-info { font-size: 11px; font-weight: bold; }
 .suggestion-item b { color: var(--bleu-marine); }
+
+/* Le conteneur de la barre de recherche */
+.search-box-container {
+    position: relative;
+    flex: 2; /* Par défaut (mobile) elle prend la place */
+}
+
+/* Sur PC (écran large) */
+@media screen and (min-width: 769px) {
+    .search-box-container {
+        flex: 0 1 400px !important; /* On la bloque à 300px maximum au lieu qu'elle s'étale */
+    }
+}
 
     </style>
 </head>
@@ -1686,23 +1720,34 @@ function onCatDrop(e, targetCatId) {
 }
 
 
-    function renderCats() {
+  function renderCats() {
     let d = dossiers.find(x => x.idDoc === activeDossierId);
     if(!d) return;
+    
     let cont = document.getElementById('dossier-cats-container'); 
     cont.innerHTML = ""; 
     let totalBrut = 0;
 
     d.cats.forEach(cat => {
         let catNet = 0;
+        
+        // --- GÉNÉRATION DES LIGNES D'ARTICLES ---
         let itemsHtml = cat.items.map((it, idx) => {
             let nom, pUnit;
-            if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
-            else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
+            if(it.isCustom) { 
+                nom = it.label; 
+                pUnit = it.pUnit; 
+            } else { 
+                let s = stock.find(x => x.ref === it.ref); 
+                nom = s ? s.nom : '???'; 
+                pUnit = s ? s.ploc : 0; 
+            }
             let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
-            let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
+            let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - (it.remise || 0) / 100);
             catNet += ligneNet;
-            return `<tr class="draggable-row" draggable="true" 
+            
+            return `
+            <tr class="draggable-row" draggable="true" 
                 ondragstart="onDragStart(event, ${cat.id}, ${idx})" 
                 ondragend="onDragEnd(event)" 
                 ondragover="onDragOver(event)" 
@@ -1719,12 +1764,14 @@ function onCatDrop(e, targetCatId) {
             </tr>`;
         }).join('');
 
-        let catFinal = catNet * (1 - cat.remise/100); 
+        let catFinal = catNet * (1 - (cat.remise || 0) / 100); 
         totalBrut += catFinal;
 
+        // --- CONSTRUCTION DU BLOC CATÉGORIE ---
         let div = document.createElement('div'); 
         div.className = 'categorie-bloc';
         div.dataset.catId = cat.id;
+        
         div.innerHTML = `
             <div class="categorie-header" style="cursor:grab;">
                 <b>☰ <span onclick="renameCat(${cat.id})" style="cursor:pointer;">${cat.nom}</span></b>
@@ -1733,22 +1780,35 @@ function onCatDrop(e, targetCatId) {
                     <button class="btn-mini btn-delete" onclick="removeCat(${cat.id})">Suppr</button>
                 </div>
             </div>
-            <div style="padding:12px; background:#f8f9fa; display:flex; gap:10px; flex-wrap:wrap;">
-                <input type="text" id="add-ref-${cat.id}" autocomplete="off" oninput="showSuggestions(this, 'stock')" placeholder="Réf...">
-                <input type="number" id="add-qte-${cat.id}" placeholder="Qté" style="width:80px; border-radius:10px;">
-                <button class="btn-mini" onclick="addItem(${cat.id})">Ajouter</button>
-                <button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})">+ Ligne Manuelle</button>
+
+            <!-- BARRE D'AJOUT (NETTOYÉE ET UNIQUE) -->
+            <div style="padding:12px; background:#f8f9fa; display:flex; gap:10px; flex-wrap:wrap; align-items: center; border-bottom: 1px solid #eee;">
+                <div class="search-box-container">
+                    <input type="text" id="add-ref-${cat.id}" autocomplete="off" 
+                           oninput="showSuggestions(this, 'stock')" 
+                           placeholder="Réf ou Nom..." style="width: 100%; margin: 0;">
+                </div>
+                <input type="number" id="add-qte-${cat.id}" placeholder="Qté" style="width:70px; margin: 0; border-radius:10px; height: 38px;">
+                <button class="btn-mini" onclick="addItem(${cat.id})" style="height: 38px; margin:0;">Ajouter</button>
+                <button class="btn-mini btn-custom" onclick="addCustomItem(${cat.id})" style="height: 38px; margin:0;">+ Ligne Manuelle</button>
             </div>
+
+            <!-- TABLEAU DES ARTICLES -->
             <table ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, ${cat.id}, null)">
-                <thead><tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Unit/J</th><th>Coeff</th><th>Rem.</th><th>Total</th><th></th></tr></thead>
+                <thead>
+                    <tr><th>Réf</th><th>Nom</th><th>Qté</th><th>Unit/J</th><th>Coeff</th><th>Rem.</th><th>Total</th><th></th></tr>
+                </thead>
                 <tbody>${itemsHtml}</tbody>
             </table>
+
+            <!-- SOUS-TOTAL CATÉGORIE -->
             <div style="text-align:right; padding:12px 16px; font-weight:bold; background:#edf2f7; border-top:1px solid var(--gris-bordure);">
                 Sous-total : ${catFinal.toFixed(2)}€
             </div>`;
 
-        // Drag & drop catégories — sur le header uniquement pour éviter les conflits
+        // --- LOGIQUE DRAG & DROP DES CATÉGORIES ---
         let header = div.querySelector('.categorie-header');
+        header.draggable = true;
         header.addEventListener('dragstart', (e) => {
             e.stopPropagation();
             draggedCatId = cat.id;
@@ -1761,9 +1821,8 @@ function onCatDrop(e, targetCatId) {
             draggedCatId = null;
         });
 
-        // Réception du drop sur tout le bloc
         div.addEventListener('dragover', (e) => {
-            if(draggedCatId === null) return; // c'est un item, pas une cat
+            if(draggedCatId === null) return;
             e.preventDefault();
             e.stopPropagation();
             div.classList.add('drag-over-cat');
@@ -1779,23 +1838,21 @@ function onCatDrop(e, targetCatId) {
             e.stopPropagation();
             div.classList.remove('drag-over-cat');
             if(draggedCatId === cat.id) return;
+            
             let dd = dossiers.find(x => x.idDoc === activeDossierId);
             let fromIdx = dd.cats.findIndex(c => c.id === draggedCatId);
             let toIdx = dd.cats.findIndex(c => c.id === cat.id);
-            if(fromIdx === -1 || toIdx === -1) return;
-            let [moved] = dd.cats.splice(fromIdx, 1);
-            dd.cats.splice(toIdx, 0, moved);
-            draggedCatId = null;
-            syncDossier();
+            if(fromIdx !== -1 && toIdx !== -1) {
+                let [moved] = dd.cats.splice(fromIdx, 1);
+                dd.cats.splice(toIdx, 0, moved);
+                syncDossier();
+            }
         });
 
-        // Rendre le header draggable
-        header.draggable = true;
-
         cont.appendChild(div);
-    }); // Fin de la boucle d.cats.forEach
+    });
 
-    // --- CALCULS FINAUX ---
+    // --- CALCULS ET RÉCAPITULATIF FINAL ---
     let totalRemise = totalBrut * (1 - (d.remiseG || 0) / 100);
     let acompte = (d.acompteStatut === 'oui') ? (d.acompteMontant || 0) : 0;
     let netAPayer = totalRemise - acompte;
@@ -1807,8 +1864,7 @@ function onCatDrop(e, targetCatId) {
         <div style="font-size:1.5em; font-weight:bold; margin-top:8px;">
             ${acompte > 0 ? 'RESTE À PAYER' : 'NET À PAYER'} : ${netAPayer.toFixed(2)}€
         </div>`;
-} // FIN DE LA FONCTION RENDERCATS
-
+}
 
 // FONCTIONS UTILITAIRES STOCK ET LIGNES
 // ==========================================
@@ -3499,6 +3555,9 @@ function showSuggestions(input, type) {
 
     let list = document.createElement('div');
     list.className = 'search-suggestions';
+if (window.innerWidth > 768) {
+    list.style.width = input.offsetWidth + "px";
+}
 
     // Récupération des dates du dossier pour le calcul du stock
     let d = activeDossierId ? dossiers.find(x => x.idDoc === activeDossierId) : null;
