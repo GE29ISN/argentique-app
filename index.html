@@ -2,6 +2,8 @@
 
 
 
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -745,6 +747,10 @@
         <div><label>Nom Contact</label><input type="text" id="c-nom"></div>
         <div><label>Téléphone</label><input type="text" id="c-tel"></div>
         <div><label>Email</label><input type="text" id="c-email"></div>
+        <!-- Nouveaux champs -->
+        <div style="grid-column: span 2;"><label>Adresse</label><input type="text" id="c-adr"></div>
+        <div><label>Code Postal</label><input type="text" id="c-cp"></div>
+        <div><label>Ville</label><input type="text" id="c-ville"></div>
     </div>
     <div style="display:flex; gap:10px; margin-bottom:20px;">
         <button id="btn-save-client" onclick="saveClient()">Enregistrer Client</button>
@@ -1445,42 +1451,77 @@ console.log("Succès !");  // 👈 ET CA
     // CLIENTS
     // ==========================================
     function renderClients() {
-        let search = (document.getElementById('search-clients') ? document.getElementById('search-clients').value || '' : '').toLowerCase();
-        let body = document.getElementById('table-clients-body'); if(!body) return; body.innerHTML = '';
-        clients.filter(c => (c.ent||'').toLowerCase().includes(search) || (c.nom||'').toLowerCase().includes(search)).forEach(c => {
-            let tr = document.createElement('tr');
-            tr.innerHTML = `<td>${c.ent||''}</td><td>${c.nom||''}</td><td>${c.tel||''}</td><td>${c.mail||''}</td>
-                <td><button class="btn-mini btn-edit" onclick="editClient('${c.idDoc}')">✏️</button> <button class="btn-mini btn-delete" onclick="deleteClient('${c.idDoc}')">🗑️</button></td>`;
-            body.appendChild(tr);
-        });
-    }
+    let search = (document.getElementById('search-clients') ? document.getElementById('search-clients').value || '' : '').toLowerCase();
+    let body = document.getElementById('table-clients-body'); 
+    if(!body) return; 
+    body.innerHTML = '';
+
+    clients.filter(c => 
+        (c.ent||'').toLowerCase().includes(search) || 
+        (c.nom||'').toLowerCase().includes(search) ||
+        (c.ville||'').toLowerCase().includes(search) // Recherche aussi par ville
+    ).forEach(c => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.ent||''}</td>
+            <td>${c.nom||''}</td>
+            <td>${c.ville||''}</td> <!-- Affiche la ville au lieu du tel par exemple -->
+            <td>${c.mail||''}</td>
+            <td>
+                <button class="btn-mini btn-edit" onclick="editClient('${c.idDoc}')">✏️</button> 
+                <button class="btn-mini btn-delete" onclick="deleteClient('${c.idDoc}')">🗑️</button>
+            </td>`;
+        body.appendChild(tr);
+    });
+}
 
     function saveClient() {
-        let ent = document.getElementById('c-ent').value;
-        let nom = document.getElementById('c-nom').value;
-        let tel = document.getElementById('c-tel').value;
-        let mail = document.getElementById('c-email').value;
-        let data = {ent, nom, tel, mail};
-        let p = editClientId ? db.collection("clients").doc(editClientId).set(data) : db.collection("clients").add(data);
-        p.then(() => {
-            document.getElementById('c-ent').value=''; document.getElementById('c-nom').value='';
-            document.getElementById('c-tel').value=''; document.getElementById('c-email').value='';
-            editClientId = null; document.getElementById('btn-cancel-client').style.display='none';
-        });
-    }
+    let ent = document.getElementById('c-ent').value;
+    let nom = document.getElementById('c-nom').value;
+    let tel = document.getElementById('c-tel').value;
+    let mail = document.getElementById('c-email').value;
+    let adr = document.getElementById('c-adr').value; // Nouveau
+    let cp = document.getElementById('c-cp').value;   // Nouveau
+    let ville = document.getElementById('c-ville').value; // Nouveau
 
-    function editClient(id) {
-        let c = clients.find(x => x.idDoc === id); if(!c) return;
-        document.getElementById('c-ent').value = c.ent||''; document.getElementById('c-nom').value = c.nom||'';
-        document.getElementById('c-tel').value = c.tel||''; document.getElementById('c-email').value = c.mail||'';
-        editClientId = id; document.getElementById('btn-cancel-client').style.display='inline-block';
-    }
+    let data = { ent, nom, tel, mail, adr, cp, ville };
+    
+    let p = editClientId ? db.collection("clients").doc(editClientId).set(data) : db.collection("clients").add(data);
+    
+    p.then(() => {
+        alert("Client enregistré !");
+        cancelClient(); // Utilise la fonction de nettoyage
+    });
+}
 
-    function cancelClient() {
-        document.getElementById('c-ent').value=''; document.getElementById('c-nom').value='';
-        document.getElementById('c-tel').value=''; document.getElementById('c-email').value='';
-        editClientId = null; document.getElementById('btn-cancel-client').style.display='none';
-    }
+function editClient(id) {
+    let c = clients.find(x => x.idDoc === id); 
+    if(!c) return;
+    document.getElementById('c-ent').value = c.ent || ''; 
+    document.getElementById('c-nom').value = c.nom || '';
+    document.getElementById('c-tel').value = c.tel || ''; 
+    document.getElementById('c-email').value = c.mail || '';
+    document.getElementById('c-adr').value = c.adr || '';     // Nouveau
+    document.getElementById('c-cp').value = c.cp || '';       // Nouveau
+    document.getElementById('c-ville').value = c.ville || ''; // Nouveau
+    
+    editClientId = id; 
+    document.getElementById('btn-cancel-client').style.display = 'inline-block';
+}
+
+function cancelClient() {
+    document.getElementById('c-ent').value = ''; 
+    document.getElementById('c-nom').value = '';
+    document.getElementById('c-tel').value = ''; 
+    document.getElementById('c-email').value = '';
+    document.getElementById('c-adr').value = '';   // Nouveau
+    document.getElementById('c-cp').value = '';    // Nouveau
+    document.getElementById('c-ville').value = ''; // Nouveau
+    
+    editClientId = null; 
+    document.getElementById('btn-cancel-client').style.display = 'none';
+}
+
 
     function deleteClient(id) { if(confirm("Supprimer ce client ?")) db.collection("clients").doc(id).delete(); }
 
@@ -2019,12 +2060,12 @@ if(!check.ok) {
         doc.text(`N° ${activeDossierId}`, 196, 20, { align: 'right' });
         doc.text(new Date().toLocaleDateString('fr-FR'), 196, 26, { align: 'right' });
 
-        // ── ÉMETTEUR / DESTINATAIRE ───────────────────────────
+               // ── ÉMETTEUR / DESTINATAIRE ───────────────────────────
         let infoY = 42;
 
         // Bloc émetteur
         doc.setFillColor(...C_LIGHT);
-        doc.roundedRect(10, infoY, 85, 28, 2, 2, 'F');
+        doc.roundedRect(10, infoY, 85, 32, 2, 2, 'F'); // J'ai augmenté la hauteur à 32 pour faire de la place
         doc.setFontSize(6.5); doc.setFont(undefined, 'bold');
         doc.setTextColor(...C_MID);
         doc.text('ÉMETTEUR', 14, infoY + 5);
@@ -2038,19 +2079,36 @@ if(!check.ok) {
 
         // Bloc destinataire
         doc.setFillColor(...C_LIGHT);
-        doc.roundedRect(115, infoY, 85, 28, 2, 2, 'F');
+        doc.roundedRect(115, infoY, 85, 32, 2, 2, 'F'); // Hauteur à 32 pour la symétrie
         doc.setFontSize(6.5); doc.setFont(undefined, 'bold');
         doc.setTextColor(...C_MID);
         doc.text('DESTINATAIRE', 119, infoY + 5);
         doc.setFont(undefined, 'normal'); doc.setTextColor(30, 30, 30);
         doc.setFontSize(7.5);
         doc.text(client.ent || client.nom || d.cli, 119, infoY + 10);
+        
+        // --- NOUVEAU : GESTION DE L'ADRESSE ---
         doc.setFontSize(7); doc.setTextColor(...C_GREY);
-        doc.text(client.mail || '', 119, infoY + 15);
-        doc.text(client.tel || '', 119, infoY + 19.5);
+        let destY = infoY + 14.5;
+        
+        if (client.adr) {
+            doc.text(client.adr, 119, destY);
+            destY += 4.5;
+        }
+        if (client.cp || client.ville) {
+            doc.text(`${client.cp || ''} ${client.ville || ''}`.trim(), 119, destY);
+            destY += 4.5;
+        }
+        if (client.mail) {
+            doc.text(client.mail, 119, destY);
+            destY += 4.5;
+        }
+        if (client.tel) {
+            doc.text(client.tel, 119, destY);
+        }
 
         // ── PROJET & DATES ────────────────────────────────────
-        let currentY = infoY + 34;
+        let currentY = infoY + 42;
 
         doc.setFontSize(9); doc.setFont(undefined, 'bold');
         doc.setTextColor(...C_DARK);
