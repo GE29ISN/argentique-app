@@ -741,13 +741,12 @@
 
 <!-- CLIENTS -->
 <div id="tab-clients" class="container">
-    <h1>👥 Clients</h1>
+    <h1>👥 Gestion Clients</h1>
     <div class="form-grid">
         <div><label>Entreprise / Asso</label><input type="text" id="c-ent"></div>
         <div><label>Nom Contact</label><input type="text" id="c-nom"></div>
         <div><label>Téléphone</label><input type="text" id="c-tel"></div>
         <div><label>Email</label><input type="text" id="c-email"></div>
-        <!-- Nouveaux champs -->
         <div style="grid-column: span 2;"><label>Adresse</label><input type="text" id="c-adr"></div>
         <div><label>Code Postal</label><input type="text" id="c-cp"></div>
         <div><label>Ville</label><input type="text" id="c-ville"></div>
@@ -756,9 +755,18 @@
         <button id="btn-save-client" onclick="saveClient()">Enregistrer Client</button>
         <button class="btn-delete" style="display:none;" id="btn-cancel-client" onclick="cancelClient()">Annuler</button>
     </div>
-    <input type="text" id="search-clients" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine); border-radius:10px;" placeholder="🔍 Rechercher un client..." oninput="renderClients()">
+    <input type="text" id="search-clients" style="margin-bottom:15px; padding:10px; border:2px solid var(--bleu-marine); border-radius:10px; width:100%;" placeholder="🔍 Rechercher un client..." oninput="renderClients()">
     <table>
-        <thead><tr><th>Entreprise</th><th>Contact</th><th>Tél</th><th>Email</th><th>Actions</th></tr></thead>
+        <thead>
+            <tr>
+                <th>Entreprise</th>
+                <th>Contact</th>
+                <th>Tél</th>
+                <th>Ville</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
         <tbody id="table-clients-body"></tbody>
     </table>
 </div>
@@ -1451,7 +1459,7 @@ console.log("Succès !");  // 👈 ET CA
     // CLIENTS
     // ==========================================
     function renderClients() {
-    let search = (document.getElementById('search-clients') ? document.getElementById('search-clients').value || '' : '').toLowerCase();
+    let search = (document.getElementById('search-clients')?.value || '').toLowerCase();
     let body = document.getElementById('table-clients-body'); 
     if(!body) return; 
     body.innerHTML = '';
@@ -1459,13 +1467,14 @@ console.log("Succès !");  // 👈 ET CA
     clients.filter(c => 
         (c.ent||'').toLowerCase().includes(search) || 
         (c.nom||'').toLowerCase().includes(search) ||
-        (c.ville||'').toLowerCase().includes(search) // Recherche aussi par ville
+        (c.ville||'').toLowerCase().includes(search)
     ).forEach(c => {
         let tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${c.ent||''}</td>
             <td>${c.nom||''}</td>
-            <td>${c.ville||''}</td> <!-- Affiche la ville au lieu du tel par exemple -->
+            <td>${c.tel||''}</td>
+            <td>${c.ville||''}</td>
             <td>${c.mail||''}</td>
             <td>
                 <button class="btn-mini btn-edit" onclick="editClient('${c.idDoc}')">✏️</button> 
@@ -1475,53 +1484,43 @@ console.log("Succès !");  // 👈 ET CA
     });
 }
 
-    function saveClient() {
-    let ent = document.getElementById('c-ent').value;
-    let nom = document.getElementById('c-nom').value;
-    let tel = document.getElementById('c-tel').value;
-    let mail = document.getElementById('c-email').value;
-    let adr = document.getElementById('c-adr').value; // Nouveau
-    let cp = document.getElementById('c-cp').value;   // Nouveau
-    let ville = document.getElementById('c-ville').value; // Nouveau
-
-    let data = { ent, nom, tel, mail, adr, cp, ville };
+function saveClient() {
+    let data = {
+        ent: document.getElementById('c-ent').value,
+        nom: document.getElementById('c-nom').value,
+        tel: document.getElementById('c-tel').value,
+        mail: document.getElementById('c-email').value,
+        adr: document.getElementById('c-adr').value,
+        cp: document.getElementById('c-cp').value,
+        ville: document.getElementById('c-ville').value
+    };
     
     let p = editClientId ? db.collection("clients").doc(editClientId).set(data) : db.collection("clients").add(data);
-    
     p.then(() => {
         alert("Client enregistré !");
-        cancelClient(); // Utilise la fonction de nettoyage
+        cancelClient();
     });
 }
 
 function editClient(id) {
     let c = clients.find(x => x.idDoc === id); 
     if(!c) return;
-    document.getElementById('c-ent').value = c.ent || ''; 
+    document.getElementById('c-ent').value = c.ent || '';
     document.getElementById('c-nom').value = c.nom || '';
-    document.getElementById('c-tel').value = c.tel || ''; 
+    document.getElementById('c-tel').value = c.tel || '';
     document.getElementById('c-email').value = c.mail || '';
-    document.getElementById('c-adr').value = c.adr || '';     // Nouveau
-    document.getElementById('c-cp').value = c.cp || '';       // Nouveau
-    document.getElementById('c-ville').value = c.ville || ''; // Nouveau
-    
+    document.getElementById('c-adr').value = c.adr || '';
+    document.getElementById('c-cp').value = c.cp || '';
+    document.getElementById('c-ville').value = c.ville || '';
     editClientId = id; 
     document.getElementById('btn-cancel-client').style.display = 'inline-block';
 }
 
 function cancelClient() {
-    document.getElementById('c-ent').value = ''; 
-    document.getElementById('c-nom').value = '';
-    document.getElementById('c-tel').value = ''; 
-    document.getElementById('c-email').value = '';
-    document.getElementById('c-adr').value = '';   // Nouveau
-    document.getElementById('c-cp').value = '';    // Nouveau
-    document.getElementById('c-ville').value = ''; // Nouveau
-    
+    ['c-ent','c-nom','c-tel','c-email','c-adr','c-cp','c-ville'].forEach(id => document.getElementById(id).value = '');
     editClientId = null; 
     document.getElementById('btn-cancel-client').style.display = 'none';
 }
-
 
     function deleteClient(id) { if(confirm("Supprimer ce client ?")) db.collection("clients").doc(id).delete(); }
 
