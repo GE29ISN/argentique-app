@@ -1,3 +1,11 @@
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -824,6 +832,7 @@
     <button class="btn-mini btn-pdf" onclick="genPDF('prep')">📋 Bon de Préparation (PDF)</button>
     <button class="btn-mini btn-pdf" onclick="genPDF('devis')">📄 Devis (PDF)</button>
     <button class="btn-mini btn-pdf" onclick="genPDF('facture')">💰 Facture (PDF)</button>
+<button class="btn-mini" style="background:#e67e22;" onclick="genPDFSousLoc()">🚚 Export Sous-Loc (PDF)</button>
 
     <button class="btn-mini" style="background:#e74c3c;" onclick="showDespensesView()">📊 Gestion Dépenses</button>
 
@@ -3739,6 +3748,103 @@ if (window.innerWidth > 768) {
         if (!input.contains(e.target) && !list.contains(e.target)) list.remove();
     }, { once: true });
 }
+
+function genPDFSousLoc() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let d = dossiers.find(x => x.idDoc === activeDossierId);
+    if (!d) return;
+
+    // 1. Grouper les éléments par prestataire de sous-location
+    let groupement = {};
+    let aDesSousLoc = false;
+
+    d.cats.forEach(cat => {
+        cat.items.forEach(it => {
+            if (it.isCustom && it.sousLoc && it.sousLoc.trim() !== "") {
+                let prestataire = it.sousLoc.trim();
+                if (!groupement[prestataire]) groupement[prestataire] = [];
+                groupement[prestataire].push({
+                    nom: it.label,
+                    qte: it.qte
+                });
+                aDesSousLoc = true;
+            }
+        });
+    });
+
+    if (!aDesSousLoc) {
+        alert("Aucune entreprise de sous-location n'a été renseignée sur les lignes manuelles de ce dossier.");
+        return;
+    }
+
+    // 2. Configuration Design (Reprise de votre charte existante)
+    const C_DARK = [10, 35, 66]; // Bleu Marine
+    const C_MID = [74, 111, 165]; // Bleu Acier
+
+    // En-tête du document
+    doc.setFillColor(...C_DARK);
+    doc.rect(0, 0, 210, 30, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text("LISTE DES SOUS-LOCATIONS", 105, 15, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`Projet : ${d.nom}`, 105, 22, { align: 'center' });
+
+    let currentY = 40;
+
+    // 3. Boucler sur chaque prestataire pour créer un tableau
+    Object.keys(groupement).forEach((prestataire, index) => {
+        // Vérifier s'il reste de la place sur la page, sinon ajouter une page
+        if (currentY > 240) {
+            doc.addPage();
+            currentY = 20;
+        }
+
+        // Titre du prestataire
+        doc.setDrawColor(...C_MID);
+        doc.setLineWidth(0.5);
+        doc.line(15, currentY, 195, currentY);
+        
+        doc.setTextColor(...C_DARK);
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text(`PRESTATAIRE : ${prestataire.toUpperCase()}`, 15, currentY + 8);
+        
+        currentY += 12;
+
+        // Données du tableau pour ce prestataire
+        let tableData = groupement[prestataire].map(item => [
+            item.nom,
+            item.qte
+        ]);
+
+        doc.autoTable({
+            startY: currentY,
+            head: [['Désignation du matériel', 'Quantité']],
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: C_MID, textColor: [255, 255, 255] },
+            styles: { fontSize: 10, cellPadding: 3 },
+            margin: { left: 15, right: 15 }
+        });
+
+        currentY = doc.lastAutoTable.finalY + 15;
+    });
+
+    // Pied de page
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Document généré le ${new Date().toLocaleDateString('fr-FR')} - Page ${i} / ${pageCount}`, 105, 285, { align: 'center' });
+    }
+
+    doc.save(`SOUS_LOC_${d.nom.replace(/\s+/g, '_')}.pdf`);
+}
+
 </script>
 
 <!-- MODAL PIÈCES JOINTES -->
