@@ -1,9 +1,3 @@
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1772,37 +1766,54 @@ function onCatDrop(e, targetCatId) {
         let catNet = 0;
         
         // --- GÉNÉRATION DES LIGNES D'ARTICLES ---
-        let itemsHtml = cat.items.map((it, idx) => {
-            let nom, pUnit;
-            if(it.isCustom) { 
-                nom = it.label; 
-                pUnit = it.pUnit; 
-            } else { 
-                let s = stock.find(x => x.ref === it.ref); 
-                nom = s ? s.nom : '???'; 
-                pUnit = s ? s.ploc : 0; 
-            }
-            let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
-            let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - (it.remise || 0) / 100);
-            catNet += ligneNet;
-            
-            return `
-            <tr class="draggable-row" draggable="true" 
-                ondragstart="onDragStart(event, ${cat.id}, ${idx})" 
-                ondragend="onDragEnd(event)" 
-                ondragover="onDragOver(event)" 
-                ondragleave="onDragLeave(event)" 
-                ondrop="onDrop(event, ${cat.id}, ${idx})">
-                <td>↕️ ${it.isCustom ? 'MANU' : it.ref}</td>
-                <td><span class="${it.isCustom ? 'item-clickable item-custom' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'label')` : ''}">${nom}</span></td>
-                <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td>
-                <td><span class="${it.isCustom ? 'item-clickable' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'pUnit')` : ''}">${pUnit}€</span></td>
-                <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'coeff')">${itemCoeff}</span></td>
-                <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td>
-                <td style="font-weight:bold;">${ligneNet.toFixed(2)}€</td>
-                <td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td>
-            </tr>`;
-        }).join('');
+       let itemsHtml = cat.items.map((it, idx) => {
+    let nom, pUnit;
+    let sousLocHtml = ""; // Variable pour l'affichage de la sous-loc
+
+    if(it.isCustom) { 
+        nom = it.label; 
+        pUnit = it.pUnit; 
+        // Si c'est une ligne manuelle, on affiche le lien pour éditer le prestataire
+        if(it.sousLoc) {
+            sousLocHtml = `<br><small style="color:#d63384; cursor:pointer;" onclick="editItem(${cat.id},${idx},'sousLoc')">
+                            (Via: ${it.sousLoc} ✏️)
+                          </small>`;
+        } else {
+            sousLocHtml = `<br><small style="color:#6c757d; cursor:pointer;" onclick="editItem(${cat.id},${idx},'sousLoc')">
+                            (+ Ajouter sous-loc)
+                          </small>`;
+        }
+    } else { 
+        let s = stock.find(x => x.ref === it.ref); 
+        nom = s ? s.nom : '???'; 
+        pUnit = s ? s.ploc : 0; 
+    }
+    
+    let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
+    let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - (it.remise || 0) / 100);
+    catNet += ligneNet;
+    
+    return `
+    <tr class="draggable-row" draggable="true" 
+        ondragstart="onDragStart(event, ${cat.id}, ${idx})" 
+        ondragend="onDragEnd(event)" 
+        ondragover="onDragOver(event)" 
+        ondragleave="onDragLeave(event)" 
+        ondrop="onDrop(event, ${cat.id}, ${idx})">
+        <td>↕️ ${it.isCustom ? 'MANU' : it.ref}</td>
+        <td>
+            <span class="${it.isCustom ? 'item-clickable item-custom' : ''}" 
+                  onclick="${it.isCustom ? `editItem(${cat.id},${idx},'label')` : ''}">${nom}</span>
+            ${sousLocHtml}
+        </td>
+        <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td>
+        <td><span class="${it.isCustom ? 'item-clickable' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'pUnit')` : ''}">${pUnit}€</span></td>
+        <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'coeff')">${itemCoeff}</span></td>
+        <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td>
+        <td style="font-weight:bold;">${ligneNet.toFixed(2)}€</td>
+        <td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td>
+    </tr>`;
+}).join('');
 
         let catFinal = catNet * (1 - (cat.remise || 0) / 100); 
         totalBrut += catFinal;
@@ -1948,25 +1959,54 @@ if(!check.ok) {
     }
 
     function addCustomItem(catId) {
-        let label = prompt("Nom de l'article / prestation ?"); if(!label) return;
-        let pUnit = parseFloat(prompt("Prix unitaire / Jour ?", "0")) || 0;
-        dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.push({label:label, pUnit:pUnit, qte:1, coeff:null, remise:0, isCustom:true}); syncDossier();
-    }
+    let label = prompt("Nom de l'article / prestation ?"); 
+    if(!label) return;
+    
+    // On ajoute la demande du prestataire
+    let sousLoc = prompt("Prestataire de sous-location (laisser vide si aucun) :");
+    
+    let pUnit = parseFloat(prompt("Prix unitaire / Jour ?", "0")) || 0;
+    
+    // On enregistre sousLoc dans l'objet
+    dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.push({
+        label: label, 
+        sousLoc: sousLoc || "", // Enregistre la valeur ou une chaîne vide
+        pUnit: pUnit, 
+        qte: 1, 
+        coeff: null, 
+        remise: 0, 
+        isCustom: true
+    }); 
+    syncDossier();
+}
 
-    function editItem(catId, idx, key) {
-        let it = dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items[idx];
-        let v = prompt("Nouvelle valeur :", (key === 'coeff' && !it[key]) ? '' : it[key]); if(v === null) return;
+function editItem(catId, idx, key) {
+    let d = dossiers.find(x => x.idDoc === activeDossierId);
+    let it = d.cats.find(c => c.id === catId).items[idx];
+
+    // Si on clique sur le label ou le prestataire d'un item manuel, on ouvre un prompt spécifique
+    if (it.isCustom && (key === 'label' || key === 'sousLoc')) {
+        let v = prompt(`Modifier ${key === 'label' ? 'le nom' : 'le prestataire'} :`, it[key] || "");
+        if (v === null) return;
+        it[key] = v;
+    } else {
+        // Logique existante pour les autres champs (qte, coeff, pUnit, remise)
+        let v = prompt("Nouvelle valeur :", (key === 'coeff' && !it[key]) ? '' : it[key]); 
+        if(v === null) return;
+        
         if(key === 'qte' && !it.isCustom) {
             let newQty = parseFloat(v) || 0;
             let check = checkAvailability(it.ref, newQty, activeDossierId, idx, catId);
-if(!check.ok) {
-    if(!confirm(`⚠️ ALERTE STOCK\n\nArticle : ${check.nom} (${it.ref})\nQuantité demandée : ${newQty}\nQuantité disponible : ${check.dispo}\n\nValider quand même ?`)) return;
-}
+            if(!check.ok) {
+                if(!confirm(`⚠️ ALERTE STOCK\n\nArticle : ${check.nom} (${it.ref})\nQuantité demandée : ${newQty}\nQuantité disponible : ${check.dispo}\n\nValider quand même ?`)) return;
+            }
         }
         if (key === 'coeff') it[key] = (v.trim() === '') ? null : parseFloat(v) || 1;
         else it[key] = (key === 'label') ? v : parseFloat(v) || 0;
-        syncDossier();
     }
+    syncDossier();
+}
+
 
     function updateCatRem(catId, v) { dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).remise = parseFloat(v) || 0; syncDossier(); }
     function addCat() { let n = prompt("Nom catégorie :"); if(n) dossiers.find(x => x.idDoc === activeDossierId).cats.push({id:Date.now(), nom:n, items:[], remise:0}); syncDossier(); }
@@ -2151,21 +2191,36 @@ if(!check.ok) {
         d.cats.forEach(cat => {
             tableData.push({ ref: '', nom: cat.nom.toUpperCase(), qte: '', pu: '', rem: '', total: '', isCat: true });
             let catBrut = 0;
-            cat.items.forEach(it => {
-                let nom, pUnit;
-                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
-                else { let s = stock.find(x => x.ref === it.ref); nom = s ? s.nom : '???'; pUnit = s ? s.ploc : 0; }
-                let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
-                let ligneHT = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
-                catBrut += ligneHT;
-                tableData.push({
-                    ref: it.isCustom ? 'MANU' : it.ref,
-                    nom: nom, qte: it.qte,
-                    pu: type!=='prep' ? pUnit.toFixed(2)+'€' : '',
-                    rem: type!=='prep' ? (it.remise ? it.remise+'%' : '') : '',
-                    total: type!=='prep' ? ligneHT.toFixed(2)+'€' : ''
-                });
-            });
+           cat.items.forEach(it => {
+    let nom, pUnit;
+    
+    if(it.isCustom) { 
+        nom = it.label; 
+        // On n'ajoute la sous-loc que si c'est un bon de prép
+        if(type === 'prep' && it.sousLoc) {
+            nom += `\n(Sous-location : ${it.sousLoc})`;
+        }
+        pUnit = it.pUnit; 
+    } else { 
+        let s = stock.find(x => x.ref === it.ref); 
+        nom = s ? s.nom : '???'; 
+        pUnit = s ? s.ploc : 0; 
+    }
+    
+    let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
+    let ligneHT = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
+    catBrut += ligneHT;
+    
+    tableData.push({
+        ref: it.isCustom ? 'MANU' : it.ref,
+        nom: nom, // Le nom contient maintenant le texte de la sous-location si besoin
+        qte: it.qte,
+        pu: type!=='prep' ? pUnit.toFixed(2)+'€' : '',
+        rem: type!=='prep' ? (it.remise ? it.remise+'%' : '') : '',
+        total: type!=='prep' ? ligneHT.toFixed(2)+'€' : ''
+    });
+});
+
             if(type !== 'prep' && cat.remise > 0) {
                 let remCat = catBrut * (cat.remise / 100);
                 tableData.push({ ref: '', nom: `Remise catégorie (${cat.remise}%)`, qte: '', pu: '', rem: '', total: `-${remCat.toFixed(2)}€`, isRemise: true });
