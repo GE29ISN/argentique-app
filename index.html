@@ -6,6 +6,8 @@
 
 
 
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -841,47 +843,81 @@
 
         <h1 id="det-titre" style="margin-top:15px;">Détails Dossier</h1>
 
-        <div class="form-grid">
-            <div><label>Nom Projet</label><input type="text" id="det-nom" onchange="syncDossier()"></div>
-            <div>
-                <label>Type de Dossier</label>
-                <select id="det-type" onchange="syncDossier()">
-                    <option value="location comptoir">Location comptoir</option>
-                    <option value="location avec livraison">Location avec livraison</option>
-                    <option value="prestation complete">Prestation complete</option>
-                </select>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px; margin-top: 15px;">
+            
+            <!-- COLONNE GAUCHE : Identité & Tarification -->
+            <div style="flex: 2; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
+                
+                <!-- Bloc 1 : Identité -->
+                <div style="background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--gris-bordure);">
+                    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; color: var(--bleu-marine);">📝 Informations Générales</h3>
+                    <div class="form-grid" style="margin-bottom: 0;">
+                        <div><label>Nom du projet</label><input type="text" id="det-nom" onchange="syncDossier()"></div>
+                        <div>
+                            <label>Client</label>
+                            <div class="search-box-container">
+                                <input type="text" id="det-cli" autocomplete="off" oninput="showSuggestions(this, 'clients')" onchange="syncDossier()">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Type de dossier</label>
+                            <select id="det-type" onchange="syncDossier()">
+                                <option value="location comptoir">Location comptoir</option>
+                                <option value="prestation avec technicien">Prestation avec technicien</option>
+                                <option value="vente">Vente</option>
+                            </select>
+                        </div>
+                        <div><label>Chargé d'affaire</label><input type="text" id="det-user" onchange="syncDossier()"></div>
+                    </div>
+                </div>
+
+                <!-- Bloc 2 : Tarification -->
+                <div style="background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--gris-bordure);">
+                    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; color: var(--bleu-marine);">🏷️ Tarification Globale</h3>
+                    <div class="form-grid" style="margin-bottom: 0;">
+                        <div><label>Coefficient (Jours)</label><input type="number" step="0.1" id="det-coeff" onchange="syncDossier()"></div>
+                        <div><label>Remise Globale (%)</label><input type="number" id="det-rem-g" onchange="syncDossier()"></div>
+                    </div>
+                </div>
+
             </div>
-            <div>
-    <label>Client</label>
-    <input type="text" id="det-cli" autocomplete="off" oninput="showSuggestions(this, 'client')" onchange="syncDossier()">
-</div>
-            <div><label>Coeff. Durée (Global)</label><input type="number" step="0.1" id="det-coeff" onchange="syncDossier()"></div>
-            <div><label>Remise Globale (%)</label><input type="number" id="det-rem-g" onchange="syncDossier()"></div>
-<div>
-    <label>Montant Acompte (€)</label>
-    <input type="number" step="0.01" id="det-acompte-val" onchange="syncDossier()">
-</div>
-<div>
-    <label>Statut Acompte</label>
-    <select id="det-acompte-statut" onchange="syncDossier()">
-        <option value="non">❌ Non payé</option>
-        <option value="oui">✅ Payé</option>
-    </select>
-</div>
-            <div><label>Chargé d'affaire</label><input type="text" id="det-user" onchange="syncDossier()"></div>
 
-           <div>
-            <label>Statut du dossier</label>
-            <select id="det-status" onchange="changeStatutDossier(this.value)">
-                <option value="devis">📝 Devis</option>
-                <option value="confirme">✅ Confirmé</option>
-                <option value="en_cours">🔧 En cours</option>
-                <option value="facture_envoye">📧 Facture envoyée</option>
-                <option value="paye">💰 Payé</option>
-            </select>
+            <!-- COLONNE DROITE : Suivi Financier & Administratif -->
+            <div style="flex: 1; min-width: 250px; background: #f8f9fa; padding: 20px; border-radius: 12px; border: 2px solid var(--bleu-marine-clair); display: flex; flex-direction: column; gap: 15px;">
+                <h3 style="margin-top: 0; margin-bottom: 5px; font-size: 15px; color: var(--bleu-marine-clair);">⚙️ Suivi & Administratif</h3>
+                
+                <div>
+                    <label>Statut du dossier</label>
+                    <select id="det-status" onchange="changeStatutDossier(this.value)" style="font-weight: bold; font-size: 15px;">
+                        <option value="devis">📝 Devis</option>
+                        <option value="confirme">✅ Confirmé</option>
+                        <option value="en_cours">🔧 En cours</option>
+                        <option value="facture_envoye">📧 Facture envoyée</option>
+                        <option value="paye">💰 Payé</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;"><label>Montant Acompte</label><input type="number" step="0.01" id="det-acompte-val" placeholder="€" onchange="syncDossier()"></div>
+                    <div style="flex: 1;">
+                        <label>Statut Acompte</label>
+                        <select id="det-acompte-statut" onchange="syncDossier()">
+                            <option value="non">❌ Non payé</option>
+                            <option value="oui">✅ Payé</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- LOCK FACTURATION (mis en bas de la colonne) -->
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #fff3cd; padding: 12px 15px; border-radius: 10px; border: 1px solid #ffeeba; margin-top: auto;">
+                    <label style="margin:0; cursor:pointer; color: #856404; font-size: 13px;">🔒 Verrouiller Facture</label>
+                    <input type="checkbox" id="det-lock" onchange="syncDossier()" style="width: 22px; height: 22px; cursor: pointer; margin: 0;">
+                </div>
+                
+            </div>
+
         </div>
-    </div><!-- fin form-grid -->
-
+        
    
         <h3>📅 Dates Détaillées</h3>
         <div class="dates-container">
@@ -1281,6 +1317,11 @@ function showTab(tab) {
 
     // 4. Cas particulier : Logique interne de l'onglet "Dossiers" (Liste vs Détail)
     if (tab === 'dossiers') {
+        
+        // CORRECTION BUG GESTION DÉPENSES : On masque toujours la vue dépenses en revenant
+        let viewDespenses = document.getElementById('view-despenses-dossier');
+        if (viewDespenses) viewDespenses.style.display = 'none';
+
         if (activeDossierId) {
             // Si un dossier est en cours d'édition, on montre ses détails
             document.getElementById('view-list-dossiers').style.display = 'none';
@@ -1665,6 +1706,8 @@ document.getElementById('det-acompte-val').value = d.acompteMontant || 0;
 document.getElementById('det-acompte-statut').value = d.acompteStatut || 'non';
         document.getElementById('det-notes').value = d.notes || '';
         document.getElementById('det-user').value = d.user || '';
+document.getElementById('det-lock').checked = d.isLocked || false;
+
 
 let selStatus = document.getElementById('det-status');
 if(selStatus) selStatus.value = d.status || 'devis';
@@ -1693,6 +1736,8 @@ d.acompteMontant = parseFloat(document.getElementById('det-acompte-val').value) 
 d.acompteStatut = document.getElementById('det-acompte-statut').value;
         d.notes = document.getElementById('det-notes').value;
         d.user = document.getElementById('det-user').value;
+d.isLocked = document.getElementById('det-lock').checked;
+
 
         ['immo','livr','mont','show','demo','recu'].forEach(k => {
             d[`${k}D`] = document.getElementById(`d-${k}-d`).value;
@@ -1766,7 +1811,18 @@ function onCatDrop(e, targetCatId) {
   function renderCats() {
     let d = dossiers.find(x => x.idDoc === activeDossierId);
     if(!d) return;
-    
+
+    // --- LOGIQUE LOCK : Changement visuel du fond de la page ---
+    let viewDetail = document.getElementById('view-detail-dossier');
+    if (d.isLocked) {
+        viewDetail.style.background = "#f0f4ff"; // Teinte bleutée quand verrouillé
+        viewDetail.style.borderRadius = "16px";
+        viewDetail.style.padding = "15px";
+    } else {
+        viewDetail.style.background = ""; // Revient à la couleur de base
+        viewDetail.style.padding = "0";
+    }
+
     let cont = document.getElementById('dossier-cats-container'); 
     cont.innerHTML = ""; 
     let totalBrut = 0;
@@ -1775,54 +1831,62 @@ function onCatDrop(e, targetCatId) {
         let catNet = 0;
         
         // --- GÉNÉRATION DES LIGNES D'ARTICLES ---
-       let itemsHtml = cat.items.map((it, idx) => {
-    let nom, pUnit;
-    let sousLocHtml = ""; // Variable pour l'affichage de la sous-loc
+        let itemsHtml = cat.items.map((it, idx) => {
+            let nom, pUnit;
+            let sousLocHtml = ""; // Variable pour l'affichage de la sous-loc
 
-    if(it.isCustom) { 
-        nom = it.label; 
-        pUnit = it.pUnit; 
-        // Si c'est une ligne manuelle, on affiche le lien pour éditer le prestataire
-        if(it.sousLoc) {
-            sousLocHtml = `<br><small style="color:#d63384; cursor:pointer;" onclick="editItem(${cat.id},${idx},'sousLoc')">
-                            (Via: ${it.sousLoc} ✏️)
-                          </small>`;
-        } else {
-            sousLocHtml = `<br><small style="color:#6c757d; cursor:pointer;" onclick="editItem(${cat.id},${idx},'sousLoc')">
-                            (+ Ajouter sous-loc)
-                          </small>`;
-        }
-    } else { 
-        let s = stock.find(x => x.ref === it.ref); 
-        nom = s ? s.nom : '???'; 
-        pUnit = s ? s.ploc : 0; 
-    }
-    
-    let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
-    let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - (it.remise || 0) / 100);
-    catNet += ligneNet;
-    
-    return `
-    <tr class="draggable-row" draggable="true" 
-        ondragstart="onDragStart(event, ${cat.id}, ${idx})" 
-        ondragend="onDragEnd(event)" 
-        ondragover="onDragOver(event)" 
-        ondragleave="onDragLeave(event)" 
-        ondrop="onDrop(event, ${cat.id}, ${idx})">
-        <td>↕️ ${it.isCustom ? 'MANU' : it.ref}</td>
-        <td>
-            <span class="${it.isCustom ? 'item-clickable item-custom' : ''}" 
-                  onclick="${it.isCustom ? `editItem(${cat.id},${idx},'label')` : ''}">${nom}</span>
-            ${sousLocHtml}
-        </td>
-        <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td>
-        <td><span class="${it.isCustom ? 'item-clickable' : ''}" onclick="${it.isCustom ? `editItem(${cat.id},${idx},'pUnit')` : ''}">${pUnit}€</span></td>
-        <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'coeff')">${itemCoeff}</span></td>
-        <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td>
-        <td style="font-weight:bold;">${ligneNet.toFixed(2)}€</td>
-        <td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td>
-    </tr>`;
-}).join('');
+            if(it.isCustom) { 
+                nom = it.label; 
+                pUnit = it.pUnit || 0; 
+                // Si c'est une ligne manuelle, on affiche le lien pour éditer le prestataire
+                if(it.sousLoc) {
+                    sousLocHtml = `<br><small style="color:#d63384; cursor:pointer;" onclick="editItem(${cat.id},${idx},'sousLoc')">
+                                    (Via: ${it.sousLoc} ✏️)
+                                  </small>`;
+                } else {
+                    sousLocHtml = `<br><small style="color:#6c757d; cursor:pointer;" onclick="editItem(${cat.id},${idx},'sousLoc')">
+                                    (+ Ajouter sous-loc)
+                                  </small>`;
+                }
+            } else { 
+                let s = stock.find(x => x.ref === it.ref); 
+                nom = s ? s.nom : '???'; 
+                pUnit = s ? s.ploc : 0; 
+            }
+            
+            let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
+            
+            // --- LOGIQUE LOCK : Gestion du prix et de l'affichage ---
+            let estOffert = it.isOffered || false;
+            let ligneNet = estOffert ? 0 : (it.qte * pUnit * itemCoeff) * (1 - (it.remise || 0) / 100);
+            
+            catNet += ligneNet;
+
+            // Affichage spécifique si l'item a été rajouté après verrouillage
+            let pUnitDisplay = estOffert ? '<b style="color:#28a745; font-size:1.4em;">+</b>' : pUnit + '€';
+            let totalDisplay = estOffert ? '<span style="color:#28a745; font-weight:bold;">OFFERT</span>' : ligneNet.toFixed(2) + '€';
+            
+            return `
+            <tr class="draggable-row" draggable="true" 
+                ondragstart="onDragStart(event, ${cat.id}, ${idx})" 
+                ondragend="onDragEnd(event)" 
+                ondragover="onDragOver(event)" 
+                ondragleave="onDragLeave(event)" 
+                ondrop="onDrop(event, ${cat.id}, ${idx})">
+                <td>↕️ ${it.isCustom ? 'MANU' : it.ref}</td>
+                <td>
+                    <span class="${it.isCustom ? 'item-clickable item-custom' : ''}" 
+                          onclick="${it.isCustom ? `editItem(${cat.id},${idx},'label')` : ''}">${nom}</span>
+                    ${sousLocHtml}
+                </td>
+                <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'qte')">${it.qte}</span></td>
+                <td><span class="${it.isCustom && !estOffert ? 'item-clickable' : ''}" onclick="${it.isCustom && !estOffert ? `editItem(${cat.id},${idx},'pUnit')` : ''}">${pUnitDisplay}</span></td>
+                <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'coeff')">${itemCoeff}</span></td>
+                <td><span class="item-clickable" onclick="editItem(${cat.id},${idx},'remise')">${it.remise}%</span></td>
+                <td style="font-weight:bold;">${totalDisplay}</td>
+                <td><button class="btn-mini btn-delete" onclick="removeItem(${cat.id},${idx})">X</button></td>
+            </tr>`;
+        }).join('');
 
         let catFinal = catNet * (1 - (cat.remise || 0) / 100); 
         totalBrut += catFinal;
@@ -1917,12 +1981,15 @@ function onCatDrop(e, targetCatId) {
     let acompte = (d.acompteStatut === 'oui') ? (d.acompteMontant || 0) : 0;
     let netAPayer = totalRemise - acompte;
 
+    // LOGIQUE LOCK : Icône Cadenas
+    let lockIcon = d.isLocked ? ' <span title="Facturation verrouillée" style="color:#f1c40f; margin-left:10px;">🔒</span>' : '';
+
     document.getElementById('dossier-recap').innerHTML = `
         <div>Total Brut : ${totalBrut.toFixed(2)}€</div>
         ${d.remiseG > 0 ? `<div>Remise Globale (${d.remiseG}%) : -${(totalBrut * d.remiseG/100).toFixed(2)}€</div>` : ''}
         ${acompte > 0 ? `<div style="color: #2ecc71; font-weight:bold;">Acompte déjà versé : -${acompte.toFixed(2)}€</div>` : ''}
         <div style="font-size:1.5em; font-weight:bold; margin-top:8px;">
-            ${acompte > 0 ? 'RESTE À PAYER' : 'NET À PAYER'} : ${netAPayer.toFixed(2)}€
+            ${acompte > 0 ? 'RESTE À PAYER' : 'NET À PAYER'} : ${netAPayer.toFixed(2)}€ ${lockIcon}
         </div>`;
 }
 
@@ -1955,39 +2022,49 @@ function checkAvailability(ref, addedQty, docId, isModIdx, catId) {
     return { ok: true };
 }
 
-    function addItem(catId) {
-        let r = document.getElementById('add-ref-'+catId).value.toUpperCase();
-        let q = parseInt(document.getElementById('add-qte-'+catId).value) || 1;
-        if(!stock.find(s => s.ref === r)) return alert("Article introuvable dans le stock");
-        let check = checkAvailability(r, q, activeDossierId, null, catId);
-if(!check.ok) {
-    if(!confirm(`⚠️ ALERTE STOCK\n\nArticle : ${check.nom} (${r})\nQuantité demandée : ${q}\nQuantité disponible : ${check.dispo}\n\nAjouter quand même ?`)) return;
-}
-        dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.push({ref:r, qte:q, coeff:null, remise:0, isCustom:false});
-        syncDossier();
+function addItem(catId) {
+    let r = document.getElementById('add-ref-'+catId).value.toUpperCase();
+    let q = parseInt(document.getElementById('add-qte-'+catId).value) || 1;
+    let d = dossiers.find(x => x.idDoc === activeDossierId); // Récupérer le dossier
+    
+    if(!stock.find(s => s.ref === r)) return alert("Article introuvable dans le stock");
+    let check = checkAvailability(r, q, activeDossierId, null, catId);
+    if(!check.ok) {
+        if(!confirm(`⚠️ ALERTE STOCK\n\nArticle : ${check.nom} (${r})\nQuantité demandée : ${q}\nQuantité disponible : ${check.dispo}\n\nAjouter quand même ?`)) return;
     }
+    
+    // On ajoute l'article avec le flag "isOffered" si le cadenas est activé
+    d.cats.find(c => c.id === catId).items.push({
+        ref: r, 
+        qte: q, 
+        coeff: null, 
+        remise: 0, 
+        isCustom: false,
+        isOffered: d.isLocked ? true : false
+    });
+    
+    syncDossier();
+}
+
+
 
     function addCustomItem(catId) {
-    let label = prompt("Nom de l'article / prestation ?"); 
-    if(!label) return;
+    let d = dossiers.find(x => x.idDoc === activeDossierId);
     
-    // On ajoute la demande du prestataire
-    let sousLoc = prompt("Prestataire de sous-location (laisser vide si aucun) :");
-    
-    let pUnit = parseFloat(prompt("Prix unitaire / Jour ?", "0")) || 0;
-    
-    // On enregistre sousLoc dans l'objet
-    dossiers.find(x => x.idDoc === activeDossierId).cats.find(c => c.id === catId).items.push({
-        label: label, 
-        sousLoc: sousLoc || "", // Enregistre la valeur ou une chaîne vide
-        pUnit: pUnit, 
+    d.cats.find(c => c.id === catId).items.push({
+        isCustom: true, 
+        label: "Nouvel article", 
+        pUnit: 0, 
         qte: 1, 
         coeff: null, 
         remise: 0, 
-        isCustom: true
-    }); 
+        sousLoc: "",
+        isOffered: d.isLocked ? true : false
+    });
+    
     syncDossier();
 }
+
 
 function editItem(catId, idx, key) {
     let d = dossiers.find(x => x.idDoc === activeDossierId);
@@ -2217,8 +2294,10 @@ function editItem(catId, idx, key) {
     }
     
     let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
-    let ligneHT = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
+    let ligneHT = it.isOffered ? 0 : (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
     catBrut += ligneHT;
+let labelNom = it.isOffered ? "[OFFERT] " + nom : nom;
+
     
     tableData.push({
         ref: it.isCustom ? 'MANU' : it.ref,
@@ -2704,22 +2783,31 @@ function renderDespenses() {
     let d = dossiers.find(x => x.idDoc === activeDossierId);
     
     // Récupérer le total du devis (net)
-    let devisTotal = 0;
+  let devisTotal = 0;
     if (d && d.cats) {
         d.cats.forEach(cat => {
             let catNet = 0;
             cat.items.forEach(it => {
                 let nom, pUnit;
-                if(it.isCustom) { nom = it.label; pUnit = it.pUnit; }
-                else { let s = stock.find(x => x.ref === it.ref); pUnit = s ? s.ploc : 0; }
+                if(it.isCustom) { 
+                    nom = it.label; 
+                    pUnit = it.pUnit; 
+                } else { 
+                    let s = stock.find(x => x.ref === it.ref); 
+                    pUnit = s ? s.ploc : 0; 
+                }
                 let itemCoeff = (it.coeff !== undefined && it.coeff !== null && it.coeff !== "") ? it.coeff : d.coeff;
-                let ligneNet = (it.qte * pUnit * itemCoeff) * (1 - it.remise/100);
+                
+                // MODIFICATION ICI : On vérifie si l'article est offert suite au lock facturation
+                let estOffert = it.isOffered || false;
+                let ligneNet = estOffert ? 0 : (it.qte * pUnit * itemCoeff) * (1 - (it.remise || 0) / 100);
+                
                 catNet += ligneNet;
             });
-            let catFinal = catNet * (1 - cat.remise/100);
+            let catFinal = catNet * (1 - (cat.remise || 0) / 100);
             devisTotal += catFinal;
         });
-        devisTotal = devisTotal * (1 - d.remiseG/100);
+        devisTotal = devisTotal * (1 - (d.remiseG || 0) / 100);
     }
 
     // Calculer les totaux
@@ -3166,7 +3254,12 @@ async function renderAnalytics() {
                     let sInfo = stock.find(s => s.ref === it.ref);
                     let pUnit = it.isCustom ? (it.pUnit || 0) : (sInfo?.ploc || 0);
                     let coeff = (it.coeff !== null && it.coeff !== undefined && it.coeff !== "") ? it.coeff : (d.coeff || 1);
-                    catBrut += (it.qte * pUnit * coeff) * (1 - (it.remise || 0) / 100);
+                    
+                    // --- MODIFICATION ICI : Ne compte pas le CA si c'est offert ---
+                    let estOffert = it.isOffered || false;
+                    let ligneBrut = estOffert ? 0 : (it.qte * pUnit * coeff) * (1 - (it.remise || 0) / 100);
+                    catBrut += ligneBrut;
+                    // ---------------------------------------------------------------
                     
                     if (!it.isCustom && sInfo) {
                         if (anaMatosCatFilter === 'all' || sInfo.cat === anaMatosCatFilter) {
@@ -3181,6 +3274,7 @@ async function renderAnalytics() {
         dCA = dCA * (1 - (d.remiseG || 0) / 100);
         totalCA += dCA;
         monthlyData[monthIdx].ca += dCA; // Ajout au graphique mensuel
+
 
         // Top Matériel
         matosDossier.forEach(ref => {
