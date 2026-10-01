@@ -20,6 +20,7 @@
 
 
 
+
     <style>
         :root {
             --bleu-marine: #0a2342;
@@ -573,6 +574,9 @@
 
 <nav id="main-nav">
     <button id="nav-dossiers" class="actif" onclick="showTab('dossiers')">📁 Dossiers</button>
+ <button id="nav-demandes-web" onclick="showTab('demandes-web')">
+   Demandes Web
+ </button>
 <button id="nav-clients" onclick="showTab('clients')">👥 Clients</button>
     <button id="nav-stock" onclick="showTab('stock')">📦 Stock & Tarifs</button>
     <button id="nav-dispo" onclick="showTab('dispo')">📅 Disponibilités</button>
@@ -660,6 +664,55 @@
     </div>
 </div>
 
+<!-- NOUVELLE VUE : DEMANDES WEB -->
+<div id="tab-demandes-web" class="container" style="display:none;">
+    <h1>Demandes Web (Catalogue)</h1>
+    
+    <!-- Zone d'affichage si aucune demande n'est sélectionnée -->
+    <div id="liste-demandes-entrantes">
+        <!-- Le tableau des demandes en attente s'affichera ici -->
+    </div>
+
+    <!-- Interface Double Colonne (cachée par défaut) -->
+    <div id="workspace-demandes" style="display:none; grid-template-columns: minmax(280px, 1fr) minmax(500px, 2fr); gap:20px;">
+
+<!-- Bouton retour en haut de l'espace de travail -->
+<div style="grid-column: 1 / -1; margin-bottom: 15px;">
+  <button type="button" class="btn-secondary" onclick="fermerWorkspaceDemande()" style="padding: 8px 14px; cursor: pointer;">
+    ← Retour aux demandes entrantes
+  </button>
+</div>
+        
+        <!-- Colonne de Gauche : La liste de la demande du client -->
+ <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+            <h3>Demande de <span id="dw-client-nom"></span></h3>
+            <p>Contact : <span id="dw-client-contact"></span></p>
+            <p style="color: #174b49; font-weight: bold;">
+              Dates : <span id="dw-client-dates"></span>
+            </p>
+            <hr>
+            <h4>Matériel souhaité :</h4>
+            <div id="dw-lignes-demande">
+                <!-- Les cartes d'articles glissables apparaîtront ici -->
+            </div>
+        </div>
+
+
+        <!-- Colonne de Droite : Votre Devis -->
+        <div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
+            <h3>Création du Devis</h3>
+            
+            <button onclick="ajouterCategorieDW()">+ Ajouter Catégorie</button>
+            <br><br>
+            
+            <!-- C'est ici que l'on va générer vos catégories de devis (similaire à dossier-cats-container) -->
+            <div id="dw-devis-container"></div>
+            
+            <br>
+            <button type="button" class="btn-valider" onclick="validerDevisDW(event)">Enregistrer ce devis</button>
+        </div>
+    </div>
+</div>
 
 <!-- STOCK -->
 <div id="tab-stock" class="container">
@@ -688,6 +741,25 @@
             <div><label>Quantité</label><input type="number" id="s-qte"></div>
             <div><label>Prix Achat (€)</label><input type="number" step="0.01" id="s-pachat"></div>
             <div><label>Prix Loc/J (€)</label><input type="number" step="0.01" id="s-ploc"></div>
+<!-- Nouveaux champs pour le catalogue public -->
+<div>
+  <label>Description détaillée (Catalogue)</label>
+  <textarea id="s-desc" rows="3" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:5px;"></textarea>
+</div>
+
+<div>
+  <label>Photo de l'article</label>
+  <!-- Input fichier qui n'accepte que les images -->
+  <input type="file" id="s-image" accept="image/*">
+  <!-- Petit aperçu optionnel et champ caché pour stocker l'URL -->
+  <input type="hidden" id="s-image-url">
+  <div id="s-image-preview" style="margin-top:5px; font-size:0.9em; color:#666;"></div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 25px;">
+  <input type="checkbox" id="s-visible" style="width:20px; height:20px;">
+  <label for="s-visible" style="margin:0; cursor:pointer;">Afficher sur le catalogue public</label>
+</div>
         </div>
 
         <!-- 2. Les boutons d'action -->
@@ -1119,6 +1191,7 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
+
     const PASS_ADMIN = "1234 ARGENTIQUE";
     let stock = [], clients = [], dossiers = [], settings = {};
     let activeDossierId = null;
@@ -1288,7 +1361,7 @@ function updateDatalists() {
 // ==========================================
 function showTab(tab) {
     // 1. On définit tous les onglets existants
-    const allTabs = ['dossiers', 'stock', 'clients', 'dispo', 'admin', 'analytics', 'calendar'];
+    const allTabs = ['dossiers','demandes-web', 'stock', 'clients', 'dispo', 'admin', 'analytics', 'calendar'];
 
     // 2. On masque tous les onglets et on retire la classe 'actif' des boutons
     allTabs.forEach(id => {
@@ -1334,6 +1407,11 @@ function showTab(tab) {
         // calcule bien la taille du conteneur qui vient de passer en "display: block"
         setTimeout(() => { renderCalendar(); }, 10);
     }
+
+if (tab === 'demandes-web') {
+        chargerDemandesWeb();
+    }
+
 }
 
     // ==========================================
@@ -1380,6 +1458,42 @@ function showTab(tab) {
         };
         reader.readAsDataURL(file);
     }
+
+document.getElementById('s-image').addEventListener('change', async function(e) {
+  let file = e.target.files[0];
+  if (!file) return;
+
+  const preview = document.getElementById('s-image-preview');
+  preview.innerText = "Envoi de l'image en cours...";
+
+  // Configuration Cloudinary existante dans votre code
+  const CLOUDINARY_CLOUD = 'dyduhm5w6';
+  const CLOUDINARY_PRESET = 'ml_default1';
+  
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  formData.append('folder', 'catalogue_stock'); // On crée un dossier spécifique pour le stock
+
+  try {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await res.json();
+    
+    if (data.secure_url) {
+      document.getElementById('s-image-url').value = data.secure_url;
+      preview.innerHTML = `<a href="${data.secure_url}" target="_blank">Image chargée avec succès !</a>`;
+    } else {
+      throw new Error("Pas d'URL retournée");
+    }
+  } catch (error) {
+    console.error("Erreur Cloudinary:", error);
+    preview.innerText = "Erreur lors de l'envoi de l'image.";
+  }
+});
 
   function saveAdminSettings() {
     let data = {
@@ -1441,52 +1555,99 @@ console.log("Succès !");  // 👈 ET CA
     });
 }
 
+    async function saveStock() {
+  let ref = document.getElementById('s-ref').value.toUpperCase();
+  let nom = document.getElementById('s-nom').value;
+  let cat = document.getElementById('s-cat').value;
+  let qte = parseInt(document.getElementById('s-qte').value) || 0;
+  let pachat = parseFloat(document.getElementById('s-pachat').value) || 0;
+  let ploc = parseFloat(document.getElementById('s-ploc').value) || 0;
+  
+  // Nouveaux champs
+  let desc = document.getElementById('s-desc').value;
+  let visible = document.getElementById('s-visible').checked;
+  let imageUrl = document.getElementById('s-image-url').value; // Garde l'ancienne image si non modifiée
 
-    function saveStock() {
-    let ref = document.getElementById('s-ref').value.toUpperCase();
-    let nom = document.getElementById('s-nom').value;
-    let cat = document.getElementById('s-cat').value; // Récupère la catégorie
-    let qte = parseInt(document.getElementById('s-qte').value) || 0;
-    let pachat = parseFloat(document.getElementById('s-pachat').value) || 0;
-    let ploc = parseFloat(document.getElementById('s-ploc').value) || 0;
+  if (!ref || !nom || !cat) {
+    return alert("Réf, Nom et Catégorie obligatoires");
+  }
+
+  
+  db.collection("stock").doc(ref).set({
+    ref,
+    nom,
+    cat,
+    qte,
+    pachat,
+    ploc,
+    desc,          // Nouveau champ
+    visible,       // Nouveau champ
+    imageUrl       // Nouveau champ
+  }).then(() => {
+    // Reset de tous les champs
+    document.getElementById('s-ref').value = '';
+    document.getElementById('s-nom').value = '';
+    document.getElementById('s-cat').value = '';
+    document.getElementById('s-qte').value = '';
+    document.getElementById('s-pachat').value = '';
+    document.getElementById('s-ploc').value = '';
     
-    if(!ref || !nom || !cat) return alert("Réf, Nom et Catégorie obligatoires");
+    // Reset des nouveaux champs
+    document.getElementById('s-desc').value = '';
+    document.getElementById('s-visible').checked = false;
+    document.getElementById('s-image').value = '';
+    document.getElementById('s-image-url').value = '';
+    document.getElementById('s-image-preview').innerText = '';
 
-    db.collection("stock").doc(ref).set({
-        ref, nom, cat, qte, pachat, ploc
-    }).then(() => {
-        // Reset des champs
-        document.getElementById('s-ref').value=''; 
-        document.getElementById('s-nom').value='';
-        document.getElementById('s-cat').value='';
-        document.getElementById('s-qte').value=''; 
-        document.getElementById('s-pachat').value='';
-        document.getElementById('s-ploc').value='';
-        editStockRef = null; 
-        document.getElementById('btn-cancel-stock').style.display='none';
-    });
+    editStockRef = null;
+    document.getElementById('btn-cancel-stock').style.display = 'none';
+  });
 }
 
-   function editStock(ref) {
-    let s = stock.find(x => x.ref === ref); 
-    if(!s) return;
-    document.getElementById('s-ref').value = s.ref; 
-    document.getElementById('s-nom').value = s.nom;
-    document.getElementById('s-cat').value = s.cat || ''; // Charge la catégorie
-    document.getElementById('s-qte').value = s.qte; 
-    document.getElementById('s-pachat').value = s.pachat||0;
-    document.getElementById('s-ploc').value = s.ploc||0;
-    editStockRef = ref; 
-    document.getElementById('btn-cancel-stock').style.display='inline-block';
+function editStock(ref) {
+  let s = stock.find(x => x.ref === ref);
+  if (!s) return;
+
+  document.getElementById('s-ref').value = s.ref || '';
+  document.getElementById('s-nom').value = s.nom || '';
+  document.getElementById('s-cat').value = s.cat || '';
+  document.getElementById('s-qte').value = s.qte || 0;
+  document.getElementById('s-pachat').value = s.pachat || 0;
+  document.getElementById('s-ploc').value = s.ploc || 0;
+  
+  // Nouveaux champs pour le catalogue
+  document.getElementById('s-desc').value = s.desc ? s.desc : '';
+  document.getElementById('s-visible').checked = s.visible === true;
+  document.getElementById('s-image-url').value = s.imageUrl ? s.imageUrl : '';
+  
+  document.getElementById('s-image').value = ''; 
+  
+  if (s.imageUrl) {
+    document.getElementById('s-image-preview').innerHTML = `<a href="${s.imageUrl}" target="_blank">Voir l'image actuelle</a>`;
+  } else {
+    document.getElementById('s-image-preview').innerText = "Aucune image actuellement";
+  }
+
+  editStockRef = ref;
+  document.getElementById('btn-cancel-stock').style.display = 'inline-block';
 }
+function cancelStock() {
+  document.getElementById('s-ref').value = '';
+  document.getElementById('s-nom').value = '';
+  document.getElementById('s-cat').value = '';
+  document.getElementById('s-qte').value = '';
+  document.getElementById('s-pachat').value = '';
+  document.getElementById('s-ploc').value = '';
+  
+  document.getElementById('s-desc').value = '';
+  document.getElementById('s-visible').checked = false;
+  document.getElementById('s-image').value = '';
+  document.getElementById('s-image-url').value = '';
+  document.getElementById('s-image-preview').innerText = '';
 
-    function cancelStock() {
-        document.getElementById('s-ref').value=''; document.getElementById('s-nom').value='';
-        document.getElementById('s-qte').value=''; document.getElementById('s-pachat').value='';
-        document.getElementById('s-ploc').value='';
-        editStockRef = null; document.getElementById('btn-cancel-stock').style.display='none';
-    }
-
+  editStockRef = null;
+  document.getElementById('btn-cancel-stock').style.display = 'none';
+}
     function deleteStock(ref) { if(confirm("Supprimer "+ref+" ?")) db.collection("stock").doc(ref).delete(); }
 
     // ==========================================
@@ -2619,8 +2780,8 @@ const fileName = `${type.toUpperCase()}_${d.nom}_${dateStr}_${heureStr}.pdf`;
 
 // ========== PIÈCES JOINTES ==========
 
-const CLOUDINARY_CLOUD = 'dyduhm5w6';
-const CLOUDINARY_PRESET = 'ml_default1';
+let CLOUDINARY_CLOUD = 'dyduhm5w6';
+let CLOUDINARY_PRESET = 'ml_default1';
 
 
 async function uploadPiecesJointes(files) {
@@ -4018,6 +4179,421 @@ async function exportBackupComplet() {
     }
 }
 
+// ==========================================
+// MODULE DEMANDES WEB (CATALOGUE)
+// ==========================================
+
+// Variable globale pour mémoriser les données complètes de la demande ouverte
+let dwCurrentDemande = null;
+
+// Fonction pour fermer le workspace et revenir à la liste
+function fermerWorkspaceDemande() {
+  document.getElementById('workspace-demandes').style.display = 'none';
+  document.getElementById('liste-demandes-entrantes').style.display = 'block';
+  document.getElementById('dw-devis-container').innerHTML = '';
+  dwCurrentDemande = null;
+  chargerDemandesWeb();
+}
+
+// 1. Mise à jour de chargerDemandesWeb (on transmet l'objet complet doc.data())
+async function chargerDemandesWeb() {
+  const container = document.getElementById('liste-demandes-entrantes');
+  if (!container) return;
+  container.innerHTML = '<em>Chargement des demandes...</em>';
+  
+  try {
+    const snapshot = await db.collection('demandes').where('statut', '==', 'nouvelle').get();
+    
+    if (snapshot.empty) {
+      container.innerHTML = '<p>Aucune nouvelle demande pour le moment.</p>';
+      return;
+    }
+
+    let html = '<table class="data-table"><thead><tr><th>Date</th><th>Client</th><th>Action</th></tr></thead><tbody>';
+    
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const rawData = encodeURIComponent(JSON.stringify({ id: doc.id, ...data }));
+      
+      html += `
+        <tr>
+          <td>${data.dateDemande || (data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString('fr-FR') : 'Récemment')}</td>
+          <td>${data.prenom || ''} ${data.nom || ''}</td>
+          <td>
+            <button onclick="ouvrirWorkspaceDemande('${rawData}')">
+              Transposer en devis
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  } catch (error) {
+    console.error("Erreur lors du chargement des demandes :", error);
+    container.innerHTML = '<p>Erreur lors du chargement.</p>';
+  }
+}
+
+// 2. Ouvrir le workspace avec initialisation
+function ouvrirWorkspaceDemande(rawJson) {
+  const data = JSON.parse(decodeURIComponent(rawJson));
+  dwCurrentDemande = data;
+  
+  document.getElementById('liste-demandes-entrantes').style.display = 'none';
+  document.getElementById('workspace-demandes').style.display = 'grid';
+  
+  const clientNom = `${data.prenom || ''} ${data.nom || ''}`.trim() || 'Client';
+  const clientContact = `${data.email || ''} ${data.telephone ? '— ' + data.telephone : ''}`.trim();
+  
+  document.getElementById('dw-client-nom').innerText = clientNom;
+  document.getElementById('dw-client-contact').innerText = clientContact;
+  
+  dwCurrentDates = { debut: data.dateDebut || '', fin: data.dateFin || '' };
+  let dateText = "Dates non précisées";
+  if (data.dateDebut && data.dateFin) {
+    dateText = `Du ${new Date(data.dateDebut).toLocaleDateString('fr-FR')} au ${new Date(data.dateFin).toLocaleDateString('fr-FR')}`;
+  }
+  const elDates = document.getElementById('dw-client-dates');
+  if (elDates) elDates.innerText = dateText;
+  
+  const itemsContainer = document.getElementById('dw-lignes-demande');
+  itemsContainer.innerHTML = '';
+  
+  const items = data.items || [];
+  items.forEach((item, index) => {
+    itemsContainer.innerHTML += `
+      <div class="dw-item-card" draggable="true" ondragstart="dragStart(event)" 
+           id="dw-item-${index}" 
+           data-ref="${item.ref || item.id || ''}" 
+           data-nom="${item.nom || ''}" 
+           data-qte="${item.quantite || 1}" 
+           style="border:1px solid #ccc; padding:10px; margin-bottom:10px; background:white; cursor:grab; border-radius:4px;">
+        <strong>${item.quantite || 1}x ${item.nom || item.ref}</strong>
+      </div>
+    `;
+  });
+
+  document.getElementById('dw-devis-container').innerHTML = '';
+  ajouterCategorieDW();
+}
+
+// 3. Enregistrement et transposition en vrai devis dans votre logiciel
+async function validerDevisDW(e) {
+  if (e && e.preventDefault) e.preventDefault();
+
+  if (!dwCurrentDemande) {
+    alert("Aucune demande en cours.");
+    return;
+  }
+
+  // 1. Récupération des catégories et articles du devis monté
+  const catZones = document.querySelectorAll('#dw-devis-container .dw-dropzone');
+  const cats = [];
+
+  catZones.forEach((zone, idx) => {
+    const inputNom = zone.querySelector('.dw-cat-title');
+    const nomCat = inputNom ? inputNom.value.trim() : `Catégorie ${idx + 1}`;
+    const itemsNodes = zone.querySelectorAll('.dw-item-card');
+    const items = [];
+
+    itemsNodes.forEach(card => {
+      const isSousLoc = card.dataset.isSousLoc === "true";
+      if (isSousLoc) {
+        items.push({
+          isCustom: true,
+          label: card.dataset.nom || 'Article Sous-location',
+          pUnit: 0,
+          qte: Number(card.dataset.qte) || 1,
+          coeff: null,
+          remise: 0,
+          sousLoc: card.dataset.fournisseur || 'Sous-location',
+          isOffered: false
+        });
+      } else {
+        items.push({
+          ref: card.dataset.ref || '',
+          qte: Number(card.dataset.qte) || 1,
+          coeff: null,
+          remise: 0,
+          isCustom: false,
+          isOffered: false
+        });
+      }
+    });
+
+    if (items.length > 0 || catZones.length === 1) {
+      cats.push({
+        id: Date.now() + idx,
+        nom: nomCat || `Catégorie ${idx + 1}`,
+        remise: 0,
+        items: items
+      });
+    }
+  });
+
+  const btn = document.querySelector('#workspace-demandes .btn-valider');
+  const originalText = btn ? btn.innerText : 'Enregistrer ce devis';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = 'Enregistrement en cours...';
+  }
+
+  try {
+    // 2. Gestion du Client
+    let clientId = '';
+    const cliNomComplet = `${dwCurrentDemande.prenom || ''} ${dwCurrentDemande.nom || ''}`.trim() || 'Client Web';
+    const email = (dwCurrentDemande.email || '').trim().toLowerCase();
+    const tel = (dwCurrentDemande.telephone || '').trim();
+
+    let existingClient = clients.find(c => (email && c.mail && c.mail.toLowerCase() === email) || (tel && c.tel === tel));
+
+    if (existingClient) {
+      clientId = existingClient.idDoc;
+    } else {
+      const newCliData = {
+        ent: '',
+        nom: cliNomComplet,
+        tel: tel,
+        mail: email,
+        adr: '',
+        cp: '',
+        ville: '',
+        notes: 'Créé automatiquement via Demande Web Catalogue'
+      };
+      const cliRef = await db.collection('clients').add(newCliData);
+      clientId = cliRef.id;
+      clients.push({ ...newCliData, idDoc: clientId });
+    }
+
+    // 3. Construction et enregistrement du Devis
+    const newDossier = {
+      nom: `Devis - ${cliNomComplet}`,
+      cli: clientId,
+      type: 'location comptoir',
+      coeff: 1,
+      remiseG: 0,
+      cats: cats,
+      immoD: dwCurrentDates.debut || '',
+      immoF: dwCurrentDates.fin || '',
+      locD: dwCurrentDates.debut || '',
+      locF: dwCurrentDates.fin || '',
+      notes: `Demande Web transmise le ${new Date().toLocaleDateString('fr-FR')}`,
+      status: 'devis',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    const dossierRef = await db.collection('dossiers').add(newDossier);
+    dossiers.push({ ...newDossier, idDoc: dossierRef.id });
+
+    // 4. Passage de la demande à 'traitee'
+    if (dwCurrentDemande.id) {
+      await db.collection('demandes').doc(dwCurrentDemande.id).update({
+        statut: 'traitee',
+        dossierId: dossierRef.id,
+        processedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    alert("✅ Le devis a bien été créé !");
+
+    // 5. Fermeture du workspace et redirection directe vers le devis créé
+    fermerWorkspaceDemande();
+    showTab('dossiers');
+    openDossier(dossierRef.id);
+
+  } catch (err) {
+    console.error("Erreur lors de l'enregistrement du devis :", err);
+    alert("Une erreur est survenue lors de l'enregistrement : " + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = originalText;
+    }
+  }
+}
+// ==========================================
+// GLISSER-DÉPOSER & CRÉATION DE DEVIS (CATALOGUE)
+// ==========================================
+
+// 1. Début du glisser (sauvegarde l'ID de l'élément)
+function dragStart(event) {
+  event.dataTransfer.setData("text/plain", event.target.id);
+}
+
+// 2. Autoriser la zone à recevoir un élément
+function allowDrop(event) {
+  event.preventDefault(); // Nécessaire pour autoriser le drop
+}
+
+// 3. Action lors du relâchement (drop) de l'article
+// Variable temporaire pour stocker l'élément en cours de traitement lors d'un conflit
+let dwPendingDrop = null;
+
+// Vérification de dispo adaptée aux dates demandées
+function checkAvailabilityDW(ref, requestedQty, dateDebut, dateFin) {
+  if (!dateDebut || !dateFin) return { ok: true };
+  let s = stock.find(x => x.ref === ref);
+  if (!s) return { ok: true };
+
+  let start = new Date(dateDebut), end = new Date(dateFin);
+  let minDispo = Infinity;
+
+  for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
+    let iso = day.toISOString().split('T')[0];
+    let booked = 0;
+
+    dossiers.forEach(dos => {
+      if (dos.immoD && dos.immoF && iso >= dos.immoD && iso <= dos.immoF) {
+        dos.cats.forEach(c => c.items.forEach(it => {
+          if (it.ref === ref && !it.isCustom) {
+            booked += Number(it.qte) || 0;
+          }
+        }));
+      }
+    });
+
+    let dispo = (Number(s.qte) || 0) - booked;
+    if (dispo < minDispo) minDispo = dispo;
+    if (booked + requestedQty > (Number(s.qte) || 0)) {
+      return { ok: false, dispo: Math.max(0, dispo), totalStock: s.qte, nom: s.nom };
+    }
+  }
+  return { ok: true };
+}
+
+// 3. Action au drop
+function drop(event) {
+  event.preventDefault();
+  const id = event.dataTransfer.getData("text/plain");
+  const draggableElement = document.getElementById(id);
+  const dropzone = event.target.closest('.dw-dropzone');
+  
+  if (!dropzone || !draggableElement) return;
+
+  const ref = draggableElement.dataset.ref;
+  const nom = draggableElement.dataset.nom;
+  const qte = Number(draggableElement.dataset.qte) || 1;
+
+  // On vérifie la dispo
+  const check = checkAvailabilityDW(ref, qte, dwCurrentDates.debut, dwCurrentDates.fin);
+
+  if (!check.ok) {
+    // Stock insuffisant -> On ouvre la pop up
+    dwPendingDrop = { element: draggableElement, dropzone: dropzone, qte: qte, ref: ref, nom: nom };
+    ouvrirModalDispoDW(nom, qte, check.dispo);
+    return;
+  }
+
+  // Stock OK -> On déplace directement
+  insererDansDevisDW(draggableElement, dropzone);
+}
+
+function insererDansDevisDW(element, dropzone, labelSupplementaire = '') {
+  dropzone.querySelector('.dw-cat-items').appendChild(element);
+  element.style.border = "none";
+  element.style.borderBottom = "1px solid #eee";
+  element.style.boxShadow = "none";
+  element.setAttribute('draggable', 'false'); // Une fois placé, on fixe la ligne
+  if (labelSupplementaire) {
+    element.innerHTML += ` <span style="font-size:0.85em; font-weight:bold;">${labelSupplementaire}</span>`;
+  }
+}
+
+// GESTION DE LA MODALE
+function ouvrirModalDispoDW(nom, qteDemandee, dispoRestante) {
+  document.getElementById('dw-modal-msg').innerHTML = `
+    L'équipement <strong>${nom}</strong> (Qté: ${qteDemandee}) n'est pas disponible pour ces dates.<br>
+    Quantité restante disponible sur cette période : <strong>${dispoRestante}</strong>.
+  `;
+  document.getElementById('dw-search-alt').value = '';
+  document.getElementById('dw-select-alt').style.display = 'none';
+  document.getElementById('dw-modal-dispo').style.display = 'flex';
+}
+
+function fermerModalDispoDW() {
+  document.getElementById('dw-modal-dispo').style.display = 'none';
+  dwPendingDrop = null;
+}
+
+// Recherche dynamique dans le stock pour remplacer
+function rechercherAlternativeDW(query) {
+  const select = document.getElementById('dw-select-alt');
+  const q = query.trim().toLowerCase();
+  if (!q) {
+    select.style.display = 'none';
+    return;
+  }
+  
+  const results = stock.filter(s => (s.nom && s.nom.toLowerCase().includes(q)) || (s.ref && s.ref.toLowerCase().includes(q)));
+  if (results.length === 0) {
+    select.style.display = 'none';
+    return;
+  }
+
+  select.innerHTML = results.map(s => `<option value="${s.ref}" data-nom="${s.nom}">${s.nom} (Réf: ${s.ref} - Stock total: ${s.qte})</option>`).join('');
+  select.style.display = 'block';
+}
+
+// 1. Bouton "Remplacer par ce produit"
+function validerRemplacementDW() {
+  const select = document.getElementById('dw-select-alt');
+  if (!select || select.style.display === 'none' || !select.value) {
+    alert("Veuillez sélectionner un article de remplacement dans la liste.");
+    return;
+  }
+
+  const opt = select.selectedOptions[0];
+  const newRef = select.value;
+  const newNom = opt.dataset.nom;
+
+  if (dwPendingDrop) {
+    dwPendingDrop.element.dataset.ref = newRef;
+    dwPendingDrop.element.dataset.nom = newNom;
+    dwPendingDrop.element.querySelector('strong').innerText = `${dwPendingDrop.qte}x ${newNom}`;
+    insererDansDevisDW(dwPendingDrop.element, dwPendingDrop.dropzone, `<span style="color:#28a745;">(Remplacement de : ${dwPendingDrop.nom})</span>`);
+  }
+  fermerModalDispoDW();
+}
+
+// 2. Bouton "Conserver en sous-location"
+function validerSousLocDW() {
+  if (dwPendingDrop) {
+    dwPendingDrop.element.dataset.isSousLoc = "true";
+    insererDansDevisDW(dwPendingDrop.element, dwPendingDrop.dropzone, `<span style="color:#17a2b8;">(Sous-location)</span>`);
+  }
+  fermerModalDispoDW();
+}
+
+// 4. Ajouter une nouvelle catégorie dans la colonne de droite
+function ajouterCategorieDW() {
+  const container = document.getElementById('dw-devis-container');
+  
+  const catDiv = document.createElement('div');
+  catDiv.className = "dw-dropzone";
+  // Style de la zone de drop
+  catDiv.style.border = "2px dashed #ccc";
+  catDiv.style.borderRadius = "8px";
+  catDiv.style.padding = "10px";
+  catDiv.style.marginBottom = "15px";
+  catDiv.style.minHeight = "80px";
+  catDiv.style.background = "#f9f9f9";
+  
+  // On ajoute les événements pour le Drag & Drop
+  catDiv.setAttribute("ondragover", "allowDrop(event)");
+  catDiv.setAttribute("ondrop", "drop(event)");
+  
+  catDiv.innerHTML = `
+    <input type="text" placeholder="Nom de la catégorie (ex: Son, Lumière...)" style="font-weight:bold; margin-bottom:10px; width:100%; padding:5px;">
+    <div class="dw-cat-items" style="min-height: 40px;">
+        <!-- Les articles glissés apparaîtront ici -->
+    </div>
+  `;
+  
+  container.appendChild(catDiv);
+}
+
 
 </script>
 
@@ -4037,6 +4613,34 @@ async function exportBackupComplet() {
         
         <div id="pj-liste"></div>
     </div>
+</div>
+
+<!-- MODALE CONFLIT DISPONIBILITÉ (DEMANDES WEB) -->
+<div id="dw-modal-dispo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+  <div style="background:#fff; border-radius:8px; padding:20px; width:90%; max-width:500px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+    <h3 style="color:#d9534f; margin-top:0;">⚠️ Matériel indisponible</h3>
+    <p id="dw-modal-msg" style="font-size:0.95em; color:#555;"></p>
+    
+    <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+
+    <!-- Option 1 : Remplacer par un article du stock -->
+    <div style="margin-bottom:20px;">
+      <label style="font-weight:bold; display:block; margin-bottom:5px;">1. Remplacer par un autre matériel (Stock)</label>
+      <input type="text" id="dw-search-alt" placeholder="Rechercher du matériel..." oninput="rechercherAlternativeDW(this.value)" style="width:100%; padding:8px; box-sizing:border-box; margin-bottom:5px;">
+      <select id="dw-select-alt" style="width:100%; padding:8px; display:none; margin-bottom:8px;"></select>
+      <button type="button" onclick="validerRemplacementDW()" style="background:#28a745; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">Remplacer par ce produit</button>
+    </div>
+
+    <!-- Option 2 : Sous-location -->
+    <div style="margin-bottom:20px;">
+      <label style="font-weight:bold; display:block; margin-bottom:5px;">2. Passer en Sous-location</label>
+      <button type="button" onclick="validerSousLocDW()" style="background:#17a2b8; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">Conserver en sous-location</button>
+    </div>
+
+    <div style="text-align:right;">
+      <button type="button" onclick="fermerModalDispoDW()" style="background:#6c757d; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Annuler</button>
+    </div>
+  </div>
 </div>
 
 </body>
