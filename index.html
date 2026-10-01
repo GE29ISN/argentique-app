@@ -674,44 +674,51 @@
     </div>
 
     <!-- Interface Double Colonne (cachée par défaut) -->
-    <div id="workspace-demandes" style="display:none; grid-template-columns: minmax(280px, 1fr) minmax(500px, 2fr); gap:20px;">
+  <div id="workspace-demandes" style="display:none; grid-template-columns: minmax(280px, 1fr) minmax(500px, 2fr); gap:20px;">
 
-<!-- Bouton retour en haut de l'espace de travail -->
-<div style="grid-column: 1 / -1; margin-bottom: 15px;">
-  <button type="button" class="btn-secondary" onclick="fermerWorkspaceDemande()" style="padding: 8px 14px; cursor: pointer;">
-    ← Retour aux demandes entrantes
-  </button>
-</div>
-        
-        <!-- Colonne de Gauche : La liste de la demande du client -->
- <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-            <h3>Demande de <span id="dw-client-nom"></span></h3>
-            <p>Contact : <span id="dw-client-contact"></span></p>
-            <p style="color: #174b49; font-weight: bold;">
-              Dates : <span id="dw-client-dates"></span>
-            </p>
-            <hr>
-            <h4>Matériel souhaité :</h4>
-            <div id="dw-lignes-demande">
-                <!-- Les cartes d'articles glissables apparaîtront ici -->
-            </div>
-        </div>
-
-
-        <!-- Colonne de Droite : Votre Devis -->
-        <div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
-            <h3>Création du Devis</h3>
-            
-            <button onclick="ajouterCategorieDW()">+ Ajouter Catégorie</button>
-            <br><br>
-            
-            <!-- C'est ici que l'on va générer vos catégories de devis (similaire à dossier-cats-container) -->
-            <div id="dw-devis-container"></div>
-            
-            <br>
-            <button type="button" class="btn-valider" onclick="validerDevisDW(event)">Enregistrer ce devis</button>
-        </div>
+    <!-- Bouton retour en haut de l'espace de travail -->
+    <div style="grid-column: 1 / -1; margin-bottom: 5px;">
+      <button type="button" class="btn-secondary" onclick="fermerWorkspaceDemande()" style="padding: 8px 14px; cursor: pointer;">
+        ← Retour aux demandes entrantes
+      </button>
     </div>
+        
+    <!-- Colonne de Gauche : La liste de la demande du client -->
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; height: calc(100vh - 200px); display: flex; flex-direction: column; box-sizing: border-box;">
+      <div style="flex-shrink: 0;">
+        <h3 style="margin-top: 0;">Demande de <span id="dw-client-nom"></span></h3>
+        <p style="margin: 4px 0;">Contact : <span id="dw-client-contact"></span></p>
+        <p style="color: #174b49; font-weight: bold; margin: 4px 0 10px 0;">
+          Dates : <span id="dw-client-dates"></span>
+        </p>
+        <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ccc;">
+        <h4 style="margin: 5px 0 10px 0;">Matériel souhaité :</h4>
+      </div>
+      
+      <!-- Zone déroulante indépendante pour les articles -->
+      <div id="dw-lignes-demande" style="flex: 1; overflow-y: auto; padding-right: 8px;">
+          <!-- Les cartes d'articles glissables apparaîtront ici -->
+      </div>
+    </div>
+
+    <!-- Colonne de Droite : Votre Devis -->
+    <div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; background: #ffffff; height: calc(100vh - 200px); display: flex; flex-direction: column; box-sizing: border-box;">
+      <div style="flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="margin: 0;">Création du Devis</h3>
+        <button type="button" onclick="ajouterCategorieDW()" style="padding: 6px 12px; cursor: pointer;">+ Ajouter Catégorie</button>
+      </div>
+      
+      <!-- Zone déroulante indépendante pour le devis -->
+      <div id="dw-devis-container" style="flex: 1; overflow-y: auto; padding-right: 8px;">
+        <!-- C'est ici que l'on va générer vos catégories de devis -->
+      </div>
+      
+      <div style="flex-shrink: 0; padding-top: 12px; border-top: 1px solid #eee; margin-top: 10px;">
+        <button type="button" class="btn-valider" onclick="validerDevisDW(event)" style="width: 100%; padding: 10px; font-weight: bold; cursor: pointer;">Enregistrer ce devis</button>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <!-- STOCK -->
@@ -1201,6 +1208,7 @@
 let currentStockCat = 'all'; // Par défaut on affiche tout
 let anaMatosCatFilter = 'all'; 
 const STOCK_CATEGORIES = ["Son", "Lumière", "Vidéo", "Structure", "Distribution Electrique", "Interphonie", "Câblage"];
+let toutesLesDemandesWeb = {};
 
 function changeAnaMatosCat(cat) {
     anaMatosCatFilter = cat;
@@ -4196,6 +4204,9 @@ function fermerWorkspaceDemande() {
 }
 
 // 1. Mise à jour de chargerDemandesWeb (on transmet l'objet complet doc.data())
+
+
+
 async function chargerDemandesWeb() {
   const container = document.getElementById('liste-demandes-entrantes');
   if (!container) return;
@@ -4209,18 +4220,22 @@ async function chargerDemandesWeb() {
       return;
     }
 
+    toutesLesDemandesWeb = {}; // On réinitialise l'objet
     let html = '<table class="data-table"><thead><tr><th>Date</th><th>Client</th><th>Action</th></tr></thead><tbody>';
     
     snapshot.forEach(doc => {
       const data = doc.data();
-      const rawData = encodeURIComponent(JSON.stringify({ id: doc.id, ...data }));
+      // On stocke la demande dans notre dictionnaire avec son ID
+      toutesLesDemandesWeb[doc.id] = { id: doc.id, ...data };
       
+      const dateAffichage = data.dateDemande || (data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString('fr-FR') : 'Récemment');
+
       html += `
         <tr>
-          <td>${data.dateDemande || (data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString('fr-FR') : 'Récemment')}</td>
+          <td>${dateAffichage}</td>
           <td>${data.prenom || ''} ${data.nom || ''}</td>
           <td>
-            <button onclick="ouvrirWorkspaceDemande('${rawData}')">
+            <button onclick="ouvrirWorkspaceDemande('${doc.id}')">
               Transposer en devis
             </button>
           </td>
@@ -4235,48 +4250,77 @@ async function chargerDemandesWeb() {
     container.innerHTML = '<p>Erreur lors du chargement.</p>';
   }
 }
-
 // 2. Ouvrir le workspace avec initialisation
-function ouvrirWorkspaceDemande(rawJson) {
-  const data = JSON.parse(decodeURIComponent(rawJson));
-  dwCurrentDemande = data;
-  
+
+function ouvrirWorkspaceDemande(docId) {
+  const demande = toutesLesDemandesWeb[docId];
+  if (!demande) {
+    alert("Impossible de récupérer les détails de la demande.");
+    return;
+  }
+
+  // ON ENREGISTRE LA DEMANDE ACTIVE (sans redéclarer les variables avec 'let')
+  if (typeof dwCurrentDemande !== 'undefined') dwCurrentDemande = demande;
+  if (typeof currentDemandeDW !== 'undefined') currentDemandeDW = demande;
+  if (typeof currentDemandeId !== 'undefined') currentDemandeId = docId;
+  window.dwCurrentDemande = demande;
+  window.currentDemandeDW = demande;
+  window.currentDemandeId = docId;
+
+  // 1. Afficher l'espace de travail
   document.getElementById('liste-demandes-entrantes').style.display = 'none';
   document.getElementById('workspace-demandes').style.display = 'grid';
-  
-  const clientNom = `${data.prenom || ''} ${data.nom || ''}`.trim() || 'Client';
-  const clientContact = `${data.email || ''} ${data.telephone ? '— ' + data.telephone : ''}`.trim();
-  
-  document.getElementById('dw-client-nom').innerText = clientNom;
-  document.getElementById('dw-client-contact').innerText = clientContact;
-  
-  dwCurrentDates = { debut: data.dateDebut || '', fin: data.dateFin || '' };
-  let dateText = "Dates non précisées";
-  if (data.dateDebut && data.dateFin) {
-    dateText = `Du ${new Date(data.dateDebut).toLocaleDateString('fr-FR')} au ${new Date(data.dateFin).toLocaleDateString('fr-FR')}`;
+
+  // 2. Remplir les informations client
+  const clientNomEl = document.getElementById('dw-client-nom');
+  const clientContactEl = document.getElementById('dw-client-contact');
+  const clientDatesEl = document.getElementById('dw-client-dates');
+
+  if (clientNomEl) clientNomEl.innerText = `${demande.prenom || ''} ${demande.nom || ''}`.trim();
+  if (clientContactEl) clientContactEl.innerText = `${demande.email || ''} - ${demande.telephone || ''}`;
+
+  // 3. Gestion des dates
+  dwCurrentDates = { debut: demande.dateDebut || '', fin: demande.dateFin || '' };
+  if (clientDatesEl) {
+    let dateText = "Dates non précisées";
+    if (demande.dateDebut && demande.dateFin) {
+      dateText = `Du ${new Date(demande.dateDebut).toLocaleDateString('fr-FR')} au ${new Date(demande.dateFin).toLocaleDateString('fr-FR')}`;
+    }
+    clientDatesEl.innerText = dateText;
   }
-  const elDates = document.getElementById('dw-client-dates');
-  if (elDates) elDates.innerText = dateText;
-  
+
+  // 4. Affichage des articles souhaités
   const itemsContainer = document.getElementById('dw-lignes-demande');
   itemsContainer.innerHTML = '';
-  
-  const items = data.items || [];
+
+  const items = Array.isArray(demande.items) ? demande.items : [];
+
   items.forEach((item, index) => {
-    itemsContainer.innerHTML += `
-      <div class="dw-item-card" draggable="true" ondragstart="dragStart(event)" 
-           id="dw-item-${index}" 
-           data-ref="${item.ref || item.id || ''}" 
-           data-nom="${item.nom || ''}" 
-           data-qte="${item.quantite || 1}" 
-           style="border:1px solid #ccc; padding:10px; margin-bottom:10px; background:white; cursor:grab; border-radius:4px;">
-        <strong>${item.quantite || 1}x ${item.nom || item.ref}</strong>
-      </div>
+    const card = document.createElement('div');
+    card.className = 'dw-item-card';
+    card.draggable = true;
+    card.ondragstart = dragStart;
+    card.id = `dw-item-${index}`;
+    card.dataset.id = item.id || '';
+    card.dataset.nom = item.nom || '';
+    card.dataset.ref = item.ref || '';
+    card.dataset.qte = item.quantite || 1;
+    card.style.cssText = 'border:1px solid #ccc; padding:10px; margin-bottom:10px; background:white; cursor:grab; border-radius:6px;';
+
+    card.innerHTML = `
+      <strong>${item.quantite || 1}x ${item.nom || ''}</strong>
+      ${item.ref ? `<br><small style="color:#666;">Réf: ${item.ref}</small>` : ''}
     `;
+
+    itemsContainer.appendChild(card);
   });
 
-  document.getElementById('dw-devis-container').innerHTML = '';
-  ajouterCategorieDW();
+  // 5. Initialiser le conteneur du devis de droite
+  const devisContainer = document.getElementById('dw-devis-container');
+  if (devisContainer) {
+    devisContainer.innerHTML = '';
+    ajouterCategorieDW();
+  }
 }
 
 // 3. Enregistrement et transposition en vrai devis dans votre logiciel
@@ -4293,8 +4337,10 @@ async function validerDevisDW(e) {
   const cats = [];
 
   catZones.forEach((zone, idx) => {
-    const inputNom = zone.querySelector('.dw-cat-title');
-    const nomCat = inputNom ? inputNom.value.trim() : `Catégorie ${idx + 1}`;
+    // Récupération souple du nom de la catégorie saisi dans l'input
+    const inputNom = zone.querySelector('.dw-cat-title-input') || zone.querySelector('.dw-cat-title') || zone.querySelector('input[type="text"]') || zone.querySelector('input');
+    const nomCat = (inputNom && inputNom.value.trim()) ? inputNom.value.trim() : `Catégorie ${idx + 1}`;
+    
     const itemsNodes = zone.querySelectorAll('.dw-item-card');
     const items = [];
 
@@ -4326,7 +4372,7 @@ async function validerDevisDW(e) {
     if (items.length > 0 || catZones.length === 1) {
       cats.push({
         id: Date.now() + idx,
-        nom: nomCat || `Catégorie ${idx + 1}`,
+        nom: nomCat,
         remise: 0,
         items: items
       });
@@ -4413,6 +4459,7 @@ async function validerDevisDW(e) {
     }
   }
 }
+
 // ==========================================
 // GLISSER-DÉPOSER & CRÉATION DE DEVIS (CATALOGUE)
 // ==========================================
@@ -4569,6 +4616,7 @@ function validerSousLocDW() {
 // 4. Ajouter une nouvelle catégorie dans la colonne de droite
 function ajouterCategorieDW() {
   const container = document.getElementById('dw-devis-container');
+  if (!container) return;
   
   const catDiv = document.createElement('div');
   catDiv.className = "dw-dropzone";
@@ -4585,7 +4633,7 @@ function ajouterCategorieDW() {
   catDiv.setAttribute("ondrop", "drop(event)");
   
   catDiv.innerHTML = `
-    <input type="text" placeholder="Nom de la catégorie (ex: Son, Lumière...)" style="font-weight:bold; margin-bottom:10px; width:100%; padding:5px;">
+    <input type="text" class="dw-cat-title-input" placeholder="Nom de la catégorie (ex: Son, Lumière...)" style="font-weight:bold; margin-bottom:10px; width:100%; padding:6px; box-sizing:border-box;">
     <div class="dw-cat-items" style="min-height: 40px;">
         <!-- Les articles glissés apparaîtront ici -->
     </div>
@@ -4593,7 +4641,6 @@ function ajouterCategorieDW() {
   
   container.appendChild(catDiv);
 }
-
 
 </script>
 
